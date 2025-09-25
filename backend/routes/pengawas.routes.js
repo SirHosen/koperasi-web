@@ -1,8 +1,238 @@
 // pengawas.routes.js - Routes for supervisor (pengawas) operations
 import express from 'express'
 import { pool } from '../db.js'
+import { authenticateJWT } from '../middleware/auth.middleware.js'
 
 const router = express.Router()
+
+// Get financial oversight data
+router.get('/oversight/financial', authenticateJWT, async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    
+    // Check if user is pengawas
+    if (req.user.role !== 'pengawas') {
+      return res.status(403).json({ error: 'Access denied. Pengawas role required.' });
+    }
+    
+    let dateFilter = 'YEAR(tanggal_transaksi) = ?';
+    const filterParams = [year || new Date().getFullYear()];
+    
+    if (month) {
+      dateFilter += ' AND MONTH(tanggal_transaksi) = ?';
+      filterParams.push(month);
+    }
+    
+    // Get savings overview
+    const [savingsRows] = await pool.execute(`
+      SELECT 
+        jenis,
+        SUM(CASE WHEN jenis_transaksi = 'setor' THEN jumlah ELSE 0 END) AS total_setor,
+        SUM(CASE WHEN jenis_transaksi = 'tarik' THEN jumlah ELSE 0 END) AS total_tarik,
+        COUNT(*) AS jumlah_transaksi
+      FROM simpanan_transaksi 
+      WHERE ${dateFilter}
+      GROUP BY jenis
+    `, filterParams);
+    
+    // Get loans overview
+    const [loansRows] = await pool.execute(`
+      SELECT 
+        status_pinjaman,
+        COUNT(*) AS jumlah,
+        SUM(jumlah_pinjaman) AS total_nilai,
+        AVG(bunga) AS rata_rata_bunga
+      FROM pinjaman 
+      WHERE ${dateFilter.replace('tanggal_transaksi', 'tanggal_pengajuan')}
+      GROUP BY status_pinjaman
+    `, filterParams);
+    
+    // Get cash flow (simplified calculation)
+    const [cashFlowRows] = await pool.execute(`
+      SELECT 
+        'masuk' as jenis,
+        SUM(jumlah) as total
+      FROM simpanan_transaksi 
+      WHERE jenis_transaksi = 'setor' AND ${dateFilter}
+      
+      UNION ALL
+      
+      SELECT 
+        'keluar' as jenis,
+        SUM(jumlah_pinjaman) as total
+      FROM pinjaman 
+      WHERE status_pinjaman = 'disetujui' AND ${dateFilter.replace('tanggal_transaksi', 'tanggal_pengajuan')}
+    `, [...filterParams, ...filterParams]);
+    
+    res.json({
+      success: true,
+      data: {
+        current_year: parseInt(year) || new Date().getFullYear(),
+        savings: savingsRows,
+        loans: loansRows,
+        cash_flow: cashFlowRows
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error fetching financial oversight:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch financial oversight data',
+      details: error.message 
+    });
+  }
+});
+
+// Get compliance monitoring metrics
+router.get('/compliance/monitoring', auth, async (req, res) => {
+  try {
+    // Check if user is pengawas
+    if (req.user.role !== 'pengawas') {
+      return res.status(403).json({ error: 'Access denied. Pengawas role required.' });
+    }
+    
+    const metrics = [];
+    
+    // Average loan approval time (in days)
+    const [approvalTimeRows] = await pool.execute(`
+      SELECT AVG(DATEDIFF(
+        COALESCE(tanggal_disetujui, NOW()), 
+        tanggal_pengajuan
+      )) AS avg_days
+      FROM pinjaman 
+      WHERE status_pinjaman IN ('disetujui', 'ditolak')
+        AND tanggal_pengajuan >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+    `);
+    
+    metrics.push({
+      metric: 'loan_approval_time',
+      value: parseFloat(approvalTimeRows[0]?.avg_days || 0),
+      description: 'Rata-rata Waktu Persetujuan Pinjaman (hari)'
+    });
+    
+    // Pending verifications count
+    const [pendingRows] = await pool.execute(`
+      SELECT COUNT(*) AS count
+      FROM pinjaman 
+      WHERE status_pinjaman = 'menunggu'
+    `);
+    
+    metrics.push({
+      metric: 'pending_verifications',
+      value: parseInt(pendingRows[0]?.count || 0),
+      description: 'Jumlah Pinjaman Menunggu Verifikasi'
+    });
+    
+    // Overdue loans (simplified - loans active > 12 months)
+    const [overdueRows] = await pool.execute(`
+      SELECT COUNT(*) AS count
+      FROM pinjaman 
+      WHERE status_pinjaman = 'aktif'
+        AND tanggal_disetujui < DATE_SUB(NOW(), INTERVAL 12 MONTH)
+    `);
+    
+    metrics.push({
+      metric: 'overdue_loans',
+      value: parseInt(overdueRows[0]?.count || 0),
+      description: 'Jumlah Pinjaman Bermasalah'
+    });
+    
+    // Member satisfaction (mock data - would need survey system)
+    metrics.push({
+      metric: 'member_satisfaction',
+      value: 85.5,
+      description: 'Tingkat Kepuasan Anggota (%)'
+    });
+    
+    res.json({
+      success: true,
+      data: metrics
+    });
+    
+  } catch (error) {
+    console.error('Error fetching compliance metrics:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch compliance metrics',
+      details: error.message 
+    });
+  }
+});
+
+// Get recommendations
+router.get('/recommendations', auth, async (req, res) => {
+  try {
+    // Check if user is pengawas
+    if (req.user.role !== 'pengawas') {
+      return res.status(403).json({ error: 'Access denied. Pengawas role required.' });
+    }
+    
+    const { limit = 10, offset = 0 } = req.query;
+    
+    // Mock recommendations data
+    const mockRecommendations = [
+      {
+        id: 1,
+        category: 'operasional',
+        priority: 'tinggi',
+        description: 'Implementasi sistem digital untuk mempercepat proses persetujuan pinjaman',
+        target_date: '2024-06-30',
+        status: 'active',
+        created_at: '2024-01-15'
+      },
+      {
+        id: 2,
+        category: 'keuangan',
+        priority: 'sedang',
+        description: 'Diversifikasi portofolio investasi untuk meningkatkan pendapatan',
+        target_date: '2024-09-30',
+        status: 'pending',
+        created_at: '2024-02-01'
+      },
+      {
+        id: 3,
+        category: 'kepatuhan',
+        priority: 'tinggi',
+        description: 'Update policy manual sesuai regulasi terbaru',
+        target_date: '2024-04-30',
+        status: 'active',
+        created_at: '2024-02-15'
+      },
+      {
+        id: 4,
+        category: 'teknologi',
+        priority: 'rendah',
+        description: 'Upgrade sistem keamanan IT dan backup data',
+        target_date: '2024-12-31',
+        status: 'pending',
+        created_at: '2024-03-01'
+      },
+      {
+        id: 5,
+        category: 'operasional',
+        priority: 'sedang',
+        description: 'Pelatihan berkala untuk staff customer service',
+        target_date: '2024-07-31',
+        status: 'completed',
+        created_at: '2024-01-10'
+      }
+    ];
+    
+    const limitedRecommendations = mockRecommendations.slice(offset, offset + parseInt(limit));
+    
+    res.json({
+      success: true,
+      data: limitedRecommendations,
+      total: mockRecommendations.length
+    });
+    
+  } catch (error) {
+    console.error('Error fetching recommendations:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch recommendations',
+      details: error.message 
+    });
+  }
+});
 
 // Get audit reports
 router.get('/audit/reports', async (req, res) => {

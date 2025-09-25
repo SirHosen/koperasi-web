@@ -9,6 +9,9 @@ import type { UserRole } from '../types'
 const authStore = useAuthStore()
 const userRole = computed(() => (authStore.userRole as UserRole) || 'anggota')
 
+// Submenu state
+const openSubmenus = ref<number[]>([])
+
 // Sidebar menu items based on user role
 const menuItems = computed(() => {
   const items = []
@@ -17,7 +20,16 @@ const menuItems = computed(() => {
     items.push(
       { label: 'Dashboard', icon: 'dashboard', route: '/anggota/dashboard' },
       { label: 'Simpanan', icon: 'savings', route: '/anggota/simpanan' },
-      { label: 'Pinjaman', icon: 'money', route: '/anggota/pinjaman' },
+      { 
+        label: 'Pinjaman', 
+        icon: 'money', 
+        submenu: [
+          { label: 'Ajukan Pinjaman', route: '/anggota/pinjaman/ajukan' },
+          { label: 'Status Pinjaman', route: '/anggota/pinjaman/status' },
+          { label: 'Status Dokumen', route: '/anggota/pinjaman/dokumen' },
+          { label: 'Bayar Pinjaman', route: '/anggota/pinjaman/bayar' }
+        ]
+      },
       { label: 'SHU', icon: 'calculate', route: '/anggota/shu' },
       { label: 'Profil', icon: 'person', route: '/anggota/profil' },
     )
@@ -52,6 +64,16 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
+// Toggle submenu
+const toggleSubmenu = (index: number) => {
+  const menuIndex = openSubmenus.value.indexOf(index)
+  if (menuIndex > -1) {
+    openSubmenus.value.splice(menuIndex, 1)
+  } else {
+    openSubmenus.value.push(index)
+  }
+}
+
 // Logout function
 const logout = async () => {
   await authStore.logout()
@@ -77,7 +99,7 @@ const logout = async () => {
               <i class="bi bi-chevron-down ms-1"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end">
-              <li v-if="authStore.isAnggota">
+              <li v-if="userRole === 'anggota'">
                 <router-link class="dropdown-item" to="/anggota/profil">
                   <i class="bi bi-person me-2"></i>Profil & Pengaturan
                 </router-link>
@@ -99,7 +121,9 @@ const logout = async () => {
       <aside class="sidebar" :class="{ 'mobile-open': isMobileMenuOpen }">
         <nav class="sidebar-nav">
           <div v-for="(item, index) in menuItems" :key="index" class="nav-item">
+            <!-- Single menu item -->
             <router-link
+              v-if="!item.submenu"
               :to="item.route"
               class="nav-link"
               :class="{ active: currentRoute === item.route }"
@@ -107,6 +131,31 @@ const logout = async () => {
               <span class="icon">{{ item.icon }}</span>
               <span class="label">{{ item.label }}</span>
             </router-link>
+            
+            <!-- Menu with submenu -->
+            <div v-else class="nav-dropdown">
+              <button 
+                class="nav-link dropdown-toggle" 
+                :class="{ active: item.submenu.some(sub => currentRoute.startsWith(sub.route.split('/').slice(0, -1).join('/'))) }"
+                @click="toggleSubmenu(index)"
+              >
+                <span class="icon">{{ item.icon }}</span>
+                <span class="label">{{ item.label }}</span>
+                <span class="arrow" :class="{ open: openSubmenus.includes(index) }">▼</span>
+              </button>
+              
+              <div class="submenu" :class="{ open: openSubmenus.includes(index) }">
+                <router-link
+                  v-for="(subitem, subindex) in item.submenu"
+                  :key="subindex"
+                  :to="subitem.route"
+                  class="submenu-link"
+                  :class="{ active: currentRoute === subitem.route }"
+                >
+                  {{ subitem.label }}
+                </router-link>
+              </div>
+            </div>
           </div>
         </nav>
         <div class="sidebar-footer">
@@ -302,5 +351,63 @@ const logout = async () => {
   .main-content {
     margin-left: 0;
   }
+}
+
+/* Submenu styles */
+.nav-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.arrow {
+  transition: transform 0.2s;
+  font-size: 0.8rem;
+}
+
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+.submenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.1);
+  margin-left: 1rem;
+  border-radius: 4px;
+}
+
+.submenu.open {
+  max-height: 200px;
+  padding: 0.5rem 0;
+}
+
+.submenu-link {
+  display: block;
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.submenu-link:hover {
+  color: white;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.submenu-link.active {
+  color: #4CAF50;
+  background-color: rgba(76, 175, 80, 0.1);
 }
 </style>
