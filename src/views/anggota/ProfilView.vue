@@ -184,6 +184,14 @@ const loadActivityHistory = async () => {
   isLoadingHistory.value = false
 }
 
+// Handle activity tab click
+const handleActivityTabClick = () => {
+  activeTab.value = 'activity'
+  if (!activityHistory.value.length) {
+    loadActivityHistory()
+  }
+}
+
 // Save profile changes
 const saveProfile = async () => {
   if (!hasProfileChanges.value) {
@@ -340,10 +348,7 @@ const getStatusBadgeClass = (status: string) => {
               <li class="nav-item" role="presentation">
                 <button
                   :class="['nav-link', { active: activeTab === 'activity' }]"
-                  @click="
-                    activeTab = 'activity'
-                    if (!activityHistory.length) loadActivityHistory()
-                  "
+                  @click="handleActivityTabClick"
                   type="button"
                 >
                   <i class="bi bi-clock-history me-2"></i>Riwayat Aktivitas

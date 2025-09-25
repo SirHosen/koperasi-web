@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-// @ts-expect-error - JS store file
 import { useSimpananStore } from '@/stores/modules/simpanan'
 import { useErrorHandler } from '@/lib/errorHandler'
 import Chart from 'chart.js/auto'
@@ -142,7 +141,7 @@ function handlePageChange(page: number) {
   simpananStore.setPage(page)
 }
 
-async function exportData(format: string) {
+async function exportData(format: 'pdf' | 'excel') {
   const result = await handleAsync(
     () => simpananStore.exportSimpanan(format),
     `Gagal mengunduh laporan ${format.toUpperCase()}`,

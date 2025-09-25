@@ -1,5 +1,5 @@
 // Declaration file for router with auth store
-declare module '../stores/modules/auth' {
+declare module '@/stores/modules/auth' {
   interface User {
     id: string
     username: string

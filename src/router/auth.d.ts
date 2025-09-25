@@ -1,1 +1,2 @@
-declare module '../stores/modules/auth'
+// Declaration file for router with auth store
+declare module '@/stores/modules/auth' {

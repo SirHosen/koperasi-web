@@ -66,6 +66,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useNotificationStore } from '@/stores/modules/notification'
+import type { Notification } from '@/stores/modules/notification'
 import { useRouter } from 'vue-router'
 
 // Props and emits
@@ -82,7 +83,7 @@ const router = useRouter()
 
 // State
 const isOpen = ref(false)
-const refreshInterval = ref(null)
+const refreshInterval = ref<NodeJS.Timeout | null>(null)
 
 // Computed
 const notifications = computed(() => {
@@ -105,8 +106,9 @@ const toggleNotifications = () => {
   }
 }
 
-const handleOutsideClick = (event) => {
-  const component = event.target.closest('.notification-component')
+const handleOutsideClick = (event: Event) => {
+  const target = event.target as Element
+  const component = target.closest('.notification-component')
   if (!component) {
     isOpen.value = false
     document.removeEventListener('click', handleOutsideClick)
@@ -129,7 +131,7 @@ const markAllAsRead = async () => {
   }
 }
 
-const openNotification = async (notification) => {
+const openNotification = async (notification: Notification) => {
   // Mark as read
   if (!notification.is_read) {
     try {
@@ -148,7 +150,7 @@ const openNotification = async (notification) => {
   isOpen.value = false
 }
 
-const getIconClass = (type) => {
+const getIconClass = (type: string) => {
   switch (true) {
     case type.includes('document_approved'):
       return 'bi bi-file-earmark-check text-success'
@@ -165,14 +167,14 @@ const getIconClass = (type) => {
   }
 }
 
-const formatTime = (timestamp) => {
+const formatTime = (timestamp: string) => {
   if (!timestamp) return ''
 
   const date = new Date(timestamp)
   const now = new Date()
 
   // Time difference in milliseconds
-  const diff = now - date
+  const diff = now.getTime() - date.getTime()
 
   // Less than a minute
   if (diff < 60 * 1000) {

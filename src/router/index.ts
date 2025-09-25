@@ -1,6 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
-// @ts-expect-error - Importing JS module in TS file, types defined in auth-store.d.ts
-import { useAuthStore } from '../stores/modules/auth'
+import { useAuthStore } from '@/stores/modules/auth'
 
 // Simulator view (untuk demo FCFS)
 const Simulator = () => import('../views/Simulator.vue')
@@ -129,7 +128,7 @@ const router = createRouter({
 })
 
 // Navigation guards
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   // Get auth store
   const authStore = useAuthStore()
 
