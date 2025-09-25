@@ -88,8 +88,16 @@ const router = createRouter({
         { path: 'pinjaman/ajukan', name: 'anggota-pinjaman-form', component: PinjamanFormView },
         { path: 'pinjaman/status', name: 'anggota-pinjaman-status', component: PinjamanStatusView },
         { path: 'pinjaman/dokumen', name: 'anggota-dokumen-status', component: DokumenStatusView },
-        { path: 'pinjaman/bayar', name: 'anggota-pembayaran-pinjaman', component: () => import('../views/anggota/PembayaranPinjamanView.vue') },
-        { path: 'shu', name: 'anggota-shu', component: () => import('../views/anggota/ShuView.vue') },
+        {
+          path: 'pinjaman/bayar',
+          name: 'anggota-pembayaran-pinjaman',
+          component: () => import('../views/anggota/PembayaranPinjamanView.vue'),
+        },
+        {
+          path: 'shu',
+          name: 'anggota-shu',
+          component: () => import('../views/anggota/ShuView.vue'),
+        },
         { path: 'profil', name: 'anggota-profil', component: ProfilView },
         { path: '', redirect: { name: 'anggota-dashboard' } },
       ],
@@ -102,7 +110,11 @@ const router = createRouter({
       component: () => import('../layouts/DashboardLayout.vue'),
       meta: { requiresAuth: true, role: 'pengawas' },
       children: [
-        { path: 'dashboard', name: 'pengawas-dashboard', component: () => import('../views/pengawas/DashboardView.vue') },
+        {
+          path: 'dashboard',
+          name: 'pengawas-dashboard',
+          component: () => import('../views/pengawas/DashboardView.vue'),
+        },
         { path: '', redirect: { name: 'pengawas-dashboard' } },
       ],
     },

@@ -476,28 +476,28 @@ router.get('/member/documents', checkRole(['anggota']), async (req, res) => {
 router.get('/active', async (req, res) => {
   try {
     const userId = req.user.id
-    
+
     const [loans] = await pool.execute(
-      `SELECT p.*, 
+      `SELECT p.*,
         COALESCE(SUM(pp.jumlah_bayar), 0) as total_dibayar
        FROM pinjaman p
        LEFT JOIN pembayaran_pinjaman pp ON p.id = pp.loan_id AND pp.status = 'diverifikasi'
-       WHERE p.anggota_id = ? 
+       WHERE p.anggota_id = ?
        AND p.status_pinjaman IN ('aktif', 'pencairan')
        GROUP BY p.id
        ORDER BY p.created_at DESC`,
-      [userId]
+      [userId],
     )
-    
+
     res.json({
       success: true,
-      data: loans
+      data: loans,
     })
   } catch (error) {
     console.error('Error fetching active loans:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memuat pinjaman aktif'
+      message: 'Gagal memuat pinjaman aktif',
     })
   }
 })
@@ -506,52 +506,55 @@ router.get('/active', async (req, res) => {
 router.post('/payments/manual', upload.single('bukti_transfer'), async (req, res) => {
   try {
     const userId = req.user.id
-    const {
-      loan_id,
-      jumlah_bayar,
-      tanggal_bayar,
-      metode_pembayaran,
-      nomor_referensi,
-      keterangan
-    } = req.body
-    
+    const { loan_id, jumlah_bayar, tanggal_bayar, metode_pembayaran, nomor_referensi, keterangan } =
+      req.body
+
     // Validate loan ownership
     const [loanCheck] = await pool.execute(
       'SELECT id, jenis_pinjaman FROM pinjaman WHERE id = ? AND anggota_id = ?',
-      [loan_id, userId]
+      [loan_id, userId],
     )
-    
+
     if (loanCheck.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Pinjaman tidak ditemukan'
+        message: 'Pinjaman tidak ditemukan',
       })
     }
-    
+
     // Insert payment record
     const paymentId = uuidv4()
     const buktiPath = req.file ? `/uploads/payments/${req.file.filename}` : null
-    
+
     await pool.execute(
-      `INSERT INTO pembayaran_pinjaman 
-       (id, loan_id, anggota_id, jumlah_bayar, tanggal_bayar, 
-        metode_pembayaran, nomor_referensi, bukti_transfer, 
-        keterangan, status, created_at) 
+      `INSERT INTO pembayaran_pinjaman
+       (id, loan_id, anggota_id, jumlah_bayar, tanggal_bayar,
+        metode_pembayaran, nomor_referensi, bukti_transfer,
+        keterangan, status, created_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'menunggu', NOW())`,
-      [paymentId, loan_id, userId, jumlah_bayar, tanggal_bayar,
-       metode_pembayaran, nomor_referensi, buktiPath, keterangan]
+      [
+        paymentId,
+        loan_id,
+        userId,
+        jumlah_bayar,
+        tanggal_bayar,
+        metode_pembayaran,
+        nomor_referensi,
+        buktiPath,
+        keterangan,
+      ],
     )
-    
+
     res.json({
       success: true,
       message: 'Pembayaran berhasil diinput dan menunggu verifikasi',
-      data: { id: paymentId }
+      data: { id: paymentId },
     })
   } catch (error) {
     console.error('Error submitting manual payment:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal menginput pembayaran'
+      message: 'Gagal menginput pembayaran',
     })
   }
 })
@@ -562,7 +565,7 @@ router.get('/payments/history', async (req, res) => {
     const userId = req.user.id
     const { page = 1, limit = 10 } = req.query
     const offset = (page - 1) * limit
-    
+
     const [payments] = await pool.execute(
       `SELECT pp.*, p.jenis_pinjaman, p.jumlah_pinjaman
        FROM pembayaran_pinjaman pp
@@ -570,18 +573,18 @@ router.get('/payments/history', async (req, res) => {
        WHERE pp.anggota_id = ?
        ORDER BY pp.created_at DESC
        LIMIT ? OFFSET ?`,
-      [userId, parseInt(limit), offset]
+      [userId, parseInt(limit), offset],
     )
-    
+
     // Get total count
     const [countResult] = await pool.execute(
       'SELECT COUNT(*) as total FROM pembayaran_pinjaman WHERE anggota_id = ?',
-      [userId]
+      [userId],
     )
-    
+
     const total = countResult[0].total
     const totalPages = Math.ceil(total / limit)
-    
+
     res.json({
       success: true,
       data: payments,
@@ -589,14 +592,14 @@ router.get('/payments/history', async (req, res) => {
         currentPage: parseInt(page),
         totalPages,
         totalItems: total,
-        itemsPerPage: parseInt(limit)
-      }
+        itemsPerPage: parseInt(limit),
+      },
     })
   } catch (error) {
     console.error('Error fetching payment history:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memuat riwayat pembayaran'
+      message: 'Gagal memuat riwayat pembayaran',
     })
   }
 })

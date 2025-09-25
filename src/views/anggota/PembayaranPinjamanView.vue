@@ -2,7 +2,13 @@
 import { ref, onMounted } from 'vue'
 import { useErrorHandler } from '@/lib/errorHandler'
 
-const { handleAsync, error: errorMessage, loading: isLoading, success: successMessage, showSuccess } = useErrorHandler()
+const {
+  handleAsync,
+  error: errorMessage,
+  loading: isLoading,
+  success: successMessage,
+  showSuccess,
+} = useErrorHandler()
 
 // Data
 const currentLoans = ref([])
@@ -14,7 +20,7 @@ const paymentForm = ref({
   metode_pembayaran: 'transfer',
   nomor_referensi: '',
   keterangan: '',
-  bukti_transfer: null as File | null
+  bukti_transfer: null as File | null,
 })
 
 const paymentHistory = ref([])
@@ -25,7 +31,7 @@ const totalPages = ref(1)
 const paymentMethods = [
   { value: 'transfer', label: 'Transfer Bank' },
   { value: 'tunai', label: 'Tunai' },
-  { value: 'auto_debit', label: 'Auto Debit' }
+  { value: 'auto_debit', label: 'Auto Debit' },
 ]
 
 // Tabs
@@ -41,15 +47,15 @@ async function loadCurrentLoans() {
   await handleAsync(async () => {
     const response = await fetch('/api/pinjaman/active', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch active loans')
-    
+
     const result = await response.json()
     currentLoans.value = result.data || []
-    
+
     // Auto select first loan if available
     if (currentLoans.value.length > 0) {
       selectedLoan.value = currentLoans.value[0]
@@ -63,12 +69,12 @@ async function loadPaymentHistory(page = 1) {
   await handleAsync(async () => {
     const response = await fetch(`/api/pinjaman/payments/history?page=${page}&limit=10`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch payment history')
-    
+
     const result = await response.json()
     paymentHistory.value = result.data
     currentPage.value = result.pagination.currentPage
@@ -78,7 +84,7 @@ async function loadPaymentHistory(page = 1) {
 
 // Handle loan selection change
 function handleLoanChange() {
-  selectedLoan.value = currentLoans.value.find(loan => loan.id === paymentForm.value.loan_id)
+  selectedLoan.value = currentLoans.value.find((loan) => loan.id === paymentForm.value.loan_id)
 }
 
 // Handle file upload
@@ -95,12 +101,12 @@ async function submitPayment() {
     errorMessage.value = 'Pilih pinjaman terlebih dahulu'
     return
   }
-  
+
   if (!paymentForm.value.jumlah_bayar || parseFloat(paymentForm.value.jumlah_bayar) <= 0) {
     errorMessage.value = 'Jumlah pembayaran harus lebih dari 0'
     return
   }
-  
+
   const formData = new FormData()
   formData.append('loan_id', paymentForm.value.loan_id)
   formData.append('jumlah_bayar', paymentForm.value.jumlah_bayar)
@@ -108,25 +114,25 @@ async function submitPayment() {
   formData.append('metode_pembayaran', paymentForm.value.metode_pembayaran)
   formData.append('nomor_referensi', paymentForm.value.nomor_referensi)
   formData.append('keterangan', paymentForm.value.keterangan)
-  
+
   if (paymentForm.value.bukti_transfer) {
     formData.append('bukti_transfer', paymentForm.value.bukti_transfer)
   }
-  
+
   const result = await handleAsync(async () => {
     const response = await fetch('/api/pinjaman/payments/manual', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
       },
-      body: formData
+      body: formData,
     })
-    
+
     if (!response.ok) throw new Error('Failed to submit payment')
-    
+
     return await response.json()
   }, 'Gagal mengirim pembayaran')
-  
+
   if (result) {
     showSuccess('Pembayaran berhasil diinput dan akan diverifikasi')
     resetForm()
@@ -144,9 +150,9 @@ function resetForm() {
     metode_pembayaran: 'transfer',
     nomor_referensi: '',
     keterangan: '',
-    bukti_transfer: null
+    bukti_transfer: null,
   }
-  
+
   // Reset file input
   const fileInput = document.getElementById('buktiTransfer') as HTMLInputElement
   if (fileInput) fileInput.value = ''
@@ -171,7 +177,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -196,26 +202,44 @@ const calculateInstallmentAmount = (loan: any) => {
           <i class="bi bi-credit-card me-2"></i>
           Input Pembayaran Pinjaman
         </h1>
-        
+
         <!-- Success/Error Messages -->
-        <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div
+          v-if="successMessage"
+          class="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
           <i class="bi bi-check-circle me-2"></i>
           {{ successMessage }}
-          <button type="button" class="btn-close" @click="successMessage = ''" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="successMessage = ''"
+            aria-label="Close"
+          ></button>
         </div>
-        
-        <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+
+        <div
+          v-if="errorMessage"
+          class="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
           <i class="bi bi-exclamation-triangle me-2"></i>
           {{ errorMessage }}
-          <button type="button" class="btn-close" @click="errorMessage = ''" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="errorMessage = ''"
+            aria-label="Close"
+          ></button>
         </div>
-        
+
         <!-- Navigation Tabs -->
         <div class="card">
           <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'payment' }]"
                   @click="activeTab = 'payment'"
                   type="button"
@@ -224,7 +248,7 @@ const calculateInstallmentAmount = (loan: any) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'history' }]"
                   @click="activeTab = 'history'"
                   type="button"
@@ -234,7 +258,7 @@ const calculateInstallmentAmount = (loan: any) => {
               </li>
             </ul>
           </div>
-          
+
           <div class="card-body">
             <!-- Payment Input Tab -->
             <div v-show="activeTab === 'payment'" class="tab-pane">
@@ -242,147 +266,161 @@ const calculateInstallmentAmount = (loan: any) => {
                 <i class="bi bi-info-circle me-2"></i>
                 Anda tidak memiliki pinjaman aktif saat ini.
               </div>
-              
+
               <div v-else class="row">
                 <div class="col-md-8">
                   <form @submit.prevent="submitPayment">
                     <div class="card">
                       <div class="card-header">
-                        <h5 class="mb-0">
-                          <i class="bi bi-form me-2"></i>Form Input Pembayaran
-                        </h5>
+                        <h5 class="mb-0"><i class="bi bi-form me-2"></i>Form Input Pembayaran</h5>
                       </div>
                       <div class="card-body">
                         <div class="row">
                           <div class="col-md-6">
                             <div class="mb-3">
                               <label for="loanSelect" class="form-label">Pilih Pinjaman *</label>
-                              <select 
-                                id="loanSelect" 
-                                class="form-select" 
-                                v-model="paymentForm.loan_id" 
+                              <select
+                                id="loanSelect"
+                                class="form-select"
+                                v-model="paymentForm.loan_id"
                                 @change="handleLoanChange"
                                 required
                               >
                                 <option value="">-- Pilih Pinjaman --</option>
-                                <option v-for="loan in currentLoans" :key="loan.id" :value="loan.id">
-                                  {{ loan.jenis_pinjaman }} - {{ formatCurrency(loan.jumlah_pinjaman) }}
+                                <option
+                                  v-for="loan in currentLoans"
+                                  :key="loan.id"
+                                  :value="loan.id"
+                                >
+                                  {{ loan.jenis_pinjaman }} -
+                                  {{ formatCurrency(loan.jumlah_pinjaman) }}
                                 </option>
                               </select>
                             </div>
                           </div>
-                          
+
                           <div class="col-md-6">
                             <div class="mb-3">
-                              <label for="tanggalBayar" class="form-label">Tanggal Pembayaran *</label>
-                              <input 
-                                type="date" 
-                                class="form-control" 
-                                id="tanggalBayar" 
+                              <label for="tanggalBayar" class="form-label"
+                                >Tanggal Pembayaran *</label
+                              >
+                              <input
+                                type="date"
+                                class="form-control"
+                                id="tanggalBayar"
                                 v-model="paymentForm.tanggal_bayar"
                                 :max="new Date().toISOString().split('T')[0]"
                                 required
-                              >
+                              />
                             </div>
                           </div>
                         </div>
-                        
+
                         <div class="row">
                           <div class="col-md-6">
                             <div class="mb-3">
-                              <label for="jumlahBayar" class="form-label">Jumlah Pembayaran (Rp) *</label>
-                              <input 
-                                type="number" 
-                                class="form-control" 
-                                id="jumlahBayar" 
+                              <label for="jumlahBayar" class="form-label"
+                                >Jumlah Pembayaran (Rp) *</label
+                              >
+                              <input
+                                type="number"
+                                class="form-control"
+                                id="jumlahBayar"
                                 v-model="paymentForm.jumlah_bayar"
                                 placeholder="Masukkan jumlah pembayaran"
                                 min="1000"
                                 step="1000"
                                 required
-                              >
+                              />
                               <div class="form-text" v-if="selectedLoan">
-                                Angsuran bulanan: {{ formatCurrency(calculateInstallmentAmount(selectedLoan)) }}
+                                Angsuran bulanan:
+                                {{ formatCurrency(calculateInstallmentAmount(selectedLoan)) }}
                               </div>
                             </div>
                           </div>
-                          
+
                           <div class="col-md-6">
                             <div class="mb-3">
-                              <label for="metodePembayaran" class="form-label">Metode Pembayaran *</label>
-                              <select 
-                                id="metodePembayaran" 
-                                class="form-select" 
+                              <label for="metodePembayaran" class="form-label"
+                                >Metode Pembayaran *</label
+                              >
+                              <select
+                                id="metodePembayaran"
+                                class="form-select"
                                 v-model="paymentForm.metode_pembayaran"
                                 required
                               >
-                                <option v-for="method in paymentMethods" :key="method.value" :value="method.value">
+                                <option
+                                  v-for="method in paymentMethods"
+                                  :key="method.value"
+                                  :value="method.value"
+                                >
                                   {{ method.label }}
                                 </option>
                               </select>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div class="row">
                           <div class="col-md-6">
                             <div class="mb-3">
                               <label for="nomorReferensi" class="form-label">Nomor Referensi</label>
-                              <input 
-                                type="text" 
-                                class="form-control" 
-                                id="nomorReferensi" 
+                              <input
+                                type="text"
+                                class="form-control"
+                                id="nomorReferensi"
                                 v-model="paymentForm.nomor_referensi"
                                 placeholder="No. transaksi/referensi"
-                              >
+                              />
                               <div class="form-text">
                                 Nomor transaksi bank atau referensi pembayaran
                               </div>
                             </div>
                           </div>
-                          
+
                           <div class="col-md-6">
                             <div class="mb-3">
                               <label for="buktiTransfer" class="form-label">Bukti Transfer</label>
-                              <input 
-                                type="file" 
-                                class="form-control" 
-                                id="buktiTransfer" 
+                              <input
+                                type="file"
+                                class="form-control"
+                                id="buktiTransfer"
                                 @change="handleFileUpload"
                                 accept="image/*,.pdf"
-                              >
+                              />
                               <div class="form-text">
                                 Upload bukti transfer/pembayaran (JPG, PNG, PDF - Max 5MB)
                               </div>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div class="mb-3">
                           <label for="keterangan" class="form-label">Keterangan</label>
-                          <textarea 
-                            class="form-control" 
-                            id="keterangan" 
+                          <textarea
+                            class="form-control"
+                            id="keterangan"
                             v-model="paymentForm.keterangan"
                             rows="3"
                             placeholder="Keterangan tambahan (opsional)"
                           ></textarea>
                         </div>
-                        
+
                         <div class="d-flex gap-2">
-                          <button 
-                            type="submit" 
-                            class="btn btn-primary" 
-                            :disabled="isLoading"
-                          >
-                            <span v-if="isLoading" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                          <button type="submit" class="btn btn-primary" :disabled="isLoading">
+                            <span
+                              v-if="isLoading"
+                              class="spinner-border spinner-border-sm me-2"
+                              role="status"
+                            ></span>
                             <i v-else class="bi bi-send me-2"></i>
                             Input Pembayaran
                           </button>
-                          
-                          <button 
-                            type="button" 
-                            class="btn btn-outline-secondary" 
+
+                          <button
+                            type="button"
+                            class="btn btn-outline-secondary"
                             @click="resetForm"
                           >
                             <i class="bi bi-arrow-clockwise me-2"></i>
@@ -393,50 +431,56 @@ const calculateInstallmentAmount = (loan: any) => {
                     </div>
                   </form>
                 </div>
-                
+
                 <div class="col-md-4">
                   <div class="card" v-if="selectedLoan">
                     <div class="card-header">
-                      <h5 class="mb-0">
-                        <i class="bi bi-info-circle me-2"></i>Detail Pinjaman
-                      </h5>
+                      <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Detail Pinjaman</h5>
                     </div>
                     <div class="card-body">
                       <dl class="row">
                         <dt class="col-sm-6">Jenis Pinjaman:</dt>
                         <dd class="col-sm-6">{{ selectedLoan.jenis_pinjaman }}</dd>
-                        
+
                         <dt class="col-sm-6">Jumlah Pinjaman:</dt>
                         <dd class="col-sm-6">{{ formatCurrency(selectedLoan.jumlah_pinjaman) }}</dd>
-                        
+
                         <dt class="col-sm-6">Bunga Total:</dt>
                         <dd class="col-sm-6">{{ formatCurrency(selectedLoan.bunga_total) }}</dd>
-                        
+
                         <dt class="col-sm-6">Total Harus Dibayar:</dt>
                         <dd class="col-sm-6 text-primary">
-                          <strong>{{ formatCurrency(selectedLoan.jumlah_pinjaman + selectedLoan.bunga_total) }}</strong>
+                          <strong>{{
+                            formatCurrency(selectedLoan.jumlah_pinjaman + selectedLoan.bunga_total)
+                          }}</strong>
                         </dd>
-                        
+
                         <dt class="col-sm-6">Sudah Dibayar:</dt>
-                        <dd class="col-sm-6 text-success">{{ formatCurrency(selectedLoan.total_dibayar || 0) }}</dd>
-                        
+                        <dd class="col-sm-6 text-success">
+                          {{ formatCurrency(selectedLoan.total_dibayar || 0) }}
+                        </dd>
+
                         <dt class="col-sm-6">Sisa Tagihan:</dt>
                         <dd class="col-sm-6 text-danger">
-                          <strong>{{ formatCurrency(calculateRemainingBalance(selectedLoan)) }}</strong>
+                          <strong>{{
+                            formatCurrency(calculateRemainingBalance(selectedLoan))
+                          }}</strong>
                         </dd>
-                        
+
                         <dt class="col-sm-6">Tenor:</dt>
                         <dd class="col-sm-6">{{ selectedLoan.tenor_bulan }} bulan</dd>
-                        
+
                         <dt class="col-sm-6">Angsuran/Bulan:</dt>
-                        <dd class="col-sm-6">{{ formatCurrency(calculateInstallmentAmount(selectedLoan)) }}</dd>
-                        
+                        <dd class="col-sm-6">
+                          {{ formatCurrency(calculateInstallmentAmount(selectedLoan)) }}
+                        </dd>
+
                         <dt class="col-sm-6">Jatuh Tempo:</dt>
                         <dd class="col-sm-6">{{ formatDate(selectedLoan.tanggal_jatuh_tempo) }}</dd>
                       </dl>
                     </div>
                   </div>
-                  
+
                   <div class="card mt-3">
                     <div class="card-body">
                       <h6 class="card-title">
@@ -453,7 +497,7 @@ const calculateInstallmentAmount = (loan: any) => {
                 </div>
               </div>
             </div>
-            
+
             <!-- Payment History Tab -->
             <div v-show="activeTab === 'history'" class="tab-pane">
               <div class="table-responsive">
@@ -490,21 +534,30 @@ const calculateInstallmentAmount = (loan: any) => {
                       </td>
                       <td>{{ payment.nomor_referensi || '-' }}</td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-success': payment.status === 'diverifikasi',
-                          'bg-warning text-dark': payment.status === 'menunggu',
-                          'bg-danger': payment.status === 'ditolak'
-                        }">
-                          {{ payment.status === 'diverifikasi' ? 'Diverifikasi' : 
-                            payment.status === 'menunggu' ? 'Menunggu' : 'Ditolak' }}
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-success': payment.status === 'diverifikasi',
+                            'bg-warning text-dark': payment.status === 'menunggu',
+                            'bg-danger': payment.status === 'ditolak',
+                          }"
+                        >
+                          {{
+                            payment.status === 'diverifikasi'
+                              ? 'Diverifikasi'
+                              : payment.status === 'menunggu'
+                                ? 'Menunggu'
+                                : 'Ditolak'
+                          }}
                         </span>
                       </td>
                       <td>
-                        <a v-if="payment.bukti_transfer" 
-                           :href="payment.bukti_transfer" 
-                           target="_blank" 
-                           class="btn btn-sm btn-outline-primary">
+                        <a
+                          v-if="payment.bukti_transfer"
+                          :href="payment.bukti_transfer"
+                          target="_blank"
+                          class="btn btn-sm btn-outline-primary"
+                        >
                           <i class="bi bi-eye"></i>
                         </a>
                         <span v-else class="text-muted">-</span>
@@ -513,16 +566,20 @@ const calculateInstallmentAmount = (loan: any) => {
                   </tbody>
                 </table>
               </div>
-              
+
               <!-- Pagination -->
               <nav v-if="totalPages > 1" aria-label="Pagination">
                 <ul class="pagination justify-content-center">
                   <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="handlePageChange(currentPage - 1)">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="handlePageChange(currentPage - 1)"
+                    >
                       &laquo; Sebelumnya
                     </a>
                   </li>
-                  
+
                   <template v-for="page in totalPages" :key="page">
                     <li class="page-item" :class="{ active: currentPage === page }">
                       <a class="page-link" href="#" @click.prevent="handlePageChange(page)">
@@ -530,9 +587,13 @@ const calculateInstallmentAmount = (loan: any) => {
                       </a>
                     </li>
                   </template>
-                  
+
                   <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" href="#" @click.prevent="handlePageChange(currentPage + 1)">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="handlePageChange(currentPage + 1)"
+                    >
                       Selanjutnya &raquo;
                     </a>
                   </li>

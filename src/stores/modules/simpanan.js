@@ -7,7 +7,7 @@ export const useSimpananStore = defineStore('simpanan', {
       pokok: 0,
       wajib: 0,
       sukarela: 0,
-      total: 0
+      total: 0,
     },
     riwayatSimpanan: [],
     isLoading: false,
@@ -20,46 +20,46 @@ export const useSimpananStore = defineStore('simpanan', {
     filterType: 'semua',
     dateRange: {
       start: null,
-      end: null
-    }
+      end: null,
+    },
   }),
-  
+
   getters: {
     formattedSimpanan: (state) => {
       return {
         pokok: new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
-          maximumFractionDigits: 0
+          maximumFractionDigits: 0,
         }).format(state.simpanan.pokok),
         wajib: new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
-          maximumFractionDigits: 0
+          maximumFractionDigits: 0,
         }).format(state.simpanan.wajib),
         sukarela: new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
-          maximumFractionDigits: 0
+          maximumFractionDigits: 0,
         }).format(state.simpanan.sukarela),
         total: new Intl.NumberFormat('id-ID', {
           style: 'currency',
           currency: 'IDR',
-          maximumFractionDigits: 0
-        }).format(state.simpanan.total)
+          maximumFractionDigits: 0,
+        }).format(state.simpanan.total),
       }
     },
-    
+
     availableBalance: (state) => {
       return state.simpanan.sukarela
-    }
+    },
   },
-  
+
   actions: {
     async fetchSimpananSummary() {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const response = await simpananApi.getSimpananSummary()
         this.simpanan = response.data
@@ -70,20 +70,20 @@ export const useSimpananStore = defineStore('simpanan', {
         this.isLoading = false
       }
     },
-    
+
     async fetchRiwayatSimpanan() {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const params = {
           page: this.currentPage,
           limit: this.pageSize,
           jenis: this.filterType !== 'semua' ? this.filterType : undefined,
           startDate: this.dateRange.start,
-          endDate: this.dateRange.end
+          endDate: this.dateRange.end,
         }
-        
+
         const response = await simpananApi.getRiwayatSimpanan(params)
         this.riwayatSimpanan = response.data.simpanan
         this.totalItems = response.data.totalItems
@@ -95,16 +95,16 @@ export const useSimpananStore = defineStore('simpanan', {
         this.isLoading = false
       }
     },
-    
+
     async setorSimpananSukarela(data) {
       this.isLoading = true
       this.error = null
       this.successMessage = ''
-      
+
       try {
         await simpananApi.setorSimpananSukarela(data)
         this.successMessage = 'Penyetoran simpanan sukarela berhasil. Menunggu verifikasi pengurus.'
-        
+
         // Refresh data
         await this.fetchSimpananSummary()
         await this.fetchRiwayatSimpanan()
@@ -117,16 +117,17 @@ export const useSimpananStore = defineStore('simpanan', {
         this.isLoading = false
       }
     },
-    
+
     async tarikSimpananSukarela(data) {
       this.isLoading = true
       this.error = null
       this.successMessage = ''
-      
+
       try {
         await simpananApi.tarikSimpananSukarela(data)
-        this.successMessage = 'Permintaan penarikan simpanan sukarela berhasil. Menunggu verifikasi pengurus.'
-        
+        this.successMessage =
+          'Permintaan penarikan simpanan sukarela berhasil. Menunggu verifikasi pengurus.'
+
         // Refresh data
         await this.fetchSimpananSummary()
         await this.fetchRiwayatSimpanan()
@@ -139,20 +140,20 @@ export const useSimpananStore = defineStore('simpanan', {
         this.isLoading = false
       }
     },
-    
+
     async exportSimpanan(format) {
       this.isLoading = true
       this.error = null
-      
+
       try {
         const params = {
           jenis: this.filterType !== 'semua' ? this.filterType : undefined,
           startDate: this.dateRange.start,
-          endDate: this.dateRange.end
+          endDate: this.dateRange.end,
         }
-        
+
         const response = await simpananApi.exportSimpananReport(format, params)
-        
+
         // Create download link
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
@@ -162,7 +163,7 @@ export const useSimpananStore = defineStore('simpanan', {
         link.click()
         link.remove()
         window.URL.revokeObjectURL(url)
-        
+
         this.successMessage = `Laporan ${format.toUpperCase()} berhasil diunduh`
         return true
       } catch (error) {
@@ -173,28 +174,28 @@ export const useSimpananStore = defineStore('simpanan', {
         this.isLoading = false
       }
     },
-    
+
     setFilter(filterType) {
       this.filterType = filterType
       this.currentPage = 1
       this.fetchRiwayatSimpanan()
     },
-    
+
     setDateRange(startDate, endDate) {
       this.dateRange.start = startDate
       this.dateRange.end = endDate
       this.currentPage = 1
       this.fetchRiwayatSimpanan()
     },
-    
+
     setPage(page) {
       this.currentPage = page
       this.fetchRiwayatSimpanan()
     },
-    
+
     clearMessages() {
       this.error = null
       this.successMessage = ''
-    }
-  }
+    },
+  },
 })

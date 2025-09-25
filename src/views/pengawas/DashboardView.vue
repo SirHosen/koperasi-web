@@ -63,7 +63,7 @@ const financialOverview = ref<FinancialOverview>({
   current_year: new Date().getFullYear(),
   savings: [],
   loans: [],
-  cash_flow: []
+  cash_flow: [],
 })
 
 const complianceMetrics = ref<ComplianceMetric[]>([])
@@ -97,7 +97,7 @@ const months = [
   { value: '9', label: 'September' },
   { value: '10', label: 'Oktober' },
   { value: '11', label: 'November' },
-  { value: '12', label: 'Desember' }
+  { value: '12', label: 'Desember' },
 ]
 
 onMounted(async () => {
@@ -111,24 +111,24 @@ onMounted(async () => {
 async function loadFinancialOverview() {
   await handleAsync(async () => {
     const params = new URLSearchParams({
-      year: selectedYear.value.toString()
+      year: selectedYear.value.toString(),
     })
-    
+
     if (selectedMonth.value) {
       params.append('month', selectedMonth.value)
     }
-    
+
     const response = await fetch(`/api/pengawas/oversight/financial?${params}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch financial overview')
-    
+
     const result = await response.json()
     financialOverview.value = result.data
-    
+
     renderCharts()
   }, 'Gagal memuat data keuangan')
 }
@@ -138,12 +138,12 @@ async function loadComplianceMetrics() {
   await handleAsync(async () => {
     const response = await fetch('/api/pengawas/compliance/monitoring', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch compliance metrics')
-    
+
     const result = await response.json()
     complianceMetrics.value = result.data
   }, 'Gagal memuat data kepatuhan')
@@ -154,12 +154,12 @@ async function loadAuditReports() {
   await handleAsync(async () => {
     const response = await fetch('/api/pengawas/audit/reports?limit=5', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch audit reports')
-    
+
     const result = await response.json()
     auditReports.value = result.data
   }, 'Gagal memuat laporan audit')
@@ -170,12 +170,12 @@ async function loadRecommendations() {
   await handleAsync(async () => {
     const response = await fetch('/api/pengawas/recommendations?limit=5', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch recommendations')
-    
+
     const result = await response.json()
     recommendations.value = result.data
   }, 'Gagal memuat rekomendasi')
@@ -191,26 +191,32 @@ function renderCharts() {
 function renderSavingsChart() {
   if (savingsChart) savingsChart.destroy()
   if (!savingsChartCanvas.value) return
-  
+
   const ctx = savingsChartCanvas.value.getContext('2d')
   if (!ctx) return
-  
-  const labels = financialOverview.value.savings.map((item: SavingOverview) => 
-    item.jenis.charAt(0).toUpperCase() + item.jenis.slice(1)
+
+  const labels = financialOverview.value.savings.map(
+    (item: SavingOverview) => item.jenis.charAt(0).toUpperCase() + item.jenis.slice(1),
   )
   const data = financialOverview.value.savings.map((item: SavingOverview) => item.total_setor)
-  
+
   savingsChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
-      datasets: [{
-        label: 'Total Setoran',
-        data,
-        backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)', 'rgba(255, 206, 86, 0.8)'],
-        borderColor: ['rgba(54, 162, 235, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)'],
-        borderWidth: 1
-      }]
+      datasets: [
+        {
+          label: 'Total Setoran',
+          data,
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+          ],
+          borderColor: ['rgba(54, 162, 235, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 206, 86, 1)'],
+          borderWidth: 1,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -218,39 +224,42 @@ function renderSavingsChart() {
       plugins: {
         title: {
           display: true,
-          text: 'Total Setoran Simpanan'
-        }
-      }
-    }
+          text: 'Total Setoran Simpanan',
+        },
+      },
+    },
   })
 }
 
 function renderLoansChart() {
   if (loansChart) loansChart.destroy()
   if (!loansChartCanvas.value) return
-  
+
   const ctx = loansChartCanvas.value.getContext('2d')
   if (!ctx) return
-  
-  const labels = financialOverview.value.loans.map((item: LoanOverview) => 
-    item.status_pinjaman.charAt(0).toUpperCase() + item.status_pinjaman.slice(1)
+
+  const labels = financialOverview.value.loans.map(
+    (item: LoanOverview) =>
+      item.status_pinjaman.charAt(0).toUpperCase() + item.status_pinjaman.slice(1),
   )
   const data = financialOverview.value.loans.map((item: LoanOverview) => item.jumlah)
-  
+
   loansChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels,
-      datasets: [{
-        data,
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.8)',
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 205, 86, 0.8)',
-          'rgba(75, 192, 192, 0.8)',
-          'rgba(153, 102, 255, 0.8)'
-        ]
-      }]
+      datasets: [
+        {
+          data,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+          ],
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -258,36 +267,38 @@ function renderLoansChart() {
       plugins: {
         title: {
           display: true,
-          text: 'Status Pinjaman'
-        }
-      }
-    }
+          text: 'Status Pinjaman',
+        },
+      },
+    },
   })
 }
 
 function renderCashFlowChart() {
   if (cashFlowChart) cashFlowChart.destroy()
   if (!cashFlowChartCanvas.value) return
-  
+
   const ctx = cashFlowChartCanvas.value.getContext('2d')
   if (!ctx) return
-  
-  const labels = financialOverview.value.cash_flow.map((item: CashFlowOverview) => 
-    item.jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar'
+
+  const labels = financialOverview.value.cash_flow.map((item: CashFlowOverview) =>
+    item.jenis === 'masuk' ? 'Kas Masuk' : 'Kas Keluar',
   )
   const data = financialOverview.value.cash_flow.map((item: CashFlowOverview) => item.total)
-  
+
   cashFlowChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels,
-      datasets: [{
-        label: 'Jumlah (Rp)',
-        data,
-        backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
-        borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
-        borderWidth: 1
-      }]
+      datasets: [
+        {
+          label: 'Jumlah (Rp)',
+          data,
+          backgroundColor: ['rgba(75, 192, 192, 0.8)', 'rgba(255, 99, 132, 0.8)'],
+          borderColor: ['rgba(75, 192, 192, 1)', 'rgba(255, 99, 132, 1)'],
+          borderWidth: 1,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -295,10 +306,10 @@ function renderCashFlowChart() {
       plugins: {
         title: {
           display: true,
-          text: 'Arus Kas'
-        }
-      }
-    }
+          text: 'Arus Kas',
+        },
+      },
+    },
   })
 }
 
@@ -321,7 +332,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -331,9 +342,17 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
     case 'loan_approval_time':
       return metric.value <= 3 ? 'text-success' : metric.value <= 7 ? 'text-warning' : 'text-danger'
     case 'pending_verifications':
-      return metric.value === 0 ? 'text-success' : metric.value <= 5 ? 'text-warning' : 'text-danger'
+      return metric.value === 0
+        ? 'text-success'
+        : metric.value <= 5
+          ? 'text-warning'
+          : 'text-danger'
     case 'overdue_loans':
-      return metric.value === 0 ? 'text-success' : metric.value <= 3 ? 'text-warning' : 'text-danger'
+      return metric.value === 0
+        ? 'text-success'
+        : metric.value <= 3
+          ? 'text-warning'
+          : 'text-danger'
     default:
       return 'text-primary'
   }
@@ -348,20 +367,29 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
           <i class="bi bi-shield-check me-2"></i>
           Dashboard Pengawas
         </h1>
-        
+
         <!-- Error Messages -->
-        <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div
+          v-if="errorMessage"
+          class="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
           <i class="bi bi-exclamation-triangle me-2"></i>
           {{ errorMessage }}
-          <button type="button" class="btn-close" @click="errorMessage = ''" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="errorMessage = ''"
+            aria-label="Close"
+          ></button>
         </div>
-        
+
         <!-- Navigation Tabs -->
         <div class="card">
           <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'overview' }]"
                   @click="activeTab = 'overview'"
                   type="button"
@@ -370,7 +398,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'compliance' }]"
                   @click="activeTab = 'compliance'"
                   type="button"
@@ -379,7 +407,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'audit' }]"
                   @click="activeTab = 'audit'"
                   type="button"
@@ -388,7 +416,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'recommendations' }]"
                   @click="activeTab = 'recommendations'"
                   type="button"
@@ -398,31 +426,37 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
               </li>
             </ul>
           </div>
-          
+
           <div class="card-body">
             <!-- Financial Overview Tab -->
             <div v-show="activeTab === 'overview'" class="tab-pane">
               <div class="row mb-3">
                 <div class="col-md-3">
                   <label for="yearSelect" class="form-label">Tahun:</label>
-                  <select 
-                    id="yearSelect" 
-                    class="form-select" 
-                    v-model="selectedYear" 
+                  <select
+                    id="yearSelect"
+                    class="form-select"
+                    v-model="selectedYear"
                     @change="handleFilterChange"
                   >
-                    <option :value="new Date().getFullYear()">{{ new Date().getFullYear() }}</option>
-                    <option :value="new Date().getFullYear() - 1">{{ new Date().getFullYear() - 1 }}</option>
-                    <option :value="new Date().getFullYear() - 2">{{ new Date().getFullYear() - 2 }}</option>
+                    <option :value="new Date().getFullYear()">
+                      {{ new Date().getFullYear() }}
+                    </option>
+                    <option :value="new Date().getFullYear() - 1">
+                      {{ new Date().getFullYear() - 1 }}
+                    </option>
+                    <option :value="new Date().getFullYear() - 2">
+                      {{ new Date().getFullYear() - 2 }}
+                    </option>
                   </select>
                 </div>
-                
+
                 <div class="col-md-3">
                   <label for="monthSelect" class="form-label">Bulan:</label>
-                  <select 
-                    id="monthSelect" 
-                    class="form-select" 
-                    v-model="selectedMonth" 
+                  <select
+                    id="monthSelect"
+                    class="form-select"
+                    v-model="selectedMonth"
                     @change="handleFilterChange"
                   >
                     <option v-for="month in months" :key="month.value" :value="month.value">
@@ -431,42 +465,42 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                   </select>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-4">
                   <div class="card mb-3">
                     <div class="card-body">
                       <h5 class="card-title">Simpanan</h5>
-                      <div style="height: 250px; position: relative;">
+                      <div style="height: 250px; position: relative">
                         <canvas ref="savingsChartCanvas"></canvas>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="col-md-4">
                   <div class="card mb-3">
                     <div class="card-body">
                       <h5 class="card-title">Pinjaman</h5>
-                      <div style="height: 250px; position: relative;">
+                      <div style="height: 250px; position: relative">
                         <canvas ref="loansChartCanvas"></canvas>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="col-md-4">
                   <div class="card mb-3">
                     <div class="card-body">
                       <h5 class="card-title">Arus Kas</h5>
-                      <div style="height: 250px; position: relative;">
+                      <div style="height: 250px; position: relative">
                         <canvas ref="cashFlowChartCanvas"></canvas>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Detailed Tables -->
               <div class="row">
                 <div class="col-md-6">
@@ -487,7 +521,9 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                           </thead>
                           <tbody>
                             <tr v-for="saving in financialOverview.savings" :key="saving.jenis">
-                              <td>{{ saving.jenis.charAt(0).toUpperCase() + saving.jenis.slice(1) }}</td>
+                              <td>
+                                {{ saving.jenis.charAt(0).toUpperCase() + saving.jenis.slice(1) }}
+                              </td>
                               <td class="text-success">{{ formatCurrency(saving.total_setor) }}</td>
                               <td class="text-danger">{{ formatCurrency(saving.total_tarik) }}</td>
                               <td>{{ saving.jumlah_transaksi }}</td>
@@ -498,7 +534,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="col-md-6">
                   <div class="card">
                     <div class="card-header">
@@ -518,13 +554,15 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                           <tbody>
                             <tr v-for="loan in financialOverview.loans" :key="loan.status_pinjaman">
                               <td>
-                                <span :class="{
-                                  'badge rounded-pill': true,
-                                  'bg-warning': loan.status_pinjaman === 'menunggu',
-                                  'bg-success': loan.status_pinjaman === 'disetujui',
-                                  'bg-primary': loan.status_pinjaman === 'aktif',
-                                  'bg-secondary': loan.status_pinjaman === 'lunas'
-                                }">
+                                <span
+                                  :class="{
+                                    'badge rounded-pill': true,
+                                    'bg-warning': loan.status_pinjaman === 'menunggu',
+                                    'bg-success': loan.status_pinjaman === 'disetujui',
+                                    'bg-primary': loan.status_pinjaman === 'aktif',
+                                    'bg-secondary': loan.status_pinjaman === 'lunas',
+                                  }"
+                                >
                                   {{ loan.status_pinjaman }}
                                 </span>
                               </td>
@@ -540,21 +578,29 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                 </div>
               </div>
             </div>
-            
+
             <!-- Compliance Monitoring Tab -->
             <div v-show="activeTab === 'compliance'" class="tab-pane">
               <div class="row">
-                <div v-for="metric in complianceMetrics" :key="metric.metric" class="col-md-6 col-lg-3">
+                <div
+                  v-for="metric in complianceMetrics"
+                  :key="metric.metric"
+                  class="col-md-6 col-lg-3"
+                >
                   <div class="card mb-3">
                     <div class="card-body text-center">
-                      <i class="bi bi-speedometer2 mb-2" style="font-size: 2rem;" :class="getMetricColorClass(metric)"></i>
+                      <i
+                        class="bi bi-speedometer2 mb-2"
+                        style="font-size: 2rem"
+                        :class="getMetricColorClass(metric)"
+                      ></i>
                       <h5 :class="getMetricColorClass(metric)">{{ metric.value }}</h5>
                       <p class="card-text text-muted small">{{ metric.description }}</p>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <div class="card">
                 <div class="card-header">
                   <h5 class="mb-0">
@@ -566,15 +612,23 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                   <div class="alert alert-info">
                     <h6 class="alert-heading">Panduan Interpretasi:</h6>
                     <ul class="mb-0">
-                      <li><span class="badge bg-success me-2">Hijau</span> Baik - Sesuai standar</li>
-                      <li><span class="badge bg-warning me-2">Kuning</span> Perhatian - Perlu monitoring</li>
-                      <li><span class="badge bg-danger me-2">Merah</span> Kritis - Perlu tindakan segera</li>
+                      <li>
+                        <span class="badge bg-success me-2">Hijau</span> Baik - Sesuai standar
+                      </li>
+                      <li>
+                        <span class="badge bg-warning me-2">Kuning</span> Perhatian - Perlu
+                        monitoring
+                      </li>
+                      <li>
+                        <span class="badge bg-danger me-2">Merah</span> Kritis - Perlu tindakan
+                        segera
+                      </li>
                     </ul>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- Audit Reports Tab -->
             <div v-show="activeTab === 'audit'" class="tab-pane">
               <div class="table-responsive">
@@ -608,11 +662,13 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                         <span class="badge bg-info">{{ report.jenis_audit }}</span>
                       </td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-secondary': report.status_audit === 'draft',
-                          'bg-success': report.status_audit === 'final'
-                        }">
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-secondary': report.status_audit === 'draft',
+                            'bg-success': report.status_audit === 'final',
+                          }"
+                        >
                           {{ report.status_audit }}
                         </span>
                       </td>
@@ -623,7 +679,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                 </table>
               </div>
             </div>
-            
+
             <!-- Recommendations Tab -->
             <div v-show="activeTab === 'recommendations'" class="tab-pane">
               <div class="table-responsive">
@@ -646,9 +702,7 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                       </td>
                     </tr>
                     <tr v-else-if="recommendations.length === 0">
-                      <td colspan="6" class="text-center py-4 text-muted">
-                        Belum ada rekomendasi
-                      </td>
+                      <td colspan="6" class="text-center py-4 text-muted">Belum ada rekomendasi</td>
                     </tr>
                     <tr v-else v-for="rec in recommendations" :key="rec.id">
                       <td>{{ formatDate(rec.created_at) }}</td>
@@ -656,24 +710,28 @@ const getMetricColorClass = (metric: ComplianceMetric) => {
                         <span class="badge bg-secondary">{{ rec.category }}</span>
                       </td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-danger': rec.priority === 'tinggi',
-                          'bg-warning text-dark': rec.priority === 'sedang',
-                          'bg-info': rec.priority === 'rendah'
-                        }">
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-danger': rec.priority === 'tinggi',
+                            'bg-warning text-dark': rec.priority === 'sedang',
+                            'bg-info': rec.priority === 'rendah',
+                          }"
+                        >
                           {{ rec.priority }}
                         </span>
                       </td>
                       <td>{{ rec.description }}</td>
                       <td>{{ formatDate(rec.target_date) }}</td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-success': rec.status === 'completed',
-                          'bg-primary': rec.status === 'active',
-                          'bg-secondary': rec.status === 'pending'
-                        }">
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-success': rec.status === 'completed',
+                            'bg-primary': rec.status === 'active',
+                            'bg-secondary': rec.status === 'pending',
+                          }"
+                        >
                           {{ rec.status }}
                         </span>
                       </td>

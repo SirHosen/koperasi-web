@@ -20,15 +20,15 @@ const menuItems = computed(() => {
     items.push(
       { label: 'Dashboard', icon: 'dashboard', route: '/anggota/dashboard' },
       { label: 'Simpanan', icon: 'savings', route: '/anggota/simpanan' },
-      { 
-        label: 'Pinjaman', 
-        icon: 'money', 
+      {
+        label: 'Pinjaman',
+        icon: 'money',
         submenu: [
           { label: 'Ajukan Pinjaman', route: '/anggota/pinjaman/ajukan' },
           { label: 'Status Pinjaman', route: '/anggota/pinjaman/status' },
           { label: 'Status Dokumen', route: '/anggota/pinjaman/dokumen' },
-          { label: 'Bayar Pinjaman', route: '/anggota/pinjaman/bayar' }
-        ]
+          { label: 'Bayar Pinjaman', route: '/anggota/pinjaman/bayar' },
+        ],
       },
       { label: 'SHU', icon: 'calculate', route: '/anggota/shu' },
       { label: 'Profil', icon: 'person', route: '/anggota/profil' },
@@ -93,7 +93,12 @@ const logout = async () => {
         <div class="user-actions">
           <NotificationBell />
           <div class="user-profile dropdown">
-            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <button
+              class="dropdown-toggle"
+              type="button"
+              data-bs-toggle="dropdown"
+              aria-expanded="false"
+            >
               <i class="bi bi-person-circle me-2"></i>
               {{ authStore.user?.name || 'User' }}
               <i class="bi bi-chevron-down ms-1"></i>
@@ -104,7 +109,7 @@ const logout = async () => {
                   <i class="bi bi-person me-2"></i>Profil & Pengaturan
                 </router-link>
               </li>
-              <li><hr class="dropdown-divider"></li>
+              <li><hr class="dropdown-divider" /></li>
               <li>
                 <button class="dropdown-item" @click="logout">
                   <i class="bi bi-box-arrow-right me-2"></i>Logout
@@ -131,19 +136,23 @@ const logout = async () => {
               <span class="icon">{{ item.icon }}</span>
               <span class="label">{{ item.label }}</span>
             </router-link>
-            
+
             <!-- Menu with submenu -->
             <div v-else class="nav-dropdown">
-              <button 
-                class="nav-link dropdown-toggle" 
-                :class="{ active: item.submenu.some(sub => currentRoute.startsWith(sub.route.split('/').slice(0, -1).join('/'))) }"
+              <button
+                class="nav-link dropdown-toggle"
+                :class="{
+                  active: item.submenu.some((sub) =>
+                    currentRoute.startsWith(sub.route.split('/').slice(0, -1).join('/')),
+                  ),
+                }"
                 @click="toggleSubmenu(index)"
               >
                 <span class="icon">{{ item.icon }}</span>
                 <span class="label">{{ item.label }}</span>
                 <span class="arrow" :class="{ open: openSubmenus.includes(index) }">▼</span>
               </button>
-              
+
               <div class="submenu" :class="{ open: openSubmenus.includes(index) }">
                 <router-link
                   v-for="(subitem, subindex) in item.submenu"
@@ -407,7 +416,7 @@ const logout = async () => {
 }
 
 .submenu-link.active {
-  color: #4CAF50;
+  color: #4caf50;
   background-color: rgba(76, 175, 80, 0.1);
 }
 </style>

@@ -3,7 +3,13 @@ import { ref, onMounted } from 'vue'
 import { useErrorHandler } from '@/lib/errorHandler'
 import Chart from 'chart.js/auto'
 
-const { handleAsync, error: errorMessage, loading: isLoading, success: successMessage, showSuccess } = useErrorHandler()
+const {
+  handleAsync,
+  error: errorMessage,
+  loading: isLoading,
+  success: successMessage,
+  showSuccess,
+} = useErrorHandler()
 
 // Data
 const currentYear = new Date().getFullYear()
@@ -16,14 +22,14 @@ const shuSummary = ref({
   shu: {
     jasa_modal: 0,
     jasa_anggota: 0,
-    total_shu: 0
+    total_shu: 0,
   },
   member_contribution: {
     simpanan_pokok: 0,
     simpanan_wajib: 0,
     simpanan_sukarela: 0,
-    jumlah_transaksi_pinjaman: 0
-  }
+    jumlah_transaksi_pinjaman: 0,
+  },
 })
 
 // SHU History
@@ -44,7 +50,7 @@ onMounted(async () => {
   for (let i = 0; i < 5; i++) {
     availableYears.value.push(currentYear - i)
   }
-  
+
   await loadShuSummary()
   await loadShuHistory()
 })
@@ -54,15 +60,15 @@ async function loadShuSummary() {
   await handleAsync(async () => {
     const response = await fetch(`/api/shu/summary/1?year=${selectedYear.value}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
+
     if (!response.ok) throw new Error('Failed to fetch SHU summary')
-    
+
     const result = await response.json()
     shuSummary.value = result.data
-    
+
     renderShuChart()
   }, 'Gagal memuat ringkasan SHU')
 }
@@ -72,21 +78,21 @@ async function loadShuHistory(page = 1) {
   await handleAsync(async () => {
     const params = new URLSearchParams({
       page: page.toString(),
-      limit: '10'
+      limit: '10',
     })
-    
+
     if (filterYear.value) {
       params.append('year', filterYear.value)
     }
-    
+
     const response = await fetch(`/api/shu/history/1?${params}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('token')}`
-      }
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
     })
-    
-    if (!response.ok) throw new Error('Failed to fetch SHU history') 
-    
+
+    if (!response.ok) throw new Error('Failed to fetch SHU history')
+
     const result = await response.json()
     shuHistory.value = result.data
     currentPage.value = result.pagination.currentPage
@@ -99,26 +105,25 @@ function renderShuChart() {
   if (shuChart) {
     shuChart.destroy()
   }
-  
+
   if (!shuChartCanvas.value) return
-  
+
   const ctx = shuChartCanvas.value.getContext('2d')
   if (!ctx) return
-  
+
   const { jasa_modal, jasa_anggota } = shuSummary.value.shu
-  
+
   shuChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
       labels: ['Jasa Modal', 'Jasa Anggota'],
-      datasets: [{
-        data: [jasa_modal, jasa_anggota],
-        backgroundColor: [
-          'rgba(54, 162, 235, 0.8)',
-          'rgba(255, 206, 86, 0.8)'
-        ],
-        borderWidth: 1
-      }]
+      datasets: [
+        {
+          data: [jasa_modal, jasa_anggota],
+          backgroundColor: ['rgba(54, 162, 235, 0.8)', 'rgba(255, 206, 86, 0.8)'],
+          borderWidth: 1,
+        },
+      ],
     },
     options: {
       responsive: true,
@@ -129,10 +134,10 @@ function renderShuChart() {
         },
         title: {
           display: true,
-          text: `Distribusi SHU Tahun ${shuSummary.value.year}`
-        }
-      }
-    }
+          text: `Distribusi SHU Tahun ${shuSummary.value.year}`,
+        },
+      },
+    },
   })
 }
 
@@ -166,7 +171,7 @@ const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
   })
 }
 
@@ -185,26 +190,44 @@ const calculatePercentage = (part: number, total: number) => {
           <i class="bi bi-calculator me-2"></i>
           Sisa Hasil Usaha (SHU)
         </h1>
-        
+
         <!-- Success/Error Messages -->
-        <div v-if="successMessage" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div
+          v-if="successMessage"
+          class="alert alert-success alert-dismissible fade show"
+          role="alert"
+        >
           <i class="bi bi-check-circle me-2"></i>
           {{ successMessage }}
-          <button type="button" class="btn-close" @click="successMessage = ''" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="successMessage = ''"
+            aria-label="Close"
+          ></button>
         </div>
-        
-        <div v-if="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+
+        <div
+          v-if="errorMessage"
+          class="alert alert-danger alert-dismissible fade show"
+          role="alert"
+        >
           <i class="bi bi-exclamation-triangle me-2"></i>
           {{ errorMessage }}
-          <button type="button" class="btn-close" @click="errorMessage = ''" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            @click="errorMessage = ''"
+            aria-label="Close"
+          ></button>
         </div>
-        
+
         <!-- Navigation Tabs -->
         <div class="card">
           <div class="card-header">
             <ul class="nav nav-tabs card-header-tabs" role="tablist">
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'summary' }]"
                   @click="activeTab = 'summary'"
                   type="button"
@@ -213,7 +236,7 @@ const calculatePercentage = (part: number, total: number) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'history' }]"
                   @click="activeTab = 'history'"
                   type="button"
@@ -222,7 +245,7 @@ const calculatePercentage = (part: number, total: number) => {
                 </button>
               </li>
               <li class="nav-item" role="presentation">
-                <button 
+                <button
                   :class="['nav-link', { active: activeTab === 'breakdown' }]"
                   @click="activeTab = 'breakdown'"
                   type="button"
@@ -232,17 +255,17 @@ const calculatePercentage = (part: number, total: number) => {
               </li>
             </ul>
           </div>
-          
+
           <div class="card-body">
             <!-- Summary Tab -->
             <div v-show="activeTab === 'summary'" class="tab-pane">
               <div class="row mb-3">
                 <div class="col-md-3">
                   <label for="yearSelect" class="form-label">Pilih Tahun:</label>
-                  <select 
-                    id="yearSelect" 
-                    class="form-select" 
-                    v-model="selectedYear" 
+                  <select
+                    id="yearSelect"
+                    class="form-select"
+                    v-model="selectedYear"
                     @change="handleYearChange"
                   >
                     <option v-for="year in availableYears" :key="year" :value="year">
@@ -251,7 +274,7 @@ const calculatePercentage = (part: number, total: number) => {
                   </select>
                 </div>
               </div>
-              
+
               <div class="row">
                 <div class="col-md-8">
                   <div class="row">
@@ -265,23 +288,30 @@ const calculatePercentage = (part: number, total: number) => {
                               <small class="opacity-75">Tahun {{ shuSummary.year }}</small>
                             </div>
                             <div class="opacity-75">
-                              <i class="bi bi-currency-dollar" style="font-size: 3rem;"></i>
+                              <i class="bi bi-currency-dollar" style="font-size: 3rem"></i>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                       <div class="row">
                         <div class="col-12">
                           <div class="card mb-2 border-info">
                             <div class="card-body text-center py-3">
-                              <i class="bi bi-bank text-info mb-1" style="font-size: 1.5rem;"></i>
+                              <i class="bi bi-bank text-info mb-1" style="font-size: 1.5rem"></i>
                               <h6 class="card-subtitle mb-1 text-muted">Jasa Modal</h6>
-                              <h5 class="text-info mb-0">{{ formatCurrency(shuSummary.shu.jasa_modal) }}</h5>
+                              <h5 class="text-info mb-0">
+                                {{ formatCurrency(shuSummary.shu.jasa_modal) }}
+                              </h5>
                               <small class="text-muted">
-                                {{ calculatePercentage(shuSummary.shu.jasa_modal, shuSummary.shu.total_shu) }}%
+                                {{
+                                  calculatePercentage(
+                                    shuSummary.shu.jasa_modal,
+                                    shuSummary.shu.total_shu,
+                                  )
+                                }}%
                               </small>
                             </div>
                           </div>
@@ -289,11 +319,21 @@ const calculatePercentage = (part: number, total: number) => {
                         <div class="col-12">
                           <div class="card mb-2 border-warning">
                             <div class="card-body text-center py-3">
-                              <i class="bi bi-people text-warning mb-1" style="font-size: 1.5rem;"></i>
+                              <i
+                                class="bi bi-people text-warning mb-1"
+                                style="font-size: 1.5rem"
+                              ></i>
                               <h6 class="card-subtitle mb-1 text-muted">Jasa Anggota</h6>
-                              <h5 class="text-warning mb-0">{{ formatCurrency(shuSummary.shu.jasa_anggota) }}</h5>
+                              <h5 class="text-warning mb-0">
+                                {{ formatCurrency(shuSummary.shu.jasa_anggota) }}
+                              </h5>
                               <small class="text-muted">
-                                {{ calculatePercentage(shuSummary.shu.jasa_anggota, shuSummary.shu.total_shu) }}%
+                                {{
+                                  calculatePercentage(
+                                    shuSummary.shu.jasa_anggota,
+                                    shuSummary.shu.total_shu,
+                                  )
+                                }}%
                               </small>
                             </div>
                           </div>
@@ -301,7 +341,7 @@ const calculatePercentage = (part: number, total: number) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- Member Contribution Summary -->
                   <div class="card">
                     <div class="card-header">
@@ -314,44 +354,56 @@ const calculatePercentage = (part: number, total: number) => {
                       <div class="row">
                         <div class="col-md-3">
                           <div class="text-center">
-                            <i class="bi bi-shield-check text-primary mb-2" style="font-size: 2rem;"></i>
+                            <i
+                              class="bi bi-shield-check text-primary mb-2"
+                              style="font-size: 2rem"
+                            ></i>
                             <h6 class="text-muted">Simpanan Pokok</h6>
-                            <h5 class="text-primary">{{ formatCurrency(shuSummary.member_contribution.simpanan_pokok) }}</h5>
+                            <h5 class="text-primary">
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_pokok) }}
+                            </h5>
                           </div>
                         </div>
                         <div class="col-md-3">
                           <div class="text-center">
-                            <i class="bi bi-calendar-check text-success mb-2" style="font-size: 2rem;"></i>
+                            <i
+                              class="bi bi-calendar-check text-success mb-2"
+                              style="font-size: 2rem"
+                            ></i>
                             <h6 class="text-muted">Simpanan Wajib</h6>
-                            <h5 class="text-success">{{ formatCurrency(shuSummary.member_contribution.simpanan_wajib) }}</h5>
+                            <h5 class="text-success">
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_wajib) }}
+                            </h5>
                           </div>
                         </div>
                         <div class="col-md-3">
                           <div class="text-center">
-                            <i class="bi bi-wallet2 text-warning mb-2" style="font-size: 2rem;"></i>
+                            <i class="bi bi-wallet2 text-warning mb-2" style="font-size: 2rem"></i>
                             <h6 class="text-muted">Simpanan Sukarela</h6>
-                            <h5 class="text-warning">{{ formatCurrency(shuSummary.member_contribution.simpanan_sukarela) }}</h5>
+                            <h5 class="text-warning">
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_sukarela) }}
+                            </h5>
                           </div>
                         </div>
                         <div class="col-md-3">
                           <div class="text-center">
-                            <i class="bi bi-credit-card text-info mb-2" style="font-size: 2rem;"></i>
+                            <i class="bi bi-credit-card text-info mb-2" style="font-size: 2rem"></i>
                             <h6 class="text-muted">Transaksi Pinjaman</h6>
-                            <h5 class="text-info">{{ shuSummary.member_contribution.jumlah_transaksi_pinjaman }}</h5>
+                            <h5 class="text-info">
+                              {{ shuSummary.member_contribution.jumlah_transaksi_pinjaman }}
+                            </h5>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div class="col-md-4">
                   <div class="card">
                     <div class="card-body">
-                      <h5 class="card-title">
-                        <i class="bi bi-pie-chart me-2"></i>Distribusi SHU
-                      </h5>
-                      <div style="height: 300px; position: relative;">
+                      <h5 class="card-title"><i class="bi bi-pie-chart me-2"></i>Distribusi SHU</h5>
+                      <div style="height: 300px; position: relative">
                         <canvas ref="shuChartCanvas"></canvas>
                       </div>
                     </div>
@@ -359,16 +411,16 @@ const calculatePercentage = (part: number, total: number) => {
                 </div>
               </div>
             </div>
-            
+
             <!-- History Tab -->
             <div v-show="activeTab === 'history'" class="tab-pane">
               <div class="row mb-3">
                 <div class="col-md-3">
                   <label for="filterYear" class="form-label">Filter Tahun:</label>
-                  <select 
-                    id="filterYear" 
-                    class="form-select" 
-                    v-model="filterYear" 
+                  <select
+                    id="filterYear"
+                    class="form-select"
+                    v-model="filterYear"
                     @change="handleFilterChange"
                   >
                     <option value="">Semua Tahun</option>
@@ -378,7 +430,7 @@ const calculatePercentage = (part: number, total: number) => {
                   </select>
                 </div>
               </div>
-              
+
               <div class="table-responsive">
                 <table class="table table-striped table-hover">
                   <thead>
@@ -400,30 +452,32 @@ const calculatePercentage = (part: number, total: number) => {
                       </td>
                     </tr>
                     <tr v-else-if="shuHistory.length === 0">
-                      <td colspan="7" class="text-center py-4 text-muted">
-                        Belum ada data SHU
-                      </td>
+                      <td colspan="7" class="text-center py-4 text-muted">Belum ada data SHU</td>
                     </tr>
                     <tr v-else v-for="item in shuHistory" :key="item.id">
                       <td>{{ formatDate(item.tanggal_pembagian) }}</td>
                       <td>{{ item.tahun }}</td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-info': item.jenis === 'jasa_modal',
-                          'bg-warning text-dark': item.jenis === 'jasa_anggota'
-                        }">
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-info': item.jenis === 'jasa_modal',
+                            'bg-warning text-dark': item.jenis === 'jasa_anggota',
+                          }"
+                        >
                           {{ item.jenis === 'jasa_modal' ? 'Jasa Modal' : 'Jasa Anggota' }}
                         </span>
                       </td>
                       <td class="text-success">{{ formatCurrency(item.jumlah) }}</td>
                       <td>{{ item.persentase }}%</td>
                       <td>
-                        <span :class="{
-                          'badge rounded-pill': true,
-                          'bg-success': item.status === 'dibagikan',
-                          'bg-warning text-dark': item.status === 'menunggu'
-                        }">
+                        <span
+                          :class="{
+                            'badge rounded-pill': true,
+                            'bg-success': item.status === 'dibagikan',
+                            'bg-warning text-dark': item.status === 'menunggu',
+                          }"
+                        >
                           {{ item.status === 'dibagikan' ? 'Dibagikan' : 'Menunggu' }}
                         </span>
                       </td>
@@ -432,16 +486,20 @@ const calculatePercentage = (part: number, total: number) => {
                   </tbody>
                 </table>
               </div>
-              
+
               <!-- Pagination -->
               <nav v-if="totalPages > 1" aria-label="Pagination">
                 <ul class="pagination justify-content-center">
                   <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                    <a class="page-link" href="#" @click.prevent="handlePageChange(currentPage - 1)">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="handlePageChange(currentPage - 1)"
+                    >
                       &laquo; Sebelumnya
                     </a>
                   </li>
-                  
+
                   <template v-for="page in totalPages" :key="page">
                     <li class="page-item" :class="{ active: currentPage === page }">
                       <a class="page-link" href="#" @click.prevent="handlePageChange(page)">
@@ -449,16 +507,20 @@ const calculatePercentage = (part: number, total: number) => {
                       </a>
                     </li>
                   </template>
-                  
+
                   <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                    <a class="page-link" href="#" @click.prevent="handlePageChange(currentPage + 1)">
+                    <a
+                      class="page-link"
+                      href="#"
+                      @click.prevent="handlePageChange(currentPage + 1)"
+                    >
                       Selanjutnya &raquo;
                     </a>
                   </li>
                 </ul>
               </nav>
             </div>
-            
+
             <!-- Breakdown Tab -->
             <div v-show="activeTab === 'breakdown'" class="tab-pane">
               <div class="row">
@@ -473,74 +535,85 @@ const calculatePercentage = (part: number, total: number) => {
                     <div class="card-body">
                       <div class="row">
                         <div class="col-md-6">
-                          <h6 class="text-primary">
-                            <i class="bi bi-bank me-1"></i>Jasa Modal
-                          </h6>
+                          <h6 class="text-primary"><i class="bi bi-bank me-1"></i>Jasa Modal</h6>
                           <p class="text-muted">
-                            Jasa modal dihitung berdasarkan proporsi simpanan (pokok, wajib, dan sukarela) 
-                            anggota terhadap total simpanan koperasi.
+                            Jasa modal dihitung berdasarkan proporsi simpanan (pokok, wajib, dan
+                            sukarela) anggota terhadap total simpanan koperasi.
                           </p>
                           <div class="alert alert-info">
                             <small>
-                              <strong>Rumus:</strong><br>
+                              <strong>Rumus:</strong><br />
                               Jasa Modal = (Simpanan Anggota / Total Simpanan) × Total Jasa Modal
                             </small>
                           </div>
-                          
+
                           <h6 class="mt-4">Komponen Simpanan Anda:</h6>
                           <ul class="list-unstyled">
                             <li class="mb-1">
                               <i class="bi bi-shield-check text-primary me-2"></i>
-                              Simpanan Pokok: {{ formatCurrency(shuSummary.member_contribution.simpanan_pokok) }}
+                              Simpanan Pokok:
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_pokok) }}
                             </li>
                             <li class="mb-1">
                               <i class="bi bi-calendar-check text-success me-2"></i>
-                              Simpanan Wajib: {{ formatCurrency(shuSummary.member_contribution.simpanan_wajib) }}
+                              Simpanan Wajib:
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_wajib) }}
                             </li>
                             <li class="mb-1">
                               <i class="bi bi-wallet2 text-warning me-2"></i>
-                              Simpanan Sukarela: {{ formatCurrency(shuSummary.member_contribution.simpanan_sukarela) }}
+                              Simpanan Sukarela:
+                              {{ formatCurrency(shuSummary.member_contribution.simpanan_sukarela) }}
                             </li>
                           </ul>
-                          
+
                           <div class="bg-light p-3 rounded">
-                            <strong>Total Simpanan Anda: 
-                              {{ formatCurrency(
-                                shuSummary.member_contribution.simpanan_pokok + 
-                                shuSummary.member_contribution.simpanan_wajib + 
-                                shuSummary.member_contribution.simpanan_sukarela
-                              ) }}
+                            <strong
+                              >Total Simpanan Anda:
+                              {{
+                                formatCurrency(
+                                  shuSummary.member_contribution.simpanan_pokok +
+                                    shuSummary.member_contribution.simpanan_wajib +
+                                    shuSummary.member_contribution.simpanan_sukarela,
+                                )
+                              }}
                             </strong>
                           </div>
                         </div>
-                        
+
                         <div class="col-md-6">
                           <h6 class="text-warning">
                             <i class="bi bi-people me-1"></i>Jasa Anggota
                           </h6>
                           <p class="text-muted">
-                            Jasa anggota dihitung berdasarkan aktivitas dan kontribusi anggota dalam 
+                            Jasa anggota dihitung berdasarkan aktivitas dan kontribusi anggota dalam
                             memanfaatkan layanan koperasi, terutama pinjaman.
                           </p>
                           <div class="alert alert-warning">
                             <small>
-                              <strong>Rumus:</strong><br>
-                              Jasa Anggota = (Kontribusi Bunga / Total Kontribusi) × Total Jasa Anggota
+                              <strong>Rumus:</strong><br />
+                              Jasa Anggota = (Kontribusi Bunga / Total Kontribusi) × Total Jasa
+                              Anggota
                             </small>
                           </div>
-                          
+
                           <h6 class="mt-4">Aktivitas Anda:</h6>
                           <ul class="list-unstyled">
                             <li class="mb-1">
                               <i class="bi bi-credit-card text-info me-2"></i>
-                              Jumlah Transaksi Pinjaman: {{ shuSummary.member_contribution.jumlah_transaksi_pinjaman }}
+                              Jumlah Transaksi Pinjaman:
+                              {{ shuSummary.member_contribution.jumlah_transaksi_pinjaman }}
                             </li>
                             <li class="mb-1">
                               <i class="bi bi-graph-up text-success me-2"></i>
-                              Status: {{ shuSummary.member_contribution.jumlah_transaksi_pinjaman > 0 ? 'Anggota Aktif' : 'Anggota Pasif' }}
+                              Status:
+                              {{
+                                shuSummary.member_contribution.jumlah_transaksi_pinjaman > 0
+                                  ? 'Anggota Aktif'
+                                  : 'Anggota Pasif'
+                              }}
                             </li>
                           </ul>
-                          
+
                           <div class="mt-4">
                             <h6>Faktor Penentu Jasa Anggota:</h6>
                             <ul class="small">
@@ -552,20 +625,18 @@ const calculatePercentage = (part: number, total: number) => {
                           </div>
                         </div>
                       </div>
-                      
-                      <hr>
-                      
+
+                      <hr />
+
                       <div class="row mt-4">
                         <div class="col-12">
-                          <h6>
-                            <i class="bi bi-info-circle me-2"></i>Informasi Tambahan
-                          </h6>
+                          <h6><i class="bi bi-info-circle me-2"></i>Informasi Tambahan</h6>
                           <div class="row">
                             <div class="col-md-6">
                               <div class="alert alert-secondary">
                                 <h6 class="alert-heading">Periode Perhitungan</h6>
                                 <p class="mb-0">
-                                  SHU dihitung berdasarkan aktivitas dan simpanan selama tahun buku 
+                                  SHU dihitung berdasarkan aktivitas dan simpanan selama tahun buku
                                   yang bersangkutan (1 Januari - 31 Desember {{ shuSummary.year }}).
                                 </p>
                               </div>
@@ -574,8 +645,8 @@ const calculatePercentage = (part: number, total: number) => {
                               <div class="alert alert-secondary">
                                 <h6 class="alert-heading">Waktu Pembagian</h6>
                                 <p class="mb-0">
-                                  SHU biasanya dibagikan setelah Rapat Anggota Tahunan (RAT) 
-                                  pada awal tahun berikutnya setelah laporan keuangan diaudit.
+                                  SHU biasanya dibagikan setelah Rapat Anggota Tahunan (RAT) pada
+                                  awal tahun berikutnya setelah laporan keuangan diaudit.
                                 </p>
                               </div>
                             </div>

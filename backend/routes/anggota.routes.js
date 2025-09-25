@@ -8,31 +8,31 @@ const router = express.Router()
 router.get('/profile/:id', async (req, res) => {
   try {
     const { id } = req.params
-    
+
     const [result] = await pool.execute(
-      `SELECT id, nama, email, telepon, alamat, tanggal_bergabung, 
+      `SELECT id, nama, email, telepon, alamat, tanggal_bergabung,
               jenis_kelamin, tempat_lahir, tanggal_lahir, pekerjaan,
               penghasilan_bulanan, status_keanggotaan, foto_profil
        FROM anggota WHERE id = ?`,
-      [id]
+      [id],
     )
-    
+
     if (result.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Anggota tidak ditemukan'
+        message: 'Anggota tidak ditemukan',
       })
     }
-    
+
     res.json({
       success: true,
-      data: result[0]
+      data: result[0],
     })
   } catch (error) {
     console.error('Error fetching member profile:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memuat profil anggota'
+      message: 'Gagal memuat profil anggota',
     })
   }
 })
@@ -49,35 +49,44 @@ router.put('/profile/:id', async (req, res) => {
       tempat_lahir,
       tanggal_lahir,
       pekerjaan,
-      penghasilan_bulanan
+      penghasilan_bulanan,
     } = req.body
-    
+
     const [result] = await pool.execute(
-      `UPDATE anggota SET 
+      `UPDATE anggota SET
         nama = ?, telepon = ?, alamat = ?, jenis_kelamin = ?,
-        tempat_lahir = ?, tanggal_lahir = ?, pekerjaan = ?, 
+        tempat_lahir = ?, tanggal_lahir = ?, pekerjaan = ?,
         penghasilan_bulanan = ?, updated_at = NOW()
        WHERE id = ?`,
-      [nama, telepon, alamat, jenis_kelamin, tempat_lahir, 
-       tanggal_lahir, pekerjaan, penghasilan_bulanan, id]
+      [
+        nama,
+        telepon,
+        alamat,
+        jenis_kelamin,
+        tempat_lahir,
+        tanggal_lahir,
+        pekerjaan,
+        penghasilan_bulanan,
+        id,
+      ],
     )
-    
+
     if (result.affectedRows === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Anggota tidak ditemukan'
+        message: 'Anggota tidak ditemukan',
       })
     }
-    
+
     res.json({
       success: true,
-      message: 'Profil berhasil diperbarui'
+      message: 'Profil berhasil diperbarui',
     })
   } catch (error) {
     console.error('Error updating member profile:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memperbarui profil'
+      message: 'Gagal memperbarui profil',
     })
   }
 })
@@ -88,15 +97,15 @@ router.get('/activity/:id', async (req, res) => {
     const { id } = req.params
     const { page = 1, limit = 10 } = req.query
     const offset = (page - 1) * limit
-    
+
     const [activities] = await pool.execute(
       `SELECT * FROM (
-        SELECT 'pinjaman' as type, 'Pengajuan Pinjaman' as action, 
+        SELECT 'pinjaman' as type, 'Pengajuan Pinjaman' as action,
                jumlah_pinjaman as amount, created_at, status_pinjaman as status
         FROM pinjaman WHERE anggota_id = ?
         UNION ALL
-        SELECT 'simpanan' as type, 
-               CASE 
+        SELECT 'simpanan' as type,
+               CASE
                  WHEN jumlah > 0 THEN 'Penyetoran Simpanan'
                  ELSE 'Penarikan Simpanan'
                END as action,
@@ -105,9 +114,9 @@ router.get('/activity/:id', async (req, res) => {
       ) AS combined_activities
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?`,
-      [id, id, parseInt(limit), offset]
+      [id, id, parseInt(limit), offset],
     )
-    
+
     // Get total count
     const [countResult] = await pool.execute(
       `SELECT COUNT(*) as total FROM (
@@ -115,12 +124,12 @@ router.get('/activity/:id', async (req, res) => {
         UNION ALL
         SELECT id FROM simpanan WHERE anggota_id = ?
       ) AS combined_count`,
-      [id, id]
+      [id, id],
     )
-    
+
     const total = countResult[0].total
     const totalPages = Math.ceil(total / limit)
-    
+
     res.json({
       success: true,
       data: activities,
@@ -128,14 +137,14 @@ router.get('/activity/:id', async (req, res) => {
         currentPage: parseInt(page),
         totalPages,
         totalItems: total,
-        itemsPerPage: parseInt(limit)
-      }
+        itemsPerPage: parseInt(limit),
+      },
     })
   } catch (error) {
     console.error('Error fetching member activity:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memuat riwayat aktivitas'
+      message: 'Gagal memuat riwayat aktivitas',
     })
   }
 })
@@ -145,39 +154,39 @@ router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, search = '', status = '' } = req.query
     const offset = (page - 1) * limit
-    
+
     let whereClause = '1 = 1'
     let params = []
-    
+
     if (search) {
       whereClause += ' AND (nama LIKE ? OR email LIKE ?)'
       params.push(`%${search}%`, `%${search}%`)
     }
-    
+
     if (status) {
       whereClause += ' AND status_keanggotaan = ?'
       params.push(status)
     }
-    
+
     const [members] = await pool.execute(
-      `SELECT id, nama, email, telepon, status_keanggotaan, 
+      `SELECT id, nama, email, telepon, status_keanggotaan,
               tanggal_bergabung, created_at
-       FROM anggota 
+       FROM anggota
        WHERE ${whereClause}
        ORDER BY created_at DESC
        LIMIT ? OFFSET ?`,
-      [...params, parseInt(limit), offset]
+      [...params, parseInt(limit), offset],
     )
-    
+
     // Get total count
     const [countResult] = await pool.execute(
       `SELECT COUNT(*) as total FROM anggota WHERE ${whereClause}`,
-      params
+      params,
     )
-    
+
     const total = countResult[0].total
     const totalPages = Math.ceil(total / limit)
-    
+
     res.json({
       success: true,
       data: members,
@@ -185,14 +194,14 @@ router.get('/', async (req, res) => {
         currentPage: parseInt(page),
         totalPages,
         totalItems: total,
-        itemsPerPage: parseInt(limit)
-      }
+        itemsPerPage: parseInt(limit),
+      },
     })
   } catch (error) {
     console.error('Error fetching members:', error)
     res.status(500).json({
       success: false,
-      message: 'Gagal memuat data anggota'
+      message: 'Gagal memuat data anggota',
     })
   }
 })
