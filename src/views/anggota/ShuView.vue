@@ -3,12 +3,23 @@ import { ref, onMounted } from 'vue'
 import { useErrorHandler } from '@/lib/errorHandler'
 import Chart from 'chart.js/auto'
 
+// SHU History interface
+interface ShuHistoryItem {
+  id: string
+  tanggal_pembagian: string
+  tahun: number
+  jenis: 'jasa_modal' | 'jasa_anggota'
+  jumlah: number
+  persentase: number
+  status: 'dibagikan' | 'menunggu'
+  keterangan?: string
+}
+
 const {
   handleAsync,
   error: errorMessage,
   loading: isLoading,
   success: successMessage,
-  showSuccess,
 } = useErrorHandler()
 
 // Data
@@ -33,7 +44,7 @@ const shuSummary = ref({
 })
 
 // SHU History
-const shuHistory = ref([])
+const shuHistory = ref<ShuHistoryItem[]>([])
 const currentPage = ref(1)
 const totalPages = ref(1)
 const filterYear = ref('')

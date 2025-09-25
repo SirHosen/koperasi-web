@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue'
 import { useVerificationStatsStore } from '@/stores/modules/verificationStats'
+import type { VerificationStats } from '@/stores/modules/verificationStats'
 import VerificationNavigation from '@/components/pengurus/VerificationNavigation.vue'
 import Chart from 'chart.js/auto'
 
@@ -11,7 +12,7 @@ const statsStore = useVerificationStatsStore()
 const isLoading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
-const stats = ref<Record<string, any> | null>(null)
+const stats = ref<VerificationStats | null>(null)
 const statsLoaded = ref(false)
 
 // Format number with commas

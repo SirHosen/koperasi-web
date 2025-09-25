@@ -1,14 +1,4 @@
-<script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-const currentRoute = computed(() => router.currentRoute.value.path)
-
-const navigateToSimulator = () => {
-  router.push('/simulator')
-}
-</script>
+<script setup lang="ts"></script>
 
 <template>
   <div class="app-layout">

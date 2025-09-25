@@ -10,20 +10,6 @@ const {
   showSuccess,
 } = useErrorHandler()
 
-// Data
-const currentLoans = ref([])
-const selectedLoan = ref(null)
-const paymentForm = ref({
-  loan_id: '',
-  jumlah_bayar: '',
-  tanggal_bayar: new Date().toISOString().split('T')[0],
-  metode_pembayaran: 'transfer',
-  nomor_referensi: '',
-  keterangan: '',
-  bukti_transfer: null as File | null,
-})
-
-const paymentHistory = ref([])
 const currentPage = ref(1)
 const totalPages = ref(1)
 
@@ -84,7 +70,8 @@ async function loadPaymentHistory(page = 1) {
 
 // Handle loan selection change
 function handleLoanChange() {
-  selectedLoan.value = currentLoans.value.find((loan) => loan.id === paymentForm.value.loan_id)
+  selectedLoan.value =
+    currentLoans.value.find((loan) => loan.id === paymentForm.value.loan_id) || null
 }
 
 // Handle file upload
@@ -181,14 +168,52 @@ const formatDate = (dateString: string) => {
   })
 }
 
+// Payment loan interface
+interface PaymentLoan {
+  id: string
+  jumlah_pinjaman: number
+  bunga_total: number
+  total_dibayar?: number
+  tenor_bulan: number
+  jenis_pinjaman: string
+  tanggal_jatuh_tempo?: string
+}
+
+// Payment history interface
+interface PaymentHistory {
+  id: string
+  tanggal_bayar: string
+  jenis_pinjaman: string
+  jumlah_bayar: number
+  metode_pembayaran: string
+  nomor_referensi?: string
+  status: string
+  bukti_transfer?: string
+}
+
+// Data
+const currentLoans = ref<PaymentLoan[]>([])
+const selectedLoan = ref<PaymentLoan | null>(null)
+const paymentForm = ref({
+  loan_id: '',
+  jumlah_bayar: '',
+  tanggal_bayar: new Date().toISOString().split('T')[0],
+  metode_pembayaran: 'transfer',
+  nomor_referensi: '',
+  keterangan: '',
+  bukti_transfer: null as File | null,
+})
+
+const paymentHistory = ref<PaymentHistory[]>([])
+
 // Calculate remaining balance
-const calculateRemainingBalance = (loan: any) => {
+const calculateRemainingBalance = (loan: PaymentLoan | null) => {
   if (!loan) return 0
   return loan.jumlah_pinjaman + loan.bunga_total - (loan.total_dibayar || 0)
 }
 
 // Calculate installment amount
-const calculateInstallmentAmount = (loan: any) => {
+const calculateInstallmentAmount = (loan: PaymentLoan | null) => {
   if (!loan) return 0
   return (loan.jumlah_pinjaman + loan.bunga_total) / loan.tenor_bulan
 }
@@ -476,7 +501,13 @@ const calculateInstallmentAmount = (loan: any) => {
                         </dd>
 
                         <dt class="col-sm-6">Jatuh Tempo:</dt>
-                        <dd class="col-sm-6">{{ formatDate(selectedLoan.tanggal_jatuh_tempo) }}</dd>
+                        <dd class="col-sm-6">
+                          {{
+                            selectedLoan.tanggal_jatuh_tempo
+                              ? formatDate(selectedLoan.tanggal_jatuh_tempo)
+                              : '-'
+                          }}
+                        </dd>
                       </dl>
                     </div>
                   </div>

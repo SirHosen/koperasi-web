@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useErrorHandler } from '@/lib/errorHandler'
 import type { KpiSummary, AntreanStats } from '../../types'
 
 // Mock KPI data

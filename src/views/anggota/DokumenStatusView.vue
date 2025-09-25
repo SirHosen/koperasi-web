@@ -78,7 +78,11 @@ const closeDocumentDetails = () => {
 }
 
 // Open document viewer
-const openDocumentViewer = (document: any) => {
+const openDocumentViewer = (document: {
+  jenis_dokumen: string
+  nama_file: string
+  path_file?: string
+}) => {
   currentDocument.value = {
     path: document.path_file || '',
     name: document.nama_file || '',

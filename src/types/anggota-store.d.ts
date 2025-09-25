@@ -35,6 +35,13 @@ declare module '@/stores/modules/anggota' {
     updatedAt: string
   }
 
+  interface MemberQueueStatus {
+    posisiAntrean: number
+    estimasiWaktu: string
+    statusPinjaman: string
+    totalAntrean: number
+  }
+
   export function useAnggotaStore(): {
     profile: AnggotaProfile | null
     isLoading: boolean
@@ -49,7 +56,7 @@ declare module '@/stores/modules/anggota' {
     getSimpananSummary: () => Promise<SimpananSummary>
     getActivePinjaman: () => Promise<Pinjaman[]>
     getPinjamanHistory: () => Promise<Pinjaman[]>
-    getQueueStatus: () => Promise<any>
+    getQueueStatus: () => Promise<MemberQueueStatus>
     clearError: () => void
   }
 }

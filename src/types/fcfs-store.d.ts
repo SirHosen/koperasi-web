@@ -17,6 +17,8 @@ declare module '@/stores/modules/fcfs' {
     start_process_time?: string
     finish_process_time?: string
     catatan?: string
+    created_at?: string
+    updated_at?: string
   }
 
   interface QueueStats {
@@ -25,6 +27,7 @@ declare module '@/stores/modules/fcfs' {
     max_processing_time: number
     arrived_today: number
     processed_today: number
+    estimatedWaitingTime?: number
   }
 
   export function useFcfsStore(): {

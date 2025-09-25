@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import type { Pinjaman } from '../../types'
+import type { Pinjaman, PinjamanStatus } from '../../types'
 import { useAnggotaStore } from '@/stores/modules/anggota'
 import { useFcfsStore } from '@/stores/modules/fcfs'
 
@@ -38,18 +38,18 @@ const fetchLoanStatus = async () => {
         bunga: queueStatus.loanStatus.bunga,
         tujuan: queueStatus.loanStatus.tujuan,
         arrivalTime: queueStatus.loanStatus.arrival_time,
-        statusPinjaman: queueStatus.loanStatus.status_pinjaman,
+        statusPinjaman: queueStatus.loanStatus.status_pinjaman as PinjamanStatus,
         posisiAntrean: queueStatus.loanStatus.posisi_antrean,
         burstTime: queueStatus.loanStatus.burst_time,
         startProcessTime: queueStatus.loanStatus.start_process_time,
         finishProcessTime: queueStatus.loanStatus.finish_process_time,
-        createdAt: queueStatus.loanStatus.created_at,
-        updatedAt: queueStatus.loanStatus.updated_at,
+        createdAt: queueStatus.loanStatus.created_at || '',
+        updatedAt: queueStatus.loanStatus.updated_at || '',
       }
 
       queueStats.value = {
         totalAntrean: queueStatus.queueStats.total_antrean,
-        estimatedWaitingTime: queueStatus.queueStats.estimatedWaitingTime,
+        estimatedWaitingTime: queueStatus.queueStats.estimatedWaitingTime || 0,
         processedToday: queueStatus.queueStats.processed_today,
       }
     }
@@ -74,17 +74,6 @@ onMounted(() => {
     clearInterval(refreshTimer)
   }
 })
-
-// Status color mapping
-const statusColors = {
-  antrean: 'bg-blue-500',
-  verifikasi: 'bg-yellow-500',
-  disetujui: 'bg-green-500',
-  ditolak: 'bg-red-500',
-  pencairan: 'bg-purple-500',
-  aktif: 'bg-indigo-500',
-  lunas: 'bg-gray-500',
-}
 
 // Format date string to localized format
 const formatDate = (dateString: string) => {
@@ -232,7 +221,7 @@ const getStatusLabel = (status: string) => {
               'pencairan',
               'aktif',
               'lunas',
-            ].includes(currentLoan.statusPinjaman),
+            ].includes(currentLoan?.statusPinjaman || ''),
           }"
         >
           <div class="step-icon">1</div>
@@ -242,7 +231,7 @@ const getStatusLabel = (status: string) => {
           class="tracker-step"
           :class="{
             completed: ['verifikasi', 'disetujui', 'pencairan', 'aktif', 'lunas'].includes(
-              currentLoan.statusPinjaman,
+              currentLoan?.statusPinjaman || '',
             ),
           }"
         >
@@ -253,7 +242,7 @@ const getStatusLabel = (status: string) => {
           class="tracker-step"
           :class="{
             completed: ['disetujui', 'pencairan', 'aktif', 'lunas'].includes(
-              currentLoan.statusPinjaman,
+              currentLoan?.statusPinjaman || '',
             ),
           }"
         >
@@ -263,7 +252,7 @@ const getStatusLabel = (status: string) => {
         <div
           class="tracker-step"
           :class="{
-            completed: ['pencairan', 'aktif', 'lunas'].includes(currentLoan.statusPinjaman),
+            completed: ['pencairan', 'aktif', 'lunas'].includes(currentLoan?.statusPinjaman || ''),
           }"
         >
           <div class="step-icon">4</div>
@@ -271,7 +260,7 @@ const getStatusLabel = (status: string) => {
         </div>
         <div
           class="tracker-step"
-          :class="{ completed: ['aktif', 'lunas'].includes(currentLoan.statusPinjaman) }"
+          :class="{ completed: ['aktif', 'lunas'].includes(currentLoan?.statusPinjaman || '') }"
         >
           <div class="step-icon">5</div>
           <div class="step-label">Aktif</div>

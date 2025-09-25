@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/modules/auth'
+import { useAuthStore } from '@/stores/modules/auth'
+
+interface ExtendedAuthStore {
+  isAuthenticated: boolean
+  isAnggota: boolean
+  isPengurus: boolean
+  isPengawas: boolean
+}
 
 const router = useRouter()
-const authStore = useAuthStore()
+const authStore = useAuthStore() as unknown as ExtendedAuthStore
 
 const goBack = () => {
   router.back()

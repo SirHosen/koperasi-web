@@ -64,7 +64,6 @@ const notificationSettings = ref({
 
 // Activity history data
 const activityHistory = ref<ActivityHistory[]>([])
-const currentPage = ref(1)
 const totalPages = ref(1)
 const isLoadingHistory = ref(false)
 

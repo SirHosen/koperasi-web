@@ -4,6 +4,7 @@ declare module '@/stores/modules/anggotaDokumen' {
     id: string
     jenis_dokumen: string
     nama_file: string
+    path_file?: string
     status: 'menunggu' | 'diterima' | 'ditolak'
     catatan?: string
     uploaded_at: string

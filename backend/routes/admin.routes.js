@@ -139,7 +139,7 @@ router.put('/config/:key', async (req, res) => {
     const { key } = req.params
     const { value, description } = req.body
 
-    const [result] = await pool.execute(
+    await pool.execute(
       `INSERT INTO sistem_config (config_key, config_value, description, updated_at)
        VALUES (?, ?, ?, NOW())
        ON DUPLICATE KEY UPDATE

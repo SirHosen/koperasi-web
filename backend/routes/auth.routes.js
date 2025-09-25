@@ -125,11 +125,11 @@ router.post('/register', async (req, res) => {
 
     // Begin transaction
     const connection = await pool.getConnection()
-    await pool.beginTransaction()
+    await connection.beginTransaction()
 
     try {
       // Create user
-      await pool.query(
+      await connection.query(
         'INSERT INTO users (id, username, password, email, role, name, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)',
         [userId, username, hashedPassword, email, 'anggota', name, true],
       )
@@ -138,7 +138,7 @@ router.post('/register', async (req, res) => {
       const today = new Date()
       const year = today.getFullYear()
 
-      const [lastAnggota] = await pool.query(
+      const [lastAnggota] = await connection.query(
         'SELECT nomor_anggota FROM anggota WHERE nomor_anggota LIKE ? ORDER BY nomor_anggota DESC LIMIT 1',
         [`A-${year}%`],
       )
@@ -152,13 +152,13 @@ router.post('/register', async (req, res) => {
       }
 
       // Create anggota
-      await pool.query(
+      await connection.query(
         'INSERT INTO anggota (id, user_id, nomor_anggota, nik, alamat, telepon, tanggal_bergabung, status_aktif) VALUES (?, ?, ?, ?, ?, ?, CURDATE(), ?)',
         [anggotaId, userId, anggotaNumber, nik, alamat, telepon, true],
       )
 
       // Get simpanan pokok amount from settings
-      const [simpananPokokSetting] = await pool.query(
+      const [simpananPokokSetting] = await connection.query(
         'SELECT setting_value FROM system_settings WHERE setting_key = ?',
         ['simpanan_pokok'],
       )
@@ -166,13 +166,13 @@ router.post('/register', async (req, res) => {
       const simpananPokok = parseFloat(simpananPokokSetting[0]?.setting_value || 100000)
 
       // Create initial simpanan pokok record (pending verification)
-      await pool.query(
+      await connection.query(
         'INSERT INTO simpanan (id, anggota_id, jenis, jumlah, tanggal, status, keterangan) VALUES (?, ?, ?, ?, CURDATE(), ?, ?)',
         [uuidv4(), anggotaId, 'pokok', simpananPokok, 'menunggu', 'Simpanan pokok awal'],
       )
 
       // Commit transaction
-      await pool.commit()
+      await connection.commit()
 
       // Return success
       return res.status(201).json({
@@ -185,10 +185,10 @@ router.post('/register', async (req, res) => {
       })
     } catch (err) {
       // Rollback on error
-      await pool.rollback()
+      await connection.rollback()
       throw err
     } finally {
-      pool.release()
+      connection.release()
     }
   } catch (error) {
     console.error('Registration error:', error)

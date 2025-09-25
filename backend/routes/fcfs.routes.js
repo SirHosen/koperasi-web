@@ -104,7 +104,7 @@ router.get('/queue/:id', async (req, res) => {
 router.post('/submit', async (req, res) => {
   const connection = await pool.getConnection()
   try {
-    await pool.beginTransaction()
+    await connection.beginTransaction()
 
     const { jumlah, tenor, tujuan, anggotaId } = req.body
 
@@ -202,7 +202,6 @@ router.post('/submit', async (req, res) => {
  * POST /api/fcfs/process-next
  */
 router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
-  const connection = await pool.getConnection()
   try {
     await pool.beginTransaction()
 
@@ -218,7 +217,7 @@ router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
       return res.status(404).json({ status: 'error', message: 'No loans in queue' })
     }
 
-    const { id: loanId, anggota_id: anggotaId } = nextInQueue[0]
+    const { id: loanId } = nextInQueue[0]
 
     // Update loan status to 'verifikasi'
     await pool.query(

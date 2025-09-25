@@ -42,11 +42,6 @@ const openDocumentViewer = (doc: { pathFile: string; namaFile: string; jenisDoku
   showDocumentViewer.value = true
 }
 
-// Close document viewer
-const closeDocumentViewer = () => {
-  showDocumentViewer.value = false
-}
-
 // Get loan details
 const showLoanDetails = async (id: string) => {
   if (selectedLoanId.value === id) {
