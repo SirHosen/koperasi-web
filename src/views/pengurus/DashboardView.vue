@@ -80,13 +80,24 @@ onMounted(() => {
 
 <template>
   <div class="admin-dashboard-container">
-    <h1>Dashboard Pengurus</h1>
+    <!-- Modern Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>
+          <i class="bi bi-speedometer2"></i>
+          Dashboard Pengurus
+        </h1>
+        <p class="page-subtitle">Monitor dan kelola operasional koperasi secara real-time</p>
+      </div>
+    </div>
 
     <!-- KPI Cards -->
     <section class="kpi-section">
       <div class="kpi-cards">
         <div class="kpi-card">
-          <div class="card-icon member-icon">👥</div>
+          <div class="card-icon">
+            <i class="bi bi-people-fill"></i>
+          </div>
           <div class="card-content">
             <div class="card-title">Total Anggota</div>
             <div class="card-value">{{ kpiData.totalAnggota }}</div>
@@ -95,7 +106,9 @@ onMounted(() => {
         </div>
 
         <div class="kpi-card">
-          <div class="card-icon assets-icon">💰</div>
+          <div class="card-icon assets">
+            <i class="bi bi-wallet-fill"></i>
+          </div>
           <div class="card-content">
             <div class="card-title">Total Aset</div>
             <div class="card-value">{{ formatCurrency(kpiData.totalAset) }}</div>
@@ -103,7 +116,9 @@ onMounted(() => {
         </div>
 
         <div class="kpi-card">
-          <div class="card-icon savings-icon">🏦</div>
+          <div class="card-icon savings">
+            <i class="bi bi-piggy-bank-fill"></i>
+          </div>
           <div class="card-content">
             <div class="card-title">Total Simpanan</div>
             <div class="card-value">{{ formatCurrency(kpiData.totalSimpanan) }}</div>
@@ -111,7 +126,9 @@ onMounted(() => {
         </div>
 
         <div class="kpi-card">
-          <div class="card-icon loan-icon">📝</div>
+          <div class="card-icon loans">
+            <i class="bi bi-file-earmark-text-fill"></i>
+          </div>
           <div class="card-content">
             <div class="card-title">Total Pinjaman</div>
             <div class="card-value">{{ formatCurrency(kpiData.totalPinjaman) }}</div>
@@ -119,7 +136,9 @@ onMounted(() => {
         </div>
 
         <div class="kpi-card" :class="{ warning: kpiData.nplRatio > 1 }">
-          <div class="card-icon npl-icon">⚠️</div>
+          <div class="card-icon npl">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+          </div>
           <div class="card-content">
             <div class="card-title">NPL Ratio</div>
             <div class="card-value">{{ kpiData.nplRatio }}%</div>
@@ -131,33 +150,57 @@ onMounted(() => {
 
     <!-- FCFS Antrean Stats -->
     <section class="antrean-section">
-      <h2>Status Antrean FCFS</h2>
-      <div class="antrean-cards">
-        <div class="antrean-card">
-          <div class="antrean-value">{{ antreanData.totalAntrean }}</div>
-          <div class="antrean-label">Total Dalam Antrean</div>
-        </div>
-
-        <div class="antrean-card">
-          <div class="antrean-value">{{ formatDuration(antreanData.averageWaitingTime) }}</div>
-          <div class="antrean-label">Waktu Tunggu Rata-rata</div>
-        </div>
-
-        <div class="antrean-card">
-          <div class="antrean-value">{{ formatDuration(antreanData.longestWaitingTime) }}</div>
-          <div class="antrean-label">Waktu Tunggu Terlama</div>
-        </div>
-
-        <div class="antrean-card">
-          <div class="antrean-value">{{ antreanData.processedToday }}</div>
-          <div class="antrean-label">Diproses Hari Ini</div>
-        </div>
+      <div class="section-header">
+        <h2>
+          <i class="bi bi-list-ol"></i>
+          Status Antrean FCFS
+        </h2>
+        <router-link to="/pengurus/antrean" class="section-action">
+          <i class="bi bi-arrow-right"></i>
+          Kelola Antrean
+        </router-link>
       </div>
 
-      <div class="action-buttons">
-        <router-link to="/pengurus/antrean" class="action-button">
-          Kelola Antrean FCFS
-        </router-link>
+      <div class="antrean-cards">
+        <div class="antrean-card">
+          <div class="antrean-icon">
+            <i class="bi bi-stack"></i>
+          </div>
+          <div class="antrean-content">
+            <div class="antrean-value">{{ antreanData.totalAntrean }}</div>
+            <div class="antrean-label">Total Dalam Antrean</div>
+          </div>
+        </div>
+
+        <div class="antrean-card">
+          <div class="antrean-icon">
+            <i class="bi bi-clock"></i>
+          </div>
+          <div class="antrean-content">
+            <div class="antrean-value">{{ formatDuration(antreanData.averageWaitingTime) }}</div>
+            <div class="antrean-label">Waktu Tunggu Rata-rata</div>
+          </div>
+        </div>
+
+        <div class="antrean-card">
+          <div class="antrean-icon">
+            <i class="bi bi-hourglass-top"></i>
+          </div>
+          <div class="antrean-content">
+            <div class="antrean-value">{{ formatDuration(antreanData.longestWaitingTime) }}</div>
+            <div class="antrean-label">Waktu Tunggu Terlama</div>
+          </div>
+        </div>
+
+        <div class="antrean-card">
+          <div class="antrean-icon">
+            <i class="bi bi-check-circle"></i>
+          </div>
+          <div class="antrean-content">
+            <div class="antrean-value">{{ antreanData.processedToday }}</div>
+            <div class="antrean-label">Diproses Hari Ini</div>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -259,22 +302,75 @@ onMounted(() => {
 .admin-dashboard-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
-h1 {
-  font-size: 1.75rem;
+/* Modern Page Header */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.header-content h1 {
+  font-size: 2.25rem;
   font-weight: 700;
-  color: #111827;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-content h1 i {
+  font-size: 2rem;
+}
+
+.page-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
-h2 {
-  font-size: 1.25rem;
+.section-header h2 {
+  font-size: 1.5rem;
   font-weight: 600;
   color: #374151;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.section-action {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+.section-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+  color: white;
 }
 
 section {
@@ -289,41 +385,60 @@ section {
 }
 
 .kpi-card {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
   display: flex;
   align-items: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
 .kpi-card.warning {
-  background-color: #fff7ed;
-  border-left: 4px solid #f59e0b;
+  background: linear-gradient(135deg, #fff7ed 0%, #fef3c7 100%);
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 .card-icon {
-  font-size: 1.75rem;
+  width: 60px;
+  height: 60px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin-right: 1rem;
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  background-color: #f3f4f6;
+  font-size: 1.75rem;
+  color: white;
 }
 
-.member-icon {
-  background-color: #eff6ff;
+.card-icon i {
+  font-size: 1.5rem;
 }
-.assets-icon {
-  background-color: #ecfdf5;
+
+.card-icon:not(.npl) {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
-.savings-icon {
-  background-color: #eef2ff;
+
+.card-icon.assets {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
 }
-.loan-icon {
-  background-color: #fef2f2;
+
+.card-icon.savings {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
 }
-.npl-icon {
-  background-color: #fff7ed;
+
+.card-icon.loans {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+}
+
+.card-icon.npl {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
 }
 
 .card-content {
@@ -351,28 +466,54 @@ section {
 /* Antrean Stats */
 .antrean-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .antrean-card {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.antrean-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+}
+
+.antrean-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+  color: white;
+  font-size: 1.25rem;
+}
+
+.antrean-content {
+  flex: 1;
 }
 
 .antrean-value {
   font-weight: 700;
   font-size: 1.5rem;
   color: #111827;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 }
 
 .antrean-label {
   color: #6b7280;
+  font-size: 0.875rem;
   font-size: 0.875rem;
 }
 

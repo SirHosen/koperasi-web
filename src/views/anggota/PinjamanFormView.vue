@@ -152,10 +152,21 @@ const formatCurrency = (value: number) => {
 
 <template>
   <div class="loan-application-container">
-    <h1>Pengajuan Pinjaman (FCFS)</h1>
+    <!-- Modern Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>
+          <i class="bi bi-cash-coin"></i>
+          Pengajuan Pinjaman (FCFS)
+        </h1>
+        <p class="page-subtitle">Ajukan pinjaman dengan sistem antrean First Come, First Served</p>
+      </div>
+    </div>
 
     <div class="info-box">
-      <div class="info-icon">ℹ️</div>
+      <div class="info-icon">
+        <i class="bi bi-info-circle-fill"></i>
+      </div>
       <div class="info-content">
         <p>
           <strong>First Come, First Served (FCFS)</strong> - Pengajuan pinjaman akan diproses sesuai
@@ -297,29 +308,55 @@ const formatCurrency = (value: number) => {
 
 <style scoped>
 .loan-application-container {
-  max-width: 1000px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
-h1 {
-  font-size: 1.75rem;
+/* Modern Page Header */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.header-content h1 {
+  font-size: 2.25rem;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-content h1 i {
+  font-size: 2rem;
+}
+
+.page-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
 }
 
 .info-box {
   display: flex;
   align-items: flex-start;
-  background-color: #eff6ff;
-  border-radius: 0.5rem;
-  padding: 1rem;
+  background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 1rem;
+  padding: 1.5rem;
   margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.1);
 }
 
 .info-icon {
   font-size: 1.5rem;
   margin-right: 1rem;
+  color: #667eea;
 }
 
 .info-content p {
@@ -344,6 +381,11 @@ h1 {
 }
 
 .form-section {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
 }
 
@@ -399,9 +441,11 @@ textarea:focus {
 
 .simulation-section {
   margin-bottom: 2rem;
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .simulation-result {
@@ -459,32 +503,44 @@ textarea:focus {
 }
 
 .cancel-button {
-  padding: 0.75rem 1.5rem;
-  background: none;
-  border: 1px solid #d1d5db;
-  border-radius: 0.375rem;
-  color: #4b5563;
-  font-weight: 500;
+  padding: 0.875rem 2rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  border-color: #cbd5e1;
+  background-color: #f8fafc;
+  transform: translateY(-1px);
 }
 
 .submit-button {
-  padding: 0.75rem 1.5rem;
-  background-color: #10b981;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
-  border-radius: 0.375rem;
+  border-radius: 0.75rem;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
 }
 
 .submit-button:hover {
-  background-color: #059669;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
 }
 
 .submit-button:disabled {
-  background-color: #94a3b8;
+  background: #94a3b8;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {

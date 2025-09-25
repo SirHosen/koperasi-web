@@ -1,0 +1,1894 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+// Types
+interface UserProfile {
+  id: string
+  nama: string
+  email: string
+  noAnggota: string
+  tanggalBergabung: string
+  status: 'aktif' | 'nonaktif'
+}
+
+interface SimpananSummary {
+  pokok: number
+  wajib: number
+  sukarela: number
+  total: number
+}
+
+interface PinjamanSummary {
+  active: {
+    jumlah: number
+    sisaPokok: number
+    sisaBunga: number
+    angsuranPerBulan: number
+    tenorSisa: number
+    jatuhTempo: string
+    status: 'lancar' | 'tunggakan'
+  } | null
+}
+
+interface ShuSummary {
+  tahunTerakhir: number
+  nominal: number
+  tanggalPembagian: string
+  status: 'belum' | 'sudah'
+  riwayat: { tahun: number; nominal: number }[]
+}
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'success' | 'info' | 'warning' | 'error'
+  date: string
+  read: boolean
+}
+
+interface Transaction {
+  id: string
+  description: string
+  amount: number
+  type: 'credit' | 'debit'
+  status: 'completed' | 'pending' | 'failed'
+  date: string
+}
+
+// Router
+const router = useRouter()
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'success'
+  date: string
+  read: boolean
+}
+
+interface TransactionHistory {
+  id: string
+  type: 'simpanan' | 'pinjaman' | 'shu'
+  subtype: string
+  amount: number
+  date: string
+  status: string
+}
+
+// User data
+const user = ref<UserProfile>({
+  id: 'A-20230056',
+  nama: 'Budi Santoso',
+  email: 'budi.santoso@example.com',
+  noAnggota: '20230056',
+  tanggalBergabung: '2023-05-15T00:00:00Z',
+  status: 'aktif',
+})
+
+// Simpanan data
+const simpanan = ref<SimpananSummary>({
+  pokok: 500000,
+  wajib: 3600000,
+  sukarela: 1150000,
+  total: 5250000,
+  lastUpdate: '2025-09-21T14:30:00Z',
+})
+
+// Pinjaman data
+const pinjaman = ref<PinjamanSummary>({
+  active: {
+    jumlah: 15000000,
+    sisaPokok: 9000000,
+    sisaBunga: 900000,
+    angsuranPerBulan: 500000,
+    tenorSisa: 18,
+    jatuhTempo: '2025-10-15T00:00:00Z',
+    status: 'lancar',
+  },
+  history: {
+    total: 2,
+    completed: 1,
+    pending: 0,
+  },
+})
+
+// SHU data
+const shu = ref<ShuSummary>({
+  tahunTerakhir: 2024,
+  nominal: 2520000,
+  tanggalPembagian: '2025-04-05T00:00:00Z',
+  status: 'sudah',
+  riwayat: [
+    { tahun: 2024, nominal: 2520000 },
+    { tahun: 2023, nominal: 1750000 },
+    { tahun: 2022, nominal: 1250000 },
+  ],
+})
+
+// Notifications
+const notifications = ref<Notification[]>([
+  {
+    id: 'n1',
+    title: 'Pembayaran Simpanan Wajib',
+    message: 'Pembayaran simpanan wajib bulan September telah berhasil.',
+    type: 'success',
+    date: '2025-09-21T14:30:00Z',
+    read: false,
+  },
+  {
+    id: 'n2',
+    title: 'Pengumuman Rapat Anggota Tahunan',
+    message: 'Rapat Anggota Tahunan akan dilaksanakan pada tanggal 15 Oktober 2025.',
+    type: 'info',
+    date: '2025-09-18T09:15:00Z',
+    read: false,
+  },
+  {
+    id: 'n3',
+    title: 'Pengingat Angsuran',
+    message: 'Angsuran pinjaman Anda akan jatuh tempo dalam 7 hari.',
+    type: 'warning',
+    date: '2025-09-08T10:45:00Z',
+    read: true,
+  },
+])
+
+// Transaction history
+const transactions = ref<TransactionHistory[]>([
+  {
+    id: 'TX-25092301',
+    type: 'simpanan',
+    subtype: 'simpanan wajib',
+    amount: 100000,
+    date: '2025-09-21T14:30:00Z',
+    status: 'berhasil',
+  },
+  {
+    id: 'TX-25092001',
+    type: 'pinjaman',
+    subtype: 'angsuran pinjaman',
+    amount: 500000,
+    date: '2025-09-15T10:15:00Z',
+    status: 'berhasil',
+  },
+  {
+    id: 'TX-25091501',
+    type: 'simpanan',
+    subtype: 'simpanan sukarela',
+    amount: 250000,
+    date: '2025-09-10T09:20:00Z',
+    status: 'berhasil',
+  },
+  {
+    id: 'TX-25090501',
+    type: 'shu',
+    subtype: 'penerimaan shu',
+    amount: 2520000,
+    date: '2025-04-05T13:45:00Z',
+    status: 'berhasil',
+  },
+  {
+    id: 'TX-25082001',
+    type: 'simpanan',
+    subtype: 'simpanan wajib',
+    amount: 100000,
+    date: '2025-08-20T11:30:00Z',
+    status: 'berhasil',
+  },
+])
+
+// UI state
+const activeTab = ref('ringkasan')
+const showNotifications = ref(false)
+const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
+
+// Format utilities
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
+}
+
+const formatDateTime = (dateString: string) => {
+  return new Date(dateString).toLocaleString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// Calculate loan progress percentage
+const pinjamanProgress = computed(() => {
+  if (!pinjaman.value.active) return 0
+  const totalPinjaman = pinjaman.value.active.jumlah
+  const sisaPokok = pinjaman.value.active.sisaPokok
+  return Math.round(((totalPinjaman - sisaPokok) / totalPinjaman) * 100)
+})
+
+// Mark notification as read
+const markAsRead = (notifId: string) => {
+  const index = notifications.value.findIndex((n) => n.id === notifId)
+  if (index !== -1) {
+    notifications.value[index].read = true
+  }
+}
+
+// Mark all notifications as read
+const markAllAsRead = () => {
+  notifications.value = notifications.value.map((notification) => ({
+    ...notification,
+    read: true,
+  }))
+}
+
+// Toggle notifications panel
+const toggleNotifications = () => {
+  showNotifications.value = !showNotifications.value
+}
+
+// Close notifications panel
+const closeNotifications = () => {
+  showNotifications.value = false
+}
+
+// Set active tab
+const setActiveTab = (tab: string) => {
+  activeTab.value = tab
+}
+
+// Initialize charts
+onMounted(() => {
+  // Simpanan chart
+  const simpananCtx = document.getElementById('simpanan-chart') as HTMLCanvasElement
+  if (simpananCtx) {
+    new Chart(simpananCtx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Simpanan Pokok', 'Simpanan Wajib', 'Simpanan Sukarela'],
+        datasets: [
+          {
+            data: [simpanan.value.pokok, simpanan.value.wajib, simpanan.value.sukarela],
+            backgroundColor: [
+              'rgb(96, 165, 250)', // blue-400
+              'rgb(251, 191, 36)', // amber-400
+              'rgb(52, 211, 153)', // emerald-400
+            ],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+          },
+        },
+      },
+    })
+  }
+
+  // SHU chart
+  const shuCtx = document.getElementById('shu-chart') as HTMLCanvasElement
+  if (shuCtx) {
+    new Chart(shuCtx, {
+      type: 'bar',
+      data: {
+        labels: shu.value.riwayat.map((item) => item.tahun.toString()),
+        datasets: [
+          {
+            label: 'SHU Diterima',
+            data: shu.value.riwayat.map((item) => item.nominal),
+            backgroundColor: 'rgb(59, 130, 246)', // blue-500
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    })
+  }
+})
+</script>
+
+<template>
+  <div class="modern-dashboard">
+    <!-- Header Section with Glass Effect -->
+    <div class="dashboard-header">
+      <div class="header-content">
+        <div class="welcome-section">
+          <div class="avatar-container">
+            <div class="avatar">
+              <i class="bi bi-person-circle"></i>
+            </div>
+            <div class="status-indicator"></div>
+          </div>
+          <div class="welcome-text">
+            <h1 class="fade-in">Selamat Datang, {{ user.nama }}</h1>
+            <p class="member-info">
+              <span class="member-id">{{ user.noAnggota }}</span>
+              <span class="separator">•</span>
+              <span class="join-date">Bergabung {{ formatDate(user.tanggalBergabung) }}</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="header-actions">
+          <div class="quick-stats">
+            <div class="stat-item">
+              <div class="stat-value">{{ formatCurrency(simpanan.total) }}</div>
+              <div class="stat-label">Total Simpanan</div>
+            </div>
+          </div>
+          <button class="notification-btn" @click="toggleNotifications">
+            <i class="bi bi-bell"></i>
+            <span v-if="unreadCount > 0" class="notification-badge">{{ unreadCount }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="dashboard-grid">
+      <!-- Summary Cards -->
+      <div class="cards-section">
+        <div class="section-header">
+          <h2>Ringkasan Keuangan</h2>
+          <p class="section-subtitle">Overview aktivitas keuangan Anda</p>
+        </div>
+        
+        <div class="cards-grid">
+          <!-- Simpanan Card -->
+          <div class="modern-card savings-card" @click="navigateTo('simpanan')">
+            <div class="card-header">
+              <div class="card-icon savings">
+                <i class="bi bi-piggy-bank"></i>
+              </div>
+              <div class="card-menu">
+                <i class="bi bi-three-dots"></i>
+              </div>
+            </div>
+            
+            <div class="card-content">
+              <div class="card-title">Simpanan</div>
+              <div class="card-amount">{{ formatCurrency(simpanan.total) }}</div>
+            <div class="card-subtitle">Total Simpanan</div>
+
+            <div class="card-highlights">
+              <div class="highlight-item">
+                <span class="highlight-label">Simpanan Pokok</span>
+                <span class="highlight-value">{{ formatCurrency(simpanan.pokok) }}</span>
+              </div>
+              <div class="highlight-item">
+                <span class="highlight-label">Simpanan Wajib</span>
+                <span class="highlight-value">{{ formatCurrency(simpanan.wajib) }}</span>
+              </div>
+              <div class="highlight-item">
+                <span class="highlight-label">Simpanan Sukarela</span>
+                <span class="highlight-value">{{ formatCurrency(simpanan.sukarela) }}</span>
+              </div>
+            </div>
+
+            <div class="card-updated">
+              Terakhir diperbarui: {{ formatDateTime(simpanan.lastUpdate) }}
+            </div>
+          </div>
+
+          <!-- Pinjaman Card -->
+          <div class="summary-card">
+            <div class="card-header">
+              <h3>Pinjaman Aktif</h3>
+              <button class="view-detail-button">Detail</button>
+            </div>
+
+            <div v-if="pinjaman.active">
+              <div class="card-amount">
+                {{ formatCurrency(pinjaman.active.sisaPokok + pinjaman.active.sisaBunga) }}
+              </div>
+              <div class="card-subtitle">Total Sisa Pinjaman</div>
+
+              <div class="loan-progress">
+                <div class="progress-label">
+                  <span>Kemajuan Pembayaran</span>
+                  <span>{{ pinjamanProgress }}%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" :style="{ width: `${pinjamanProgress}%` }"></div>
+                </div>
+              </div>
+
+              <div class="card-highlights">
+                <div class="highlight-item">
+                  <span class="highlight-label">Sisa Pokok</span>
+                  <span class="highlight-value">{{
+                    formatCurrency(pinjaman.active.sisaPokok)
+                  }}</span>
+                </div>
+                <div class="highlight-item">
+                  <span class="highlight-label">Sisa Bunga</span>
+                  <span class="highlight-value">{{
+                    formatCurrency(pinjaman.active.sisaBunga)
+                  }}</span>
+                </div>
+                <div class="highlight-item">
+                  <span class="highlight-label">Angsuran per Bulan</span>
+                  <span class="highlight-value">{{
+                    formatCurrency(pinjaman.active.angsuranPerBulan)
+                  }}</span>
+                </div>
+                <div class="highlight-item">
+                  <span class="highlight-label">Sisa Tenor</span>
+                  <span class="highlight-value">{{ pinjaman.active.tenorSisa }} bulan</span>
+                </div>
+                <div class="highlight-item">
+                  <span class="highlight-label">Jatuh Tempo</span>
+                  <span class="highlight-value">{{ formatDate(pinjaman.active.jatuhTempo) }}</span>
+                </div>
+                <div class="highlight-item">
+                  <span class="highlight-label">Status</span>
+                  <span
+                    class="status-badge"
+                    :class="
+                      pinjaman.active.status === 'lancar' ? 'status-success' : 'status-warning'
+                    "
+                  >
+                    {{ pinjaman.active.status === 'lancar' ? 'Lancar' : 'Tunggakan' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="no-active-loan">
+              <p>Anda tidak memiliki pinjaman aktif saat ini.</p>
+              <button class="apply-button">Ajukan Pinjaman</button>
+            </div>
+          </div>
+
+          <!-- SHU Card -->
+          <div class="summary-card">
+            <div class="card-header">
+              <h3>SHU Terakhir</h3>
+              <button class="view-detail-button">Detail</button>
+            </div>
+
+            <div class="card-amount">{{ formatCurrency(shu.nominal) }}</div>
+            <div class="card-subtitle">SHU {{ shu.tahunTerakhir }}</div>
+
+            <div class="card-highlights">
+              <div class="highlight-item">
+                <span class="highlight-label">Tanggal Pembagian</span>
+                <span class="highlight-value">{{ formatDate(shu.tanggalPembagian) }}</span>
+              </div>
+              <div class="highlight-item">
+                <span class="highlight-label">Status</span>
+                <span
+                  class="status-badge"
+                  :class="shu.status === 'sudah' ? 'status-success' : 'status-warning'"
+                >
+                  {{ shu.status === 'sudah' ? 'Sudah Dibagikan' : 'Belum Dibagikan' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions -->
+        <div class="recent-transactions">
+          <div class="section-header">
+            <h3>Transaksi Terbaru</h3>
+            <button class="view-all-button" @click="setActiveTab('riwayat')">Lihat Semua</button>
+          </div>
+
+          <div class="transactions-list">
+            <div v-for="tx in transactions.slice(0, 3)" :key="tx.id" class="transaction-item">
+              <div class="transaction-icon" :class="`icon-${tx.type}`">
+                <span v-if="tx.type === 'simpanan'">💰</span>
+                <span v-else-if="tx.type === 'pinjaman'">💸</span>
+                <span v-else>📊</span>
+              </div>
+
+              <div class="transaction-details">
+                <div class="transaction-title">
+                  {{ tx.subtype.charAt(0).toUpperCase() + tx.subtype.slice(1) }}
+                </div>
+                <div class="transaction-date">{{ formatDateTime(tx.date) }}</div>
+              </div>
+
+              <div
+                class="transaction-amount"
+                :class="{
+                  'amount-positive': tx.type === 'simpanan' || tx.type === 'shu',
+                  'amount-negative': tx.type === 'pinjaman',
+                }"
+              >
+                {{ (tx.type === 'pinjaman' ? '- ' : '+ ') + formatCurrency(tx.amount) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Simpanan Tab -->
+      <div v-if="activeTab === 'simpanan'" class="tab-content">
+        <div class="section-header">
+          <h2>Simpanan Saya</h2>
+          <div class="section-actions">
+            <button class="action-button">+ Simpanan Sukarela</button>
+          </div>
+        </div>
+
+        <div class="simpanan-overview">
+          <div class="simpanan-chart-container">
+            <canvas id="simpanan-chart"></canvas>
+          </div>
+
+          <div class="simpanan-details">
+            <div class="simpanan-total">
+              <div class="total-label">Total Simpanan</div>
+              <div class="total-amount">{{ formatCurrency(simpanan.total) }}</div>
+            </div>
+
+            <div class="simpanan-breakdown">
+              <div class="breakdown-item">
+                <div class="breakdown-label">
+                  <span class="color-dot pokok"></span>
+                  <span>Simpanan Pokok</span>
+                </div>
+                <div class="breakdown-amount">{{ formatCurrency(simpanan.pokok) }}</div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-label">
+                  <span class="color-dot wajib"></span>
+                  <span>Simpanan Wajib</span>
+                </div>
+                <div class="breakdown-amount">{{ formatCurrency(simpanan.wajib) }}</div>
+              </div>
+
+              <div class="breakdown-item">
+                <div class="breakdown-label">
+                  <span class="color-dot sukarela"></span>
+                  <span>Simpanan Sukarela</span>
+                </div>
+                <div class="breakdown-amount">{{ formatCurrency(simpanan.sukarela) }}</div>
+              </div>
+            </div>
+
+            <div class="simpanan-info">
+              <div class="info-item">
+                <div class="info-label">Terakhir Diperbarui</div>
+                <div class="info-value">{{ formatDateTime(simpanan.lastUpdate) }}</div>
+              </div>
+
+              <div class="info-item">
+                <div class="info-label">Status</div>
+                <div class="info-value">
+                  <span class="status-badge status-success">Aktif</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="simpanan-actions">
+          <div class="action-card">
+            <div class="action-icon">📝</div>
+            <div class="action-title">Riwayat Simpanan</div>
+            <button class="action-button">Lihat</button>
+          </div>
+
+          <div class="action-card">
+            <div class="action-icon">💰</div>
+            <div class="action-title">Tambah Simpanan Sukarela</div>
+            <button class="action-button">Tambah</button>
+          </div>
+
+          <div class="action-card">
+            <div class="action-icon">📊</div>
+            <div class="action-title">Laporan Simpanan</div>
+            <button class="action-button">Cetak</button>
+          </div>
+        </div>
+
+        <div class="simpanan-info-section">
+          <h3>Informasi Simpanan</h3>
+
+          <div class="info-cards">
+            <div class="info-card">
+              <h4>Simpanan Pokok</h4>
+              <p>
+                Simpanan pokok adalah sejumlah uang yang wajib dibayarkan oleh anggota kepada
+                koperasi pada saat masuk menjadi anggota. Simpanan ini tidak dapat diambil kembali
+                selama yang bersangkutan masih menjadi anggota koperasi.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h4>Simpanan Wajib</h4>
+              <p>
+                Simpanan wajib adalah jumlah simpanan tertentu yang harus dibayarkan oleh anggota
+                kepada koperasi dalam waktu dan kesempatan tertentu, misalnya setiap bulan dengan
+                jumlah simpanan yang sama. Simpanan ini tidak dapat diambil kembali selama yang
+                bersangkutan masih menjadi anggota koperasi.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h4>Simpanan Sukarela</h4>
+              <p>
+                Simpanan sukarela adalah simpanan yang besarnya tidak ditentukan, tetapi bergantung
+                kepada kemampuan anggota. Simpanan ini dapat disetorkan dan diambil kapan saja oleh
+                anggota.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pinjaman Tab -->
+      <div v-if="activeTab === 'pinjaman'" class="tab-content">
+        <div class="section-header">
+          <h2>Pinjaman Saya</h2>
+          <div class="section-actions">
+            <button v-if="!pinjaman.active" class="action-button primary">+ Ajukan Pinjaman</button>
+          </div>
+        </div>
+
+        <div v-if="pinjaman.active" class="active-loan-details">
+          <div class="loan-status-card">
+            <div class="loan-card-header">
+              <h3>Pinjaman Aktif</h3>
+              <span
+                class="status-badge"
+                :class="pinjaman.active.status === 'lancar' ? 'status-success' : 'status-warning'"
+              >
+                {{ pinjaman.active.status === 'lancar' ? 'Lancar' : 'Tunggakan' }}
+              </span>
+            </div>
+
+            <div class="loan-amount">
+              <div class="amount-label">Total Pinjaman</div>
+              <div class="amount-value">{{ formatCurrency(pinjaman.active.jumlah) }}</div>
+            </div>
+
+            <div class="loan-progress">
+              <div class="progress-label">
+                <span>Kemajuan Pembayaran</span>
+                <span>{{ pinjamanProgress }}%</span>
+              </div>
+              <div class="progress-bar">
+                <div class="progress-fill" :style="{ width: `${pinjamanProgress}%` }"></div>
+              </div>
+            </div>
+
+            <div class="loan-info-grid">
+              <div class="loan-info-item">
+                <div class="info-label">Sisa Pokok</div>
+                <div class="info-value">{{ formatCurrency(pinjaman.active.sisaPokok) }}</div>
+              </div>
+
+              <div class="loan-info-item">
+                <div class="info-label">Sisa Bunga</div>
+                <div class="info-value">{{ formatCurrency(pinjaman.active.sisaBunga) }}</div>
+              </div>
+
+              <div class="loan-info-item">
+                <div class="info-label">Angsuran per Bulan</div>
+                <div class="info-value">{{ formatCurrency(pinjaman.active.angsuranPerBulan) }}</div>
+              </div>
+
+              <div class="loan-info-item">
+                <div class="info-label">Sisa Tenor</div>
+                <div class="info-value">{{ pinjaman.active.tenorSisa }} bulan</div>
+              </div>
+
+              <div class="loan-info-item">
+                <div class="info-label">Jatuh Tempo Berikutnya</div>
+                <div class="info-value">{{ formatDate(pinjaman.active.jatuhTempo) }}</div>
+              </div>
+            </div>
+
+            <div class="loan-actions">
+              <button class="action-button">Lihat Jadwal Angsuran</button>
+              <button class="action-button">Bayar Angsuran</button>
+            </div>
+          </div>
+
+          <div class="payment-history">
+            <h3>Riwayat Pembayaran</h3>
+            <button class="view-all-button">Lihat Semua</button>
+          </div>
+        </div>
+
+        <div v-else class="no-active-loan-details">
+          <div class="no-loan-message">
+            <div class="message-icon">💼</div>
+            <h3>Anda tidak memiliki pinjaman aktif</h3>
+            <p>Ajukan pinjaman baru dengan mengklik tombol di bawah ini.</p>
+            <button class="action-button primary">Ajukan Pinjaman</button>
+          </div>
+
+          <div class="loan-history-summary">
+            <h3>Riwayat Pinjaman</h3>
+            <div class="history-stats">
+              <div class="stat-item">
+                <div class="stat-value">{{ pinjaman.history.total }}</div>
+                <div class="stat-label">Total Pinjaman</div>
+              </div>
+
+              <div class="stat-item">
+                <div class="stat-value">{{ pinjaman.history.completed }}</div>
+                <div class="stat-label">Lunas</div>
+              </div>
+
+              <div class="stat-item">
+                <div class="stat-value">{{ pinjaman.history.pending }}</div>
+                <div class="stat-label">Dalam Proses</div>
+              </div>
+            </div>
+
+            <button class="view-history-button">Lihat Riwayat Pinjaman</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SHU Tab -->
+      <div v-if="activeTab === 'shu'" class="tab-content">
+        <div class="section-header">
+          <h2>Sisa Hasil Usaha (SHU)</h2>
+        </div>
+
+        <div class="shu-overview">
+          <div class="shu-chart-container">
+            <canvas id="shu-chart"></canvas>
+          </div>
+
+          <div class="shu-details">
+            <div class="shu-info-card">
+              <h3>SHU {{ shu.tahunTerakhir }}</h3>
+              <div class="shu-amount">{{ formatCurrency(shu.nominal) }}</div>
+
+              <div class="shu-status-info">
+                <div class="info-item">
+                  <div class="info-label">Tanggal Pembagian</div>
+                  <div class="info-value">{{ formatDate(shu.tanggalPembagian) }}</div>
+                </div>
+
+                <div class="info-item">
+                  <div class="info-label">Status</div>
+                  <div class="info-value">
+                    <span
+                      class="status-badge"
+                      :class="shu.status === 'sudah' ? 'status-success' : 'status-warning'"
+                    >
+                      {{ shu.status === 'sudah' ? 'Sudah Dibagikan' : 'Belum Dibagikan' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="shu-history">
+              <h3>Riwayat SHU</h3>
+
+              <div class="shu-history-list">
+                <div v-for="(item, index) in shu.riwayat" :key="index" class="history-item">
+                  <div class="history-year">{{ item.tahun }}</div>
+                  <div class="history-amount">{{ formatCurrency(item.nominal) }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="shu-info-section">
+          <h3>Tentang SHU Koperasi</h3>
+
+          <div class="info-cards">
+            <div class="info-card">
+              <h4>Apa itu SHU?</h4>
+              <p>
+                Sisa Hasil Usaha (SHU) adalah pendapatan koperasi yang diperoleh dalam satu tahun
+                buku dikurangi dengan biaya, penyusutan, dan kewajiban lain termasuk pajak dalam
+                tahun buku yang bersangkutan.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h4>Pembagian SHU</h4>
+              <p>
+                SHU dibagi berdasarkan jasa usaha masing-masing anggota terhadap koperasi. Besarnya
+                SHU yang diterima oleh setiap anggota akan berbeda tergantung besarnya partisipasi
+                modal dan transaksi anggota terhadap pembentukan pendapatan koperasi.
+              </p>
+            </div>
+
+            <div class="info-card">
+              <h4>Perhitungan SHU</h4>
+              <p>
+                SHU dihitung berdasarkan kontribusi anggota dalam penyertaan modal (simpanan) dan
+                transaksi pinjaman yang dilakukan oleh anggota. Semakin besar kontribusi anggota,
+                semakin besar pula SHU yang akan diterima.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Riwayat Transaksi Tab -->
+      <div v-if="activeTab === 'riwayat'" class="tab-content">
+        <div class="section-header">
+          <h2>Riwayat Transaksi</h2>
+          <div class="section-actions">
+            <button class="action-button">Cetak Laporan</button>
+          </div>
+        </div>
+
+        <div class="transaction-filters">
+          <select class="filter-select">
+            <option value="all">Semua Transaksi</option>
+            <option value="simpanan">Simpanan</option>
+            <option value="pinjaman">Pinjaman</option>
+            <option value="shu">SHU</option>
+          </select>
+
+          <select class="filter-select">
+            <option value="all">Semua Waktu</option>
+            <option value="week">7 Hari Terakhir</option>
+            <option value="month">30 Hari Terakhir</option>
+            <option value="year">1 Tahun Terakhir</option>
+          </select>
+        </div>
+
+        <div class="transactions-list full-list">
+          <div v-for="tx in transactions" :key="tx.id" class="transaction-item">
+            <div class="transaction-icon" :class="`icon-${tx.type}`">
+              <span v-if="tx.type === 'simpanan'">💰</span>
+              <span v-else-if="tx.type === 'pinjaman'">💸</span>
+              <span v-else>📊</span>
+            </div>
+
+            <div class="transaction-details">
+              <div class="transaction-id-row">
+                <div class="transaction-id">{{ tx.id }}</div>
+                <div class="transaction-status">
+                  <span class="status-badge status-success">{{ tx.status }}</span>
+                </div>
+              </div>
+
+              <div class="transaction-title">
+                {{ tx.subtype.charAt(0).toUpperCase() + tx.subtype.slice(1) }}
+              </div>
+              <div class="transaction-date">{{ formatDateTime(tx.date) }}</div>
+            </div>
+
+            <div
+              class="transaction-amount"
+              :class="{
+                'amount-positive': tx.type === 'simpanan' || tx.type === 'shu',
+                'amount-negative': tx.type === 'pinjaman',
+              }"
+            >
+              {{ (tx.type === 'pinjaman' ? '- ' : '+ ') + formatCurrency(tx.amount) }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Panel -->
+    <div v-if="showNotifications" class="notifications-panel">
+      <div class="panel-header">
+        <h3>Notifikasi</h3>
+        <div class="panel-actions">
+          <button class="panel-action-button" @click="markAllAsRead">Tandai Semua Dibaca</button>
+          <button class="close-panel-button" @click="closeNotifications">&times;</button>
+        </div>
+      </div>
+
+      <div class="notifications-list">
+        <div
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="notification-item"
+          :class="{ unread: !notification.read }"
+          @click="markAsRead(notification.id)"
+        >
+          <div class="notification-icon" :class="`type-${notification.type}`">
+            <span v-if="notification.type === 'info'">ℹ️</span>
+            <span v-else-if="notification.type === 'warning'">⚠️</span>
+            <span v-else>✅</span>
+          </div>
+
+          <div class="notification-content">
+            <div class="notification-title">{{ notification.title }}</div>
+            <div class="notification-message">{{ notification.message }}</div>
+            <div class="notification-time">{{ formatDateTime(notification.date) }}</div>
+          </div>
+
+          <div v-if="!notification.read" class="unread-indicator"></div>
+        </div>
+
+        <div v-if="notifications.length === 0" class="empty-notifications">
+          <p>Tidak ada notifikasi</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.dashboard {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* Header Section */
+.header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+
+.member-id {
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+.notification-bell {
+  position: relative;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.bell-icon {
+  font-size: 1.5rem;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.75rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  color: #10b981;
+  border-bottom: 2px solid #10b981;
+}
+
+.tab-content {
+  min-height: 500px;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.view-detail-button {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.card-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.card-subtitle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.card-highlights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.highlight-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.highlight-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.highlight-value {
+  font-weight: 500;
+  color: #374151;
+}
+
+.card-updated {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-align: right;
+}
+
+/* Loan Progress */
+.loan-progress {
+  margin: 1rem 0;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.progress-bar {
+  height: 0.5rem;
+  background-color: #e5e7eb;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #10b981;
+  border-radius: 9999px;
+}
+
+.no-active-loan {
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.apply-button {
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 1rem;
+}
+
+/* Recent Transactions */
+.recent-transactions {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.section-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.view-all-button {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  background-color: #f9fafb;
+}
+
+.transaction-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.icon-simpanan {
+  background-color: #dbeafe;
+}
+
+.icon-pinjaman {
+  background-color: #fee2e2;
+}
+
+.icon-shu {
+  background-color: #d1fae5;
+}
+
+.transaction-details {
+  flex: 1;
+}
+
+.transaction-title {
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.transaction-date {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.transaction-id-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.transaction-id {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.transaction-amount {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.amount-positive {
+  color: #10b981;
+}
+
+.amount-negative {
+  color: #ef4444;
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-success {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-warning {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+/* Simpanan Tab */
+.simpanan-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.simpanan-chart-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.simpanan-details {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.simpanan-total {
+  margin-bottom: 1.5rem;
+}
+
+.total-label {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+}
+
+.total-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.simpanan-breakdown {
+  margin-bottom: 1.5rem;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.breakdown-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.color-dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+}
+
+.color-dot.pokok {
+  background-color: rgb(96, 165, 250);
+}
+
+.color-dot.wajib {
+  background-color: rgb(251, 191, 36);
+}
+
+.color-dot.sukarela {
+  background-color: rgb(52, 211, 153);
+}
+
+.breakdown-amount {
+  font-weight: 500;
+}
+
+.simpanan-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.info-value {
+  font-weight: 500;
+}
+
+.simpanan-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.action-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.action-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.action-title {
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+}
+
+.action-button.primary {
+  background-color: #10b981;
+  border-color: #10b981;
+  color: white;
+}
+
+.simpanan-info-section {
+  margin-top: 2rem;
+}
+
+.simpanan-info-section h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+.info-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-card h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  color: #111827;
+}
+
+.info-card p {
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* Pinjaman Tab */
+.active-loan-details {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.loan-status-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.loan-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.loan-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.loan-amount {
+  margin-bottom: 1.5rem;
+}
+
+.amount-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.amount-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.loan-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.loan-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.loan-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.payment-history {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.payment-history h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.no-active-loan-details {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+.no-loan-message {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 3rem 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.message-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.no-loan-message h3 {
+  margin-bottom: 0.5rem;
+}
+
+.no-loan-message p {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+}
+
+.loan-history-summary {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.loan-history-summary h3 {
+  margin-bottom: 1rem;
+}
+
+.history-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.stat-item {
+  background-color: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.view-history-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  text-align: center;
+}
+
+/* SHU Tab */
+.shu-overview {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.shu-chart-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shu-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.shu-info-card,
+.shu-history {
+  background-color: white;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shu-info-card h3,
+.shu-history h3 {
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.shu-amount {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.shu-status-info {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.shu-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+}
+
+.history-year {
+  font-weight: 500;
+}
+
+.history-amount {
+  font-weight: 600;
+}
+
+/* Notifications Panel */
+.notifications-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  max-height: 90vh;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.panel-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.panel-action-button {
+  background: none;
+  border: none;
+  color: #10b981;
+  font-weight: 500;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.close-panel-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.notifications-list {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.notification-item {
+  display: flex;
+  padding: 1rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  position: relative;
+}
+
+.notification-item.unread {
+  background-color: #f0fdfa;
+}
+
+.notification-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 1rem;
+}
+
+.type-info {
+  background-color: #dbeafe;
+}
+
+.type-warning {
+  background-color: #fef3c7;
+}
+
+.type-success {
+  background-color: #d1fae5;
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.notification-message {
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.notification-time {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.unread-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #10b981;
+  border-radius: 50%;
+  position: absolute;
+  top: 1.25rem;
+  right: 1rem;
+}
+
+.empty-notifications {
+  padding: 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Transaction Filters */
+.transaction-filters {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+}
+
+.transactions-list.full-list {
+  margin-bottom: 2rem;
+}
+
+.transactions-list.full-list .transaction-item {
+  border-left: 4px solid transparent;
+}
+
+.transactions-list.full-list .transaction-item:hover {
+  border-left-color: #10b981;
+}
+
+/* Section Actions */
+.section-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .simpanan-overview,
+  .shu-overview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-panel {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .loan-info-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .history-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .loan-actions {
+    flex-direction: column;
+  }
+
+  .transaction-filters {
+    flex-direction: column;
+  }
+}
+</style>

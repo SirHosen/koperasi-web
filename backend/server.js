@@ -28,7 +28,13 @@ const PORT = process.env.PORT || 3000
 // Apply middleware
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173', // Vue.js development server
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:5174',
+      'http://127.0.0.1:5173',
+      'http://127.0.0.1:5174',
+      process.env.CORS_ORIGIN,
+    ].filter(Boolean), // Remove any undefined values
     credentials: true,
   }),
 )

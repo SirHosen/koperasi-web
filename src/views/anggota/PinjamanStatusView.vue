@@ -123,7 +123,16 @@ const getStatusLabel = (status: string) => {
 
 <template>
   <div class="queue-status-container">
-    <h1>Status Antrean FCFS</h1>
+    <!-- Modern Header -->
+    <div class="page-header">
+      <div class="header-content">
+        <h1>
+          <i class="bi bi-list-check"></i>
+          Status Pinjaman FCFS
+        </h1>
+        <p class="page-subtitle">Pantau status dan posisi antrean pinjaman Anda secara real-time</p>
+      </div>
+    </div>
 
     <div v-if="isLoading" class="loading-state">
       <div class="loading-spinner"></div>
@@ -290,15 +299,38 @@ const getStatusLabel = (status: string) => {
 
 <style scoped>
 .queue-status-container {
-  max-width: 900px;
+  max-width: 1200px;
   margin: 0 auto;
+  padding: 0 1rem;
 }
 
-h1 {
-  font-size: 1.75rem;
+/* Modern Page Header */
+.page-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.header-content h1 {
+  font-size: 2.25rem;
   font-weight: 700;
-  color: #111827;
-  margin-bottom: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.header-content h1 i {
+  font-size: 2rem;
+}
+
+.page-subtitle {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
 }
 
 h2 {
@@ -311,10 +343,11 @@ h2 {
 }
 
 .queue-card {
-  background-color: white;
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 2rem;
   margin-bottom: 2rem;
 }
 
@@ -367,11 +400,12 @@ h2 {
 }
 
 .queue-info {
-  background-color: #f9fafb;
-  border-radius: 0.5rem;
-  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 1rem;
+  padding: 2.5rem;
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .position-info {
@@ -551,6 +585,40 @@ h2 {
   font-weight: 700;
   color: #111827;
   margin-bottom: 0.5rem;
+}
+
+.no-loan-state {
+  background: white;
+  border-radius: 1rem;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.no-loan-state p {
+  margin-bottom: 2rem;
+  color: #64748b;
+  font-size: 1.1rem;
+}
+
+.apply-button {
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 0.75rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  display: inline-block;
+}
+
+.apply-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  text-decoration: none;
+  color: white;
 }
 
 .stat-label {

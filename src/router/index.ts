@@ -71,7 +71,7 @@ const router = createRouter({
         },
         { path: 'simpanan', name: 'pengurus-simpanan', component: SimpananView },
         { path: 'shu', name: 'pengurus-shu', component: ShuView },
-        { path: '', redirect: { name: 'pengurus-dashboard' } },
+        { path: '', name: 'pengurus-root', redirect: { name: 'pengurus-dashboard' } },
       ],
     },
 
@@ -98,7 +98,7 @@ const router = createRouter({
           component: () => import('../views/anggota/ShuView.vue'),
         },
         { path: 'profil', name: 'anggota-profil', component: ProfilView },
-        { path: '', redirect: { name: 'anggota-dashboard' } },
+        { path: '', name: 'anggota-root', redirect: { name: 'anggota-dashboard' } },
       ],
     },
 
@@ -114,7 +114,7 @@ const router = createRouter({
           name: 'pengawas-dashboard',
           component: () => import('../views/pengawas/DashboardView.vue'),
         },
-        { path: '', redirect: { name: 'pengawas-dashboard' } },
+        { path: '', name: 'pengawas-root', redirect: { name: 'pengawas-dashboard' } },
       ],
     },
 

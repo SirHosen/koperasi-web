@@ -11,11 +11,11 @@
             <div class="status-indicator"></div>
           </div>
           <div class="welcome-text">
-            <h1 class="fade-in">Selamat Datang, {{ user?.nama || 'Pengguna' }}</h1>
+            <h1 class="fade-in">Selamat Datang, {{ user.nama }}</h1>
             <p class="member-info">
-              <span class="member-id">{{ user?.noAnggota || 'Belum Ada' }}</span>
+              <span class="member-id">{{ user.noAnggota }}</span>
               <span class="separator">•</span>
-              <span class="join-date">Bergabung {{ formatDate(user?.tanggalBergabung) }}</span>
+              <span class="join-date">Bergabung {{ formatDate(user.tanggalBergabung) }}</span>
             </p>
           </div>
         </div>
@@ -303,20 +303,15 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/modules/auth'
-import axios from 'axios'
-
-// API base URL
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 // Types
-interface NotificationItem {
+interface UserProfile {
   id: string
-  title: string
-  message: string
-  type: string
-  date: string
-  read: boolean
+  nama: string
+  email: string
+  noAnggota: string
+  tanggalBergabung: string
+  status: 'aktif' | 'nonaktif'
 }
 
 interface SimpananSummary {
@@ -324,7 +319,6 @@ interface SimpananSummary {
   wajib: number
   sukarela: number
   total: number
-  lastUpdate?: string
 }
 
 interface PinjamanSummary {
@@ -342,9 +336,18 @@ interface PinjamanSummary {
 interface ShuSummary {
   tahunTerakhir: number
   nominal: number
-  tanggalPembagian?: string
+  tanggalPembagian: string
   status: 'belum' | 'sudah'
   riwayat: { tahun: number; nominal: number }[]
+}
+
+interface Notification {
+  id: string
+  title: string
+  message: string
+  type: 'success' | 'info' | 'warning' | 'error'
+  date: string
+  read: boolean
 }
 
 interface Transaction {
@@ -356,58 +359,109 @@ interface Transaction {
   date: string
 }
 
-// Stores
-const authStore = useAuthStore()
-
 // Router
 const router = useRouter()
 
-// Reactive data
-const isLoading = ref(true)
+// Reactive Data
 const showNotifications = ref(false)
 
-// User data from auth store
-const user = computed(() => {
-  const authUser = authStore.user
-  if (!authUser) return null
-
-  return {
-    id: authUser.id,
-    nama: authUser.name || 'Pengguna',
-    email: authUser.email || '',
-    noAnggota: (authUser as any).nomor_anggota || 'Belum Ada',
-    tanggalBergabung: (authUser as any).tanggal_bergabung || new Date().toISOString(),
-    status: (authUser as any).is_active ? 'aktif' : 'nonaktif',
-  }
+// Mock Data
+const user = ref<UserProfile>({
+  id: 'user-1',
+  nama: 'Budi Santoso',
+  email: 'budi@gmail.com',
+  noAnggota: 'A-20230056',
+  tanggalBergabung: '2023-01-15',
+  status: 'aktif',
 })
 
-// Empty data states
 const simpanan = ref<SimpananSummary>({
-  pokok: 0,
-  wajib: 0,
-  sukarela: 0,
-  total: 0,
-  lastUpdate: undefined,
+  pokok: 100000,
+  wajib: 360000,
+  sukarela: 2540000,
+  total: 3000000,
 })
 
 const pinjaman = ref<PinjamanSummary>({
-  active: null,
+  active: {
+    jumlah: 5000000,
+    sisaPokok: 3200000,
+    sisaBunga: 480000,
+    angsuranPerBulan: 520833,
+    tenorSisa: 8,
+    jatuhTempo: '2025-10-15',
+    status: 'lancar',
+  },
 })
 
 const shu = ref<ShuSummary>({
-  tahunTerakhir: new Date().getFullYear(),
-  nominal: 0,
-  status: 'belum',
-  riwayat: [],
+  tahunTerakhir: 2024,
+  nominal: 2520000,
+  tanggalPembagian: '2025-04-05',
+  status: 'sudah',
+  riwayat: [
+    { tahun: 2024, nominal: 2520000 },
+    { tahun: 2023, nominal: 1750000 },
+    { tahun: 2022, nominal: 1250000 },
+  ],
 })
 
-const notifications = ref<NotificationItem[]>([])
-const recentTransactions = ref<Transaction[]>([])
+const notifications = ref<Notification[]>([
+  {
+    id: 'n1',
+    title: 'Pembayaran Berhasil',
+    message: 'Pembayaran simpanan wajib bulan September telah berhasil diproses.',
+    type: 'success',
+    date: '2025-09-21T14:30:00Z',
+    read: false,
+  },
+  {
+    id: 'n2',
+    title: 'Rapat Anggota Tahunan',
+    message: 'Rapat Anggota Tahunan akan dilaksanakan pada tanggal 15 Oktober 2025.',
+    type: 'info',
+    date: '2025-09-18T09:15:00Z',
+    read: false,
+  },
+  {
+    id: 'n3',
+    title: 'Pengingat Angsuran',
+    message: 'Angsuran pinjaman Anda akan jatuh tempo dalam 7 hari.',
+    type: 'warning',
+    date: '2025-09-08T10:45:00Z',
+    read: true,
+  },
+])
+
+const recentTransactions = ref<Transaction[]>([
+  {
+    id: 'tx1',
+    description: 'Setor Simpanan Sukarela',
+    amount: 500000,
+    type: 'credit',
+    status: 'completed',
+    date: '2025-09-23T10:30:00Z',
+  },
+  {
+    id: 'tx2',
+    description: 'Bayar Angsuran Pinjaman',
+    amount: 520833,
+    type: 'debit',
+    status: 'completed',
+    date: '2025-09-15T14:15:00Z',
+  },
+  {
+    id: 'tx3',
+    description: 'Pembagian SHU 2024',
+    amount: 2520000,
+    type: 'credit',
+    status: 'completed',
+    date: '2025-04-05T09:00:00Z',
+  },
+])
 
 // Computed
-const unreadCount = computed(
-  () => notifications.value.filter((n: NotificationItem) => !n.read).length,
-)
+const unreadCount = computed(() => notifications.value.filter((n) => !n.read).length)
 
 // Methods
 const formatCurrency = (amount: number): string => {
@@ -418,8 +472,7 @@ const formatCurrency = (amount: number): string => {
   }).format(amount)
 }
 
-const formatDate = (dateString?: string): string => {
-  if (!dateString) return 'Tidak diketahui'
+const formatDate = (dateString: string): string => {
   return new Date(dateString).toLocaleDateString('id-ID', {
     day: 'numeric',
     month: 'long',
@@ -488,122 +541,8 @@ const getYearlyGrowth = (): string => {
   return '+0%'
 }
 
-// API calls for real data
-const fetchSimpananData = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/anggota/simpanan`)
-    if (response.data.success) {
-      const data = response.data.data
-      simpanan.value = {
-        pokok: data.pokok || 0,
-        wajib: data.wajib || 0,
-        sukarela: data.sukarela || 0,
-        total: (data.pokok || 0) + (data.wajib || 0) + (data.sukarela || 0),
-        lastUpdate: data.lastUpdate,
-      }
-    }
-  } catch {
-    console.log('No savings data found - showing empty state')
-  }
-}
-
-const fetchPinjamanData = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/anggota/pinjaman`)
-    if (response.data.success && response.data.data.length > 0) {
-      const activeLoan = response.data.data.find((p: any) => p.status_pinjaman === 'aktif')
-      if (activeLoan) {
-        pinjaman.value.active = {
-          jumlah: activeLoan.jumlah,
-          sisaPokok: activeLoan.sisa_pokok,
-          sisaBunga: activeLoan.sisa_bunga,
-          angsuranPerBulan: activeLoan.angsuran_per_bulan,
-          tenorSisa: activeLoan.tenor_sisa,
-          jatuhTempo: activeLoan.jatuh_tempo,
-          status: activeLoan.status_pembayaran,
-        }
-      }
-    }
-  } catch {
-    console.log('No loan data found - showing empty state')
-  }
-}
-
-const fetchShuData = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/anggota/shu`)
-    if (response.data.success) {
-      const data = response.data.data
-      shu.value = {
-        tahunTerakhir: data.tahunTerakhir || new Date().getFullYear(),
-        nominal: data.nominal || 0,
-        tanggalPembagian: data.tanggalPembagian,
-        status: data.status || 'belum',
-        riwayat: data.riwayat || [],
-      }
-    }
-  } catch {
-    console.log('No SHU data found - showing empty state')
-  }
-}
-
-const fetchNotifications = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/notifications`)
-    if (response.data.success) {
-      notifications.value = response.data.data || []
-    }
-  } catch {
-    console.log('No notifications found')
-  }
-}
-
-const fetchRecentTransactions = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/anggota/transactions/recent`)
-    if (response.data.success) {
-      recentTransactions.value =
-        response.data.data.map((t: any) => ({
-          id: t.id,
-          description: t.description || t.keterangan,
-          amount: t.amount || t.jumlah,
-          type: t.type === 'debit' ? 'debit' : 'credit',
-          status: t.status || 'completed',
-          date: t.date || t.tanggal,
-        })) || []
-    }
-  } catch {
-    console.log('No transaction history found')
-  }
-}
-
-// Load all data on mount
-const loadDashboardData = async () => {
-  isLoading.value = true
-  try {
-    await Promise.all([
-      fetchSimpananData(),
-      fetchPinjamanData(),
-      fetchShuData(),
-      fetchNotifications(),
-      fetchRecentTransactions(),
-    ])
-  } catch (error) {
-    console.error('Error loading dashboard data:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
 // Lifecycle
 onMounted(() => {
-  // Load data if user is authenticated
-  if (authStore.isAuthenticated && authStore.isAnggota) {
-    loadDashboardData()
-  } else {
-    isLoading.value = false
-  }
-
   // Initialize animations
   setTimeout(() => {
     const cards = document.querySelectorAll('.modern-card')
