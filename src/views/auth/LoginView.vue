@@ -90,19 +90,6 @@ const login = async () => {
       <div class="login-footer">
         <p>Belum memiliki akun? <router-link to="/register">Daftar</router-link></p>
       </div>
-
-      <div class="demo-accounts">
-        <h3>Demo Accounts</h3>
-        <div class="demo-account">
-          <strong>Anggota:</strong> username: anggota, password: password
-        </div>
-        <div class="demo-account">
-          <strong>Pengurus:</strong> username: pengurus, password: password
-        </div>
-        <div class="demo-account">
-          <strong>Pengawas:</strong> username: pengawas, password: password
-        </div>
-      </div>
     </div>
   </div>
 </template>

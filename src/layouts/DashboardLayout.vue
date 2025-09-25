@@ -70,9 +70,25 @@ const logout = async () => {
         <div class="brand">Koperasi Simpan Pinjam</div>
         <div class="user-actions">
           <NotificationBell />
-          <div class="user-profile">
-            <span>{{ authStore.user?.name || 'User' }}</span>
-            <button @click="logout" class="logout-btn">Logout</button>
+          <div class="user-profile dropdown">
+            <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi bi-person-circle me-2"></i>
+              {{ authStore.user?.name || 'User' }}
+              <i class="bi bi-chevron-down ms-1"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li v-if="authStore.isAnggota">
+                <router-link class="dropdown-item" to="/anggota/profil">
+                  <i class="bi bi-person me-2"></i>Profil & Pengaturan
+                </router-link>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <button class="dropdown-item" @click="logout">
+                  <i class="bi bi-box-arrow-right me-2"></i>Logout
+                </button>
+              </li>
+            </ul>
           </div>
         </div>
       </div>

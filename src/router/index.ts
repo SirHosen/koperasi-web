@@ -23,6 +23,7 @@ const AnggotaSimpananView = () => import('../views/anggota/SimpananView.vue')
 const PinjamanFormView = () => import('../views/anggota/PinjamanFormView.vue')
 const PinjamanStatusView = () => import('../views/anggota/PinjamanStatusView.vue')
 const DokumenStatusView = () => import('../views/anggota/DokumenStatusView.vue')
+const ProfilView = () => import('../views/anggota/ProfilView.vue')
 
 // Pengawas (Supervisor) views
 // const PengawasDashboardView = () => import('../views/pengawas/DashboardView.vue')
@@ -87,6 +88,8 @@ const router = createRouter({
         { path: 'pinjaman/ajukan', name: 'anggota-pinjaman-form', component: PinjamanFormView },
         { path: 'pinjaman/status', name: 'anggota-pinjaman-status', component: PinjamanStatusView },
         { path: 'pinjaman/dokumen', name: 'anggota-dokumen-status', component: DokumenStatusView },
+        { path: 'shu', name: 'anggota-shu', component: () => import('../views/anggota/ShuView.vue') },
+        { path: 'profil', name: 'anggota-profil', component: ProfilView },
         { path: '', redirect: { name: 'anggota-dashboard' } },
       ],
     },

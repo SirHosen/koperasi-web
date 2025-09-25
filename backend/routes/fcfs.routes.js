@@ -104,7 +104,7 @@ router.get('/queue/:id', async (req, res) => {
 router.post('/submit', async (req, res) => {
   const connection = await pool.getConnection()
   try {
-    await connection.beginTransaction()
+    await pool.beginTransaction()
 
     const { jumlah, tenor, tujuan, anggotaId } = req.body
 
@@ -113,7 +113,7 @@ router.post('/submit', async (req, res) => {
     }
 
     // Get system bunga setting
-    const [bungaSetting] = await connection.query(
+    const [bungaSetting] = await pool.query(
       'SELECT setting_value FROM system_settings WHERE setting_key = ?',
       ['bunga_pinjaman'],
     )
@@ -127,7 +127,7 @@ router.post('/submit', async (req, res) => {
     const day = today.getDate().toString().padStart(2, '0')
     const dateStr = `${year}${month}${day}`
 
-    const [lastPinjaman] = await connection.query(
+    const [lastPinjaman] = await pool.query(
       'SELECT id FROM pinjaman WHERE id LIKE ? ORDER BY id DESC LIMIT 1',
       [`P-${dateStr}%`],
     )
@@ -141,7 +141,7 @@ router.post('/submit', async (req, res) => {
     }
 
     // Get current position in queue
-    const [currentQueue] = await connection.query(
+    const [currentQueue] = await pool.query(
       'SELECT COUNT(*) as count FROM pinjaman WHERE status_pinjaman = ?',
       ['antrean'],
     )
@@ -152,7 +152,7 @@ router.post('/submit', async (req, res) => {
     const burstTime = Math.ceil(jumlah / 500000) * 5 + 15 // Base 15 min + 5 min per 500k
 
     // Insert new loan application
-    await connection.query(
+    await pool.query(
       `INSERT INTO pinjaman
        (id, anggota_id, jumlah, tenor, bunga, tujuan, arrival_time,
         status_pinjaman, posisi_antrean, burst_time)
@@ -161,7 +161,7 @@ router.post('/submit', async (req, res) => {
     )
 
     // Log activity
-    await connection.query(
+    await pool.query(
       `INSERT INTO activity_logs
        (id, user_id, action, entity_type, entity_id, description, ip_address)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -176,7 +176,7 @@ router.post('/submit', async (req, res) => {
       ],
     )
 
-    await connection.commit()
+    await pool.commit()
 
     return res.status(201).json({
       status: 'success',
@@ -189,11 +189,11 @@ router.post('/submit', async (req, res) => {
       },
     })
   } catch (error) {
-    await connection.rollback()
+    await pool.rollback()
     console.error('Loan submission error:', error)
     return res.status(500).json({ status: 'error', message: 'Internal server error' })
   } finally {
-    connection.release()
+    pool.release()
   }
 })
 
@@ -204,10 +204,10 @@ router.post('/submit', async (req, res) => {
 router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
   const connection = await pool.getConnection()
   try {
-    await connection.beginTransaction()
+    await pool.beginTransaction()
 
     // Get the next loan in queue
-    const [nextInQueue] = await connection.query(
+    const [nextInQueue] = await pool.query(
       `SELECT id, anggota_id FROM pinjaman
        WHERE status_pinjaman = 'antrean'
        ORDER BY posisi_antrean ASC
@@ -221,7 +221,7 @@ router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
     const { id: loanId, anggota_id: anggotaId } = nextInQueue[0]
 
     // Update loan status to 'verifikasi'
-    await connection.query(
+    await pool.query(
       `UPDATE pinjaman
        SET status_pinjaman = 'verifikasi',
            start_process_time = NOW(),
@@ -232,14 +232,14 @@ router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
     )
 
     // Update positions for remaining queue items
-    await connection.query(
+    await pool.query(
       `UPDATE pinjaman
        SET posisi_antrean = posisi_antrean - 1
        WHERE status_pinjaman = 'antrean'`,
     )
 
     // Log activity
-    await connection.query(
+    await pool.query(
       `INSERT INTO activity_logs
        (id, user_id, action, entity_type, entity_id, description, ip_address)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -254,7 +254,7 @@ router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
       ],
     )
 
-    await connection.commit()
+    await pool.commit()
 
     return res.status(200).json({
       status: 'success',
@@ -264,11 +264,11 @@ router.post('/process-next', checkRole(['pengurus']), async (req, res) => {
       },
     })
   } catch (error) {
-    await connection.rollback()
+    await pool.rollback()
     console.error('Process next loan error:', error)
     return res.status(500).json({ status: 'error', message: 'Internal server error' })
   } finally {
-    connection.release()
+    pool.release()
   }
 })
 
