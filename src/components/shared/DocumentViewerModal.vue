@@ -1,9 +1,8 @@
 // DocumentViewerModal.vue - Modal for document viewing
 <script setup lang="ts">
-import { ref } from 'vue'
 import DocumentPreview from './DocumentPreview.vue'
 
-const props = defineProps({
+defineProps({
   show: {
     type: Boolean,
     required: true,

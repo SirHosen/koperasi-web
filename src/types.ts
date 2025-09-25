@@ -199,14 +199,3 @@ export interface OfficerPerformance {
   rejected_count: number
   average_processing_time: number
 }
-
-// Notification types
-export interface Notification {
-  id: number
-  user_id: string
-  title: string
-  message: string
-  link: string
-  is_read: boolean
-  created_at: string
-}

@@ -22,33 +22,33 @@ const pinjamanAktif = ref({
 const notifications = ref<Notification[]>([
   {
     id: '1',
-    userId: 'user123',
+    user_id: 'user123',
     title: 'Pembayaran Simpanan Wajib',
     message: 'Jangan lupa membayar simpanan wajib bulan Oktober',
-    isRead: false,
+    is_read: false,
     type: 'info',
-    createdAt: '2025-09-20T10:00:00Z',
-    updatedAt: '2025-09-20T10:00:00Z',
+    created_at: '2025-09-20T10:00:00Z',
+    updated_at: '2025-09-20T10:00:00Z',
   },
   {
     id: '2',
-    userId: 'user123',
+    user_id: 'user123',
     title: 'Rapat Anggota Tahunan',
     message: 'RAT akan dilaksanakan pada tanggal 15 November 2025',
-    isRead: true,
+    is_read: true,
     type: 'info',
-    createdAt: '2025-09-18T14:30:00Z',
-    updatedAt: '2025-09-18T14:30:00Z',
+    created_at: '2025-09-18T14:30:00Z',
+    updated_at: '2025-09-18T14:30:00Z',
   },
   {
     id: '3',
-    userId: 'user123',
+    user_id: 'user123',
     title: 'Angsuran Pinjaman',
     message: 'Angsuran pinjaman Anda akan jatuh tempo dalam 5 hari',
-    isRead: false,
+    is_read: false,
     type: 'warning',
-    createdAt: '2025-09-22T09:15:00Z',
-    updatedAt: '2025-09-22T09:15:00Z',
+    created_at: '2025-09-22T09:15:00Z',
+    updated_at: '2025-09-22T09:15:00Z',
   },
 ])
 
@@ -77,7 +77,7 @@ const formatDate = (dateString: string) => {
 const markAsRead = (notificationId: string) => {
   const notification = notifications.value.find((n) => n.id === notificationId)
   if (notification) {
-    notification.isRead = true
+    notification.is_read = true
   }
 }
 </script>
@@ -192,7 +192,7 @@ const markAsRead = (notificationId: string) => {
           v-for="notification in notifications"
           :key="notification.id"
           class="notification-item"
-          :class="{ unread: !notification.isRead, [notification.type]: true }"
+          :class="{ unread: !notification.is_read, [notification.type || 'info']: true }"
         >
           <div class="notification-icon">
             <span v-if="notification.type === 'info'">ℹ️</span>
@@ -203,10 +203,10 @@ const markAsRead = (notificationId: string) => {
           <div class="notification-content">
             <div class="notification-title">{{ notification.title }}</div>
             <div class="notification-message">{{ notification.message }}</div>
-            <div class="notification-date">{{ formatDate(notification.createdAt) }}</div>
+            <div class="notification-date">{{ formatDate(notification.created_at) }}</div>
           </div>
           <button
-            v-if="!notification.isRead"
+            v-if="!notification.is_read"
             @click="markAsRead(notification.id)"
             class="mark-read-button"
           >

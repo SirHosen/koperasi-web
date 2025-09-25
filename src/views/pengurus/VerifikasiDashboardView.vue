@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 import { useVerificationStatsStore } from '@/stores/modules/verificationStats'
 import VerificationNavigation from '@/components/pengurus/VerificationNavigation.vue'
 import Chart from 'chart.js/auto'

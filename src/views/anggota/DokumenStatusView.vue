@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useAnggotaDokumenStore } from '@/stores/modules/anggotaDokumen'
 import DocumentViewerModal from '@/components/shared/DocumentViewerModal.vue'
 
