@@ -1,0 +1,1394 @@
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import type { Pinjaman, User } from '../../types'
+
+const applications = ref<Pinjaman[]>([
+  {
+    id: 'P-20250923-001',
+    anggotaId: 'A-20230056',
+    jumlah: 5000000,
+    tenor: 12,
+    bunga: 1.5,
+    tujuan: 'Renovasi rumah',
+    arrivalTime: '2025-09-23T09:15:03Z',
+    statusPinjaman: 'verifikasi',
+    burstTime: 25,
+    createdAt: '2025-09-23T09:15:03Z',
+    updatedAt: '2025-09-23T09:15:03Z',
+    dokumenPendukung: [
+      { id: 'DOC-001', nama: 'KTP', status: 'diterima', url: '/documents/ktp.pdf' },
+      { id: 'DOC-002', nama: 'Slip Gaji', status: 'diterima', url: '/documents/slip_gaji.pdf' },
+      {
+        id: 'DOC-003',
+        nama: 'Surat Pernyataan',
+        status: 'menunggu',
+        url: '/documents/pernyataan.pdf',
+      },
+    ],
+  },
+  {
+    id: 'P-20250923-002',
+    anggotaId: 'A-20210034',
+    jumlah: 10000000,
+    tenor: 24,
+    bunga: 1.5,
+    tujuan: 'Modal usaha',
+    arrivalTime: '2025-09-23T10:22:17Z',
+    statusPinjaman: 'verifikasi',
+    burstTime: 40,
+    createdAt: '2025-09-23T10:22:17Z',
+    updatedAt: '2025-09-23T10:22:17Z',
+    dokumenPendukung: [
+      { id: 'DOC-101', nama: 'KTP', status: 'diterima', url: '/documents/ktp_2.pdf' },
+      { id: 'DOC-102', nama: 'SIUP', status: 'diterima', url: '/documents/siup.pdf' },
+      { id: 'DOC-103', nama: 'Proposal Usaha', status: 'diterima', url: '/documents/proposal.pdf' },
+      { id: 'DOC-104', nama: 'Laporan Keuangan', status: 'ditolak', url: '/documents/laporan.pdf' },
+    ],
+  },
+  {
+    id: 'P-20250923-003',
+    anggotaId: 'A-20230001',
+    jumlah: 3000000,
+    tenor: 12,
+    bunga: 1.5,
+    tujuan: 'Biaya pendidikan',
+    arrivalTime: '2025-09-23T11:45:30Z',
+    statusPinjaman: 'disetujui',
+    burstTime: 20,
+    createdAt: '2025-09-23T11:45:30Z',
+    updatedAt: '2025-09-23T15:30:45Z',
+    dokumenPendukung: [
+      { id: 'DOC-201', nama: 'KTP', status: 'diterima', url: '/documents/ktp_3.pdf' },
+      { id: 'DOC-202', nama: 'Kartu Keluarga', status: 'diterima', url: '/documents/kk.pdf' },
+      {
+        id: 'DOC-203',
+        nama: 'Tagihan Pendidikan',
+        status: 'diterima',
+        url: '/documents/tagihan.pdf',
+      },
+    ],
+    catatanVerifikasi: 'Dokumen lengkap dan valid',
+  },
+  {
+    id: 'P-20250923-004',
+    anggotaId: 'A-20220078',
+    jumlah: 7500000,
+    tenor: 18,
+    bunga: 1.5,
+    tujuan: 'Pembelian laptop',
+    arrivalTime: '2025-09-23T13:12:55Z',
+    statusPinjaman: 'ditolak',
+    burstTime: 30,
+    createdAt: '2025-09-23T13:12:55Z',
+    updatedAt: '2025-09-23T16:20:10Z',
+    dokumenPendukung: [
+      { id: 'DOC-301', nama: 'KTP', status: 'diterima', url: '/documents/ktp_4.pdf' },
+      { id: 'DOC-302', nama: 'Slip Gaji', status: 'ditolak', url: '/documents/slip_4.pdf' },
+      {
+        id: 'DOC-303',
+        nama: 'Surat Keterangan Kerja',
+        status: 'menunggu',
+        url: '/documents/surat_kerja.pdf',
+      },
+    ],
+    catatanVerifikasi: 'Slip gaji tidak sesuai dengan ketentuan minimum pendapatan',
+  },
+  {
+    id: 'P-20250923-005',
+    anggotaId: 'A-20210092',
+    jumlah: 15000000,
+    tenor: 36,
+    bunga: 1.5,
+    tujuan: 'Renovasi toko',
+    arrivalTime: '2025-09-23T14:30:10Z',
+    statusPinjaman: 'antrean',
+    burstTime: 45,
+    createdAt: '2025-09-23T14:30:10Z',
+    updatedAt: '2025-09-23T14:30:10Z',
+    posisiAntrean: 1,
+  },
+])
+
+// Mock data for anggota
+const anggotaData = ref<Record<string, User>>({
+  'A-20230056': {
+    id: 'A-20230056',
+    nama: 'Budi Santoso',
+    email: 'budi@example.com',
+    noHp: '08123456789',
+    alamat: 'Jl. Merdeka No. 123, Jakarta',
+    pekerjaan: 'Karyawan Swasta',
+    penghasilan: 6500000,
+    role: 'anggota',
+    statusAktif: true,
+    createdAt: '2023-01-15T08:30:00Z',
+    updatedAt: '2025-08-20T14:15:30Z',
+  },
+  'A-20210034': {
+    id: 'A-20210034',
+    nama: 'Dewi Lestari',
+    email: 'dewi@example.com',
+    noHp: '08567891234',
+    alamat: 'Jl. Sudirman No. 45, Bandung',
+    pekerjaan: 'Wiraswasta',
+    penghasilan: 12000000,
+    role: 'anggota',
+    statusAktif: true,
+    createdAt: '2021-05-22T10:45:00Z',
+    updatedAt: '2025-07-10T09:20:15Z',
+  },
+  'A-20230001': {
+    id: 'A-20230001',
+    nama: 'Ahmad Fadli',
+    email: 'ahmad@example.com',
+    noHp: '08234567890',
+    alamat: 'Jl. Gatot Subroto No. 78, Surabaya',
+    pekerjaan: 'Guru',
+    penghasilan: 4800000,
+    role: 'anggota',
+    statusAktif: true,
+    createdAt: '2023-01-03T09:15:00Z',
+    updatedAt: '2025-06-12T11:30:45Z',
+  },
+  'A-20220078': {
+    id: 'A-20220078',
+    nama: 'Siti Nurhaliza',
+    email: 'siti@example.com',
+    noHp: '08987654321',
+    alamat: 'Jl. Ahmad Yani No. 56, Yogyakarta',
+    pekerjaan: 'Freelancer',
+    penghasilan: 7200000,
+    role: 'anggota',
+    statusAktif: true,
+    createdAt: '2022-07-18T14:20:00Z',
+    updatedAt: '2025-09-01T15:45:30Z',
+  },
+  'A-20210092': {
+    id: 'A-20210092',
+    nama: 'Rudi Hermawan',
+    email: 'rudi@example.com',
+    noHp: '08765432198',
+    alamat: 'Jl. Diponegoro No. 112, Semarang',
+    pekerjaan: 'Wiraswasta',
+    penghasilan: 18500000,
+    role: 'anggota',
+    statusAktif: true,
+    createdAt: '2021-08-05T11:10:00Z',
+    updatedAt: '2025-08-25T13:25:40Z',
+  },
+})
+
+// Mock data for simpanan
+const simpananData = ref<Record<string, { wajib: number; pokok: number; sukarela: number }>>({
+  'A-20230056': { wajib: 3600000, pokok: 500000, sukarela: 1150000 },
+  'A-20210034': { wajib: 7200000, pokok: 500000, sukarela: 1050000 },
+  'A-20230001': { wajib: 1600000, pokok: 500000, sukarela: 0 },
+  'A-20220078': { wajib: 4400000, pokok: 500000, sukarela: 0 },
+  'A-20210092': { wajib: 7600000, pokok: 500000, sukarela: 4400000 },
+})
+
+// UI state variables
+const selectedApplication = ref<Pinjaman | null>(null)
+const isDetailVisible = ref(false)
+const filterStatus = ref<string>('all')
+const searchQuery = ref('')
+const sortBy = ref<string>('arrivalTime')
+const sortOrder = ref<'asc' | 'desc'>('asc')
+
+// Format utilities
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+// Get total simpanan
+const getTotalSimpanan = (anggotaId: string) => {
+  const data = simpananData.value[anggotaId]
+  if (!data) return 0
+  return data.wajib + data.pokok + data.sukarela
+}
+
+// View application details
+const viewApplicationDetails = (application: Pinjaman) => {
+  selectedApplication.value = application
+  isDetailVisible.value = true
+}
+
+// Close application details
+const closeApplicationDetails = () => {
+  isDetailVisible.value = false
+  selectedApplication.value = null
+}
+
+// Verify document
+const verifyDocument = (appId: string, docId: string, status: 'diterima' | 'ditolak') => {
+  const app = applications.value.find((a) => a.id === appId)
+  if (!app || !app.dokumenPendukung) return
+
+  const doc = app.dokumenPendukung.find((d) => d.id === docId)
+  if (!doc) return
+
+  doc.status = status
+}
+
+// Process application
+const processApplication = (
+  application: Pinjaman,
+  status: 'disetujui' | 'ditolak',
+  catatan: string = '',
+) => {
+  const appIndex = applications.value.findIndex((a) => a.id === application.id)
+  if (appIndex === -1) return
+
+  applications.value[appIndex] = {
+    ...application,
+    statusPinjaman: status,
+    catatanVerifikasi: catatan,
+    updatedAt: new Date().toISOString(),
+  }
+
+  closeApplicationDetails()
+}
+
+// Filter and sort applications
+const filteredApplications = computed(() => {
+  let filtered = [...applications.value]
+
+  // Apply status filter
+  if (filterStatus.value !== 'all') {
+    filtered = filtered.filter((app) => app.statusPinjaman === filterStatus.value)
+  }
+
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    filtered = filtered.filter((app) => {
+      const anggota = anggotaData.value[app.anggotaId]
+      return (
+        app.id.toLowerCase().includes(query) ||
+        app.tujuan.toLowerCase().includes(query) ||
+        (anggota && anggota.nama.toLowerCase().includes(query))
+      )
+    })
+  }
+
+  // Apply sorting
+  filtered.sort((a, b) => {
+    let valueA: any
+    let valueB: any
+
+    switch (sortBy.value) {
+      case 'arrivalTime':
+        valueA = new Date(a.arrivalTime).getTime()
+        valueB = new Date(b.arrivalTime).getTime()
+        break
+      case 'amount':
+        valueA = a.jumlah
+        valueB = b.jumlah
+        break
+      case 'name':
+        valueA = anggotaData.value[a.anggotaId]?.nama || ''
+        valueB = anggotaData.value[b.anggotaId]?.nama || ''
+        break
+      default:
+        valueA = a[sortBy.value as keyof Pinjaman]
+        valueB = b[sortBy.value as keyof Pinjaman]
+    }
+
+    if (valueA < valueB) return sortOrder.value === 'asc' ? -1 : 1
+    if (valueA > valueB) return sortOrder.value === 'asc' ? 1 : -1
+    return 0
+  })
+
+  return filtered
+})
+
+// Check if all required documents are approved
+const areAllDocumentsApproved = (application: Pinjaman) => {
+  if (!application.dokumenPendukung) return false
+  return application.dokumenPendukung.every((doc) => doc.status === 'diterima')
+}
+
+// Get document verification status summary
+const getDocumentStatusSummary = (application: Pinjaman) => {
+  if (!application.dokumenPendukung) return { total: 0, approved: 0 }
+
+  const total = application.dokumenPendukung.length
+  const approved = application.dokumenPendukung.filter((doc) => doc.status === 'diterima').length
+
+  return { total, approved }
+}
+
+// Handle sorting change
+const changeSorting = (column: string) => {
+  if (sortBy.value === column) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortBy.value = column
+    sortOrder.value = 'asc'
+  }
+}
+
+// Process all selected documents
+const selectedDocumentStatus = ref<'diterima' | 'ditolak' | ''>('')
+const processAllDocuments = () => {
+  if (
+    !selectedApplication.value ||
+    !selectedApplication.value.dokumenPendukung ||
+    !selectedDocumentStatus.value
+  )
+    return
+
+  selectedApplication.value.dokumenPendukung.forEach((doc) => {
+    if (doc.status === 'menunggu') {
+      doc.status = selectedDocumentStatus.value as 'diterima' | 'ditolak'
+    }
+  })
+
+  selectedDocumentStatus.value = ''
+}
+</script>
+
+<template>
+  <div class="application-management">
+    <div class="page-header">
+      <h1>Verifikasi Pengajuan Pinjaman</h1>
+      <div class="filter-controls">
+        <div class="search-bar">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="Cari ID / Nama / Tujuan"
+            class="search-input"
+          />
+        </div>
+        <div class="status-filter">
+          <select v-model="filterStatus">
+            <option value="all">Semua Status</option>
+            <option value="antrean">Antrean</option>
+            <option value="verifikasi">Verifikasi</option>
+            <option value="disetujui">Disetujui</option>
+            <option value="ditolak">Ditolak</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="application-table">
+      <table>
+        <thead>
+          <tr>
+            <th @click="changeSorting('id')">
+              ID Pengajuan
+              <span v-if="sortBy === 'id'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="changeSorting('name')">
+              Nama Anggota
+              <span v-if="sortBy === 'name'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="changeSorting('amount')">
+              Jumlah
+              <span v-if="sortBy === 'amount'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="changeSorting('tenor')">
+              Tenor
+              <span v-if="sortBy === 'tenor'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="changeSorting('arrivalTime')">
+              Tanggal Pengajuan
+              <span v-if="sortBy === 'arrivalTime'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th>Dokumen</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            v-for="app in filteredApplications"
+            :key="app.id"
+            :class="{
+              'completed-row':
+                app.statusPinjaman === 'disetujui' || app.statusPinjaman === 'ditolak',
+            }"
+          >
+            <td>{{ app.id }}</td>
+            <td>{{ anggotaData[app.anggotaId]?.nama }}</td>
+            <td>{{ formatCurrency(app.jumlah) }}</td>
+            <td>{{ app.tenor }} bulan</td>
+            <td>{{ formatDate(app.arrivalTime) }}</td>
+            <td>
+              <div class="document-progress" v-if="app.dokumenPendukung">
+                <div class="progress-bar">
+                  <div
+                    class="progress-fill"
+                    :style="`width: ${(getDocumentStatusSummary(app).approved / getDocumentStatusSummary(app).total) * 100}%`"
+                  ></div>
+                </div>
+                <div class="progress-text">
+                  {{ getDocumentStatusSummary(app).approved }}/{{
+                    getDocumentStatusSummary(app).total
+                  }}
+                </div>
+              </div>
+              <div v-else>-</div>
+            </td>
+            <td>
+              <span class="status-badge" :class="app.statusPinjaman">
+                {{
+                  app.statusPinjaman === 'antrean'
+                    ? 'Antrean'
+                    : app.statusPinjaman === 'verifikasi'
+                      ? 'Verifikasi'
+                      : app.statusPinjaman === 'disetujui'
+                        ? 'Disetujui'
+                        : app.statusPinjaman === 'ditolak'
+                          ? 'Ditolak'
+                          : app.statusPinjaman
+                }}
+              </span>
+            </td>
+            <td>
+              <button class="action-button" @click="viewApplicationDetails(app)">Detail</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div v-if="filteredApplications.length === 0" class="no-applications">
+        <p>Tidak ada pengajuan yang sesuai dengan filter</p>
+      </div>
+    </div>
+
+    <!-- Application Detail Modal -->
+    <div v-if="isDetailVisible && selectedApplication" class="modal-overlay">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2>Detail Pengajuan Pinjaman</h2>
+          <button @click="closeApplicationDetails" class="close-button">&times;</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="detail-grid">
+            <div class="detail-section">
+              <h3>Informasi Pengajuan</h3>
+
+              <div class="detail-group">
+                <div class="detail-label">ID Pengajuan</div>
+                <div class="detail-value">{{ selectedApplication.id }}</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Status</div>
+                <div class="detail-value">
+                  <span class="status-badge" :class="selectedApplication.statusPinjaman">
+                    {{
+                      selectedApplication.statusPinjaman === 'antrean'
+                        ? 'Antrean'
+                        : selectedApplication.statusPinjaman === 'verifikasi'
+                          ? 'Verifikasi'
+                          : selectedApplication.statusPinjaman === 'disetujui'
+                            ? 'Disetujui'
+                            : selectedApplication.statusPinjaman === 'ditolak'
+                              ? 'Ditolak'
+                              : selectedApplication.statusPinjaman
+                    }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Tanggal Pengajuan</div>
+                <div class="detail-value">{{ formatDate(selectedApplication.arrivalTime) }}</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Jumlah Pinjaman</div>
+                <div class="detail-value">{{ formatCurrency(selectedApplication.jumlah) }}</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Tenor</div>
+                <div class="detail-value">{{ selectedApplication.tenor }} bulan</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Bunga</div>
+                <div class="detail-value">{{ selectedApplication.bunga }}% per bulan</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Tujuan Pinjaman</div>
+                <div class="detail-value">{{ selectedApplication.tujuan }}</div>
+              </div>
+
+              <div v-if="selectedApplication.catatanVerifikasi" class="detail-group">
+                <div class="detail-label">Catatan Verifikasi</div>
+                <div class="detail-value">{{ selectedApplication.catatanVerifikasi }}</div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Informasi Anggota</h3>
+
+              <div class="detail-group">
+                <div class="detail-label">Nama Anggota</div>
+                <div class="detail-value">
+                  {{ anggotaData[selectedApplication.anggotaId]?.nama }}
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">ID Anggota</div>
+                <div class="detail-value">{{ selectedApplication.anggotaId }}</div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Pekerjaan</div>
+                <div class="detail-value">
+                  {{ anggotaData[selectedApplication.anggotaId]?.pekerjaan }}
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Penghasilan per Bulan</div>
+                <div class="detail-value">
+                  {{ formatCurrency(anggotaData[selectedApplication.anggotaId]?.penghasilan || 0) }}
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Alamat</div>
+                <div class="detail-value">
+                  {{ anggotaData[selectedApplication.anggotaId]?.alamat }}
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Email</div>
+                <div class="detail-value">
+                  {{ anggotaData[selectedApplication.anggotaId]?.email }}
+                </div>
+              </div>
+
+              <div class="detail-group">
+                <div class="detail-label">Telepon</div>
+                <div class="detail-value">
+                  {{ anggotaData[selectedApplication.anggotaId]?.noHp }}
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <h3>Simpanan Anggota</h3>
+
+              <div class="savings-summary">
+                <div class="savings-total">
+                  <div class="amount">
+                    {{ formatCurrency(getTotalSimpanan(selectedApplication.anggotaId)) }}
+                  </div>
+                  <div class="label">Total Simpanan</div>
+                </div>
+
+                <div class="savings-breakdown">
+                  <div class="savings-item">
+                    <div class="savings-label">Simpanan Pokok</div>
+                    <div class="savings-value">
+                      {{ formatCurrency(simpananData[selectedApplication.anggotaId]?.pokok || 0) }}
+                    </div>
+                  </div>
+
+                  <div class="savings-item">
+                    <div class="savings-label">Simpanan Wajib</div>
+                    <div class="savings-value">
+                      {{ formatCurrency(simpananData[selectedApplication.anggotaId]?.wajib || 0) }}
+                    </div>
+                  </div>
+
+                  <div class="savings-item">
+                    <div class="savings-label">Simpanan Sukarela</div>
+                    <div class="savings-value">
+                      {{
+                        formatCurrency(simpananData[selectedApplication.anggotaId]?.sukarela || 0)
+                      }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="loan-eligibility">
+                <h4>Analisis Kelayakan</h4>
+
+                <div class="eligibility-metrics">
+                  <div class="eligibility-item">
+                    <div class="eligibility-label">Rasio Pinjaman terhadap Simpanan</div>
+                    <div
+                      class="eligibility-value"
+                      :class="{
+                        good:
+                          selectedApplication.jumlah /
+                            getTotalSimpanan(selectedApplication.anggotaId) <=
+                          3,
+                        warning:
+                          selectedApplication.jumlah /
+                            getTotalSimpanan(selectedApplication.anggotaId) >
+                            3 &&
+                          selectedApplication.jumlah /
+                            getTotalSimpanan(selectedApplication.anggotaId) <=
+                            5,
+                        danger:
+                          selectedApplication.jumlah /
+                            getTotalSimpanan(selectedApplication.anggotaId) >
+                          5,
+                      }"
+                    >
+                      {{
+                        (
+                          selectedApplication.jumlah /
+                          getTotalSimpanan(selectedApplication.anggotaId)
+                        ).toFixed(2)
+                      }}x
+                    </div>
+                  </div>
+
+                  <div class="eligibility-item">
+                    <div class="eligibility-label">Rasio Angsuran terhadap Penghasilan</div>
+                    <div
+                      class="eligibility-value"
+                      :class="{
+                        good:
+                          (selectedApplication.jumlah *
+                            (selectedApplication.bunga / 100 + 1 / selectedApplication.tenor)) /
+                            (anggotaData[selectedApplication.anggotaId]?.penghasilan || 1) <
+                          0.3,
+                        warning:
+                          (selectedApplication.jumlah *
+                            (selectedApplication.bunga / 100 + 1 / selectedApplication.tenor)) /
+                            (anggotaData[selectedApplication.anggotaId]?.penghasilan || 1) >=
+                            0.3 &&
+                          (selectedApplication.jumlah *
+                            (selectedApplication.bunga / 100 + 1 / selectedApplication.tenor)) /
+                            (anggotaData[selectedApplication.anggotaId]?.penghasilan || 1) <=
+                            0.5,
+                        danger:
+                          (selectedApplication.jumlah *
+                            (selectedApplication.bunga / 100 + 1 / selectedApplication.tenor)) /
+                            (anggotaData[selectedApplication.anggotaId]?.penghasilan || 1) >
+                          0.5,
+                      }"
+                    >
+                      {{
+                        (
+                          ((selectedApplication.jumlah *
+                            (selectedApplication.bunga / 100 + 1 / selectedApplication.tenor)) /
+                            (anggotaData[selectedApplication.anggotaId]?.penghasilan || 1)) *
+                          100
+                        ).toFixed(1)
+                      }}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="documents-section">
+            <h3>Dokumen Pendukung</h3>
+
+            <div
+              v-if="
+                selectedApplication.dokumenPendukung &&
+                selectedApplication.dokumenPendukung.length > 0
+              "
+              class="document-actions"
+            >
+              <div class="bulk-action">
+                <select v-model="selectedDocumentStatus">
+                  <option value="">Pilih Status Semua</option>
+                  <option value="diterima">Terima Semua</option>
+                  <option value="ditolak">Tolak Semua</option>
+                </select>
+                <button
+                  class="apply-button"
+                  :disabled="!selectedDocumentStatus"
+                  @click="processAllDocuments"
+                >
+                  Terapkan
+                </button>
+              </div>
+            </div>
+
+            <div
+              v-if="
+                selectedApplication.dokumenPendukung &&
+                selectedApplication.dokumenPendukung.length > 0
+              "
+              class="documents-list"
+            >
+              <div
+                v-for="doc in selectedApplication.dokumenPendukung"
+                :key="doc.id"
+                class="document-item"
+              >
+                <div class="document-info">
+                  <div class="document-name">{{ doc.nama }}</div>
+                  <div class="document-status" :class="doc.status">
+                    {{
+                      doc.status === 'diterima'
+                        ? 'Diterima'
+                        : doc.status === 'ditolak'
+                          ? 'Ditolak'
+                          : 'Menunggu Verifikasi'
+                    }}
+                  </div>
+                </div>
+
+                <div class="document-actions">
+                  <button class="doc-action view">Lihat</button>
+                  <button
+                    v-if="doc.status !== 'diterima'"
+                    class="doc-action approve"
+                    @click="verifyDocument(selectedApplication.id, doc.id, 'diterima')"
+                  >
+                    Terima
+                  </button>
+                  <button
+                    v-if="doc.status !== 'ditolak'"
+                    class="doc-action reject"
+                    @click="verifyDocument(selectedApplication.id, doc.id, 'ditolak')"
+                  >
+                    Tolak
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div v-else class="no-documents">
+              <p>Tidak ada dokumen pendukung</p>
+            </div>
+          </div>
+
+          <div
+            class="verification-section"
+            v-if="selectedApplication.statusPinjaman === 'verifikasi'"
+          >
+            <h3>Verifikasi Pengajuan</h3>
+
+            <div class="verification-form">
+              <div class="form-group">
+                <label for="verification-notes">Catatan Verifikasi</label>
+                <textarea
+                  id="verification-notes"
+                  rows="3"
+                  placeholder="Tambahkan catatan untuk verifikasi pengajuan"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="verification-actions">
+              <button
+                class="reject-button"
+                @click="
+                  processApplication(
+                    selectedApplication,
+                    'ditolak',
+                    'Pengajuan tidak memenuhi syarat',
+                  )
+                "
+              >
+                Tolak Pengajuan
+              </button>
+              <button
+                class="approve-button"
+                :disabled="!areAllDocumentsApproved(selectedApplication)"
+                @click="
+                  processApplication(selectedApplication, 'disetujui', 'Dokumen lengkap dan valid')
+                "
+              >
+                Setujui Pengajuan
+              </button>
+            </div>
+
+            <div v-if="!areAllDocumentsApproved(selectedApplication)" class="approval-warning">
+              <p>Semua dokumen harus diverifikasi dan diterima sebelum pengajuan dapat disetujui</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.application-management {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  width: 250px;
+}
+
+.status-filter select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+}
+
+/* Table */
+.application-table {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th {
+  background-color: #f9fafb;
+  color: #374151;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+}
+
+th:hover {
+  background-color: #f3f4f6;
+}
+
+td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  color: #4b5563;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+.sort-icon {
+  margin-left: 0.25rem;
+  color: #6b7280;
+}
+
+.completed-row {
+  background-color: #f9fafb;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-badge.antrean {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge.verifikasi {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.status-badge.disetujui {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.ditolak {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.action-button {
+  padding: 0.25rem 0.75rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.document-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #e5e7eb;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #10b981;
+}
+
+.progress-text {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.no-applications {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-container {
+  background-color: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 1000px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1.5rem;
+}
+
+/* Detail sections */
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.detail-section {
+  border-radius: 0.5rem;
+  background-color: #f9fafb;
+  padding: 1.25rem;
+}
+
+.detail-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.detail-group {
+  margin-bottom: 0.75rem;
+}
+
+.detail-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 500;
+  color: #111827;
+}
+
+/* Savings section */
+.savings-summary {
+  margin-bottom: 1.25rem;
+}
+
+.savings-total {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.savings-total .amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.savings-total .label {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.savings-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.savings-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.savings-label {
+  color: #6b7280;
+}
+
+.savings-value {
+  font-weight: 500;
+}
+
+/* Loan eligibility */
+.loan-eligibility h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.75rem 0;
+}
+
+.eligibility-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.eligibility-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+.eligibility-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.eligibility-value {
+  font-weight: 600;
+}
+
+.eligibility-value.good {
+  color: #10b981;
+}
+
+.eligibility-value.warning {
+  color: #f59e0b;
+}
+
+.eligibility-value.danger {
+  color: #ef4444;
+}
+
+/* Documents section */
+.documents-section {
+  background-color: #f9fafb;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.documents-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.document-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.bulk-action {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.bulk-action select {
+  padding: 0.375rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+  background-color: white;
+}
+
+.apply-button {
+  padding: 0.375rem 0.75rem;
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.apply-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.documents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.document-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: white;
+  padding: 1rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.document-name {
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.document-status {
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  display: inline-block;
+}
+
+.document-status.diterima {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.document-status.ditolak {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.document-status.menunggu {
+  background-color: #e5e7eb;
+  color: #4b5563;
+}
+
+.document-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.doc-action {
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.doc-action.view {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.doc-action.approve {
+  background-color: #d1fae5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.doc-action.reject {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.no-documents {
+  text-align: center;
+  padding: 1.5rem;
+  color: #6b7280;
+}
+
+/* Verification section */
+.verification-section {
+  background-color: #f9fafb;
+  padding: 1.25rem;
+  border-radius: 0.5rem;
+}
+
+.verification-section h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  resize: vertical;
+}
+
+.verification-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.reject-button {
+  padding: 0.625rem 1.25rem;
+  background-color: white;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.approve-button {
+  padding: 0.625rem 1.25rem;
+  background-color: #10b981;
+  border: none;
+  color: white;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.approve-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.approval-warning {
+  background-color: #fef3c7;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  color: #92400e;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 1024px) {
+  .detail-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .filter-controls {
+    width: 100%;
+  }
+
+  .search-input {
+    flex: 1;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

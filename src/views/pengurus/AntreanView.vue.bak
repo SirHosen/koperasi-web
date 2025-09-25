@@ -1,0 +1,924 @@
+<script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
+import { useFcfsStore } from '@/stores/modules/fcfs'
+
+// Use FCFS store
+const fcfsStore = useFcfsStore()
+const isLoading = ref(true)
+const errorMessage = ref('')
+const autoRefreshInterval = ref<number | null>(null)
+const isProcessing = ref(false)
+const processingNotes = ref('')
+
+// Current processing
+const currentProcessing = ref<Pinjaman | null>(null)
+const processingNotes = ref('')
+
+// Search and filter options
+const searchTerm = ref('')
+const filterStatus = ref('all')
+
+// Auto-refresh queue every 60 seconds
+const setupAutoRefresh = () => {
+  autoRefreshInterval.value = window.setInterval(() => {
+    fetchQueue()
+  }, 60000) // 60 seconds
+}
+
+// Fetch queue from API
+const fetchQueue = async () => {
+  isLoading.value = true
+  errorMessage.value = ''
+  
+  try {
+    // Get queue data from FCFS store
+    await fcfsStore.getQueueStatus()
+  } catch (error) {
+    console.error('Error fetching queue data:', error)
+    errorMessage.value = 'Gagal mengambil data antrean. Silakan coba lagi.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const currentProcessing = ref<Pinjaman | null>(null)
+const processingStartTime = ref<Date | null>(null)
+const isProcessing = ref(false)
+const showDetail = ref<string | null>(null)
+const currentTab = ref<'all' | 'waiting' | 'processed'>('all')
+const processedItems = ref<Pinjaman[]>([])
+const searchQuery = ref('')
+const filterAmount = ref<string>('all')
+
+// Show anggota data (mock)
+const anggotaData = ref<
+  Record<
+    string,
+    { name: string; statusAktif: boolean; riwayatPinjaman: number; simpananTotal: number }
+  >
+>({
+  'A-20230056': {
+    name: 'Budi Santoso',
+    statusAktif: true,
+    riwayatPinjaman: 2,
+    simpananTotal: 5250000,
+  },
+  'A-20210034': {
+    name: 'Dewi Lestari',
+    statusAktif: true,
+    riwayatPinjaman: 3,
+    simpananTotal: 8750000,
+  },
+  'A-20230001': {
+    name: 'Ahmad Fadli',
+    statusAktif: true,
+    riwayatPinjaman: 1,
+    simpananTotal: 2100000,
+  },
+  'A-20220078': {
+    name: 'Siti Nurhaliza',
+    statusAktif: true,
+    riwayatPinjaman: 2,
+    simpananTotal: 4500000,
+  },
+  'A-20210092': {
+    name: 'Rudi Hermawan',
+    statusAktif: true,
+    riwayatPinjaman: 4,
+    simpananTotal: 12500000,
+  },
+  'A-20240012': {
+    name: 'Lia Indrawati',
+    statusAktif: true,
+    riwayatPinjaman: 0,
+    simpananTotal: 1750000,
+  },
+  'A-20240045': {
+    name: 'Doni Kusuma',
+    statusAktif: true,
+    riwayatPinjaman: 0,
+    simpananTotal: 3250000,
+  },
+})
+
+// Format utilities
+const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleString('id-ID', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+const formatTime = (minutes: number) => {
+  if (minutes < 60) {
+    return `${minutes} menit`
+  }
+  const hours = Math.floor(minutes / 60)
+  const remainingMinutes = minutes % 60
+  return `${hours} jam ${remainingMinutes} menit`
+}
+
+// Calculate estimated processing time based on items ahead in queue
+const getEstimatedTime = (position: number) => {
+  let totalMinutes = 0
+  for (let i = 0; i < position && i < queueItems.value.length; i++) {
+    totalMinutes += queueItems.value[i].burstTime || 0
+  }
+  return formatTime(totalMinutes)
+}
+
+// Process next application in queue
+const processNext = () => {
+  if (isProcessing.value || queueItems.value.length === 0) return
+
+  currentProcessing.value = queueItems.value[0]
+  processingStartTime.value = new Date()
+  isProcessing.value = true
+
+  // Simulate processing time
+  setTimeout(() => {
+    if (currentProcessing.value) {
+      const processed = {
+        ...currentProcessing.value,
+        statusPinjaman: 'disetujui',
+        startProcessTime: processingStartTime.value?.toISOString(),
+        finishProcessTime: new Date().toISOString(),
+      }
+
+      processedItems.value.unshift(processed)
+      queueItems.value.shift()
+
+      // Update positions for remaining queue items
+      queueItems.value = queueItems.value.map((item, idx) => ({
+        ...item,
+        posisiAntrean: idx + 1,
+      }))
+
+      currentProcessing.value = null
+      processingStartTime.value = null
+      isProcessing.value = false
+    }
+  }, 5000) // Simulate 5-second processing for demo
+}
+
+// Skip current application
+const skipApplication = () => {
+  if (!currentProcessing.value) return
+
+  const skipped = {
+    ...currentProcessing.value,
+    statusPinjaman: 'ditolak',
+    startProcessTime: processingStartTime.value?.toISOString(),
+    finishProcessTime: new Date().toISOString(),
+    catatan: 'Aplikasi tidak memenuhi syarat',
+  }
+
+  processedItems.value.unshift(skipped)
+  queueItems.value.shift()
+
+  // Update positions for remaining queue items
+  queueItems.value = queueItems.value.map((item, idx) => ({
+    ...item,
+    posisiAntrean: idx + 1,
+  }))
+
+  currentProcessing.value = null
+  processingStartTime.value = null
+  isProcessing.value = false
+}
+
+// Show details of application
+const toggleDetail = (id: string) => {
+  if (showDetail.value === id) {
+    showDetail.value = null
+  } else {
+    showDetail.value = id
+  }
+}
+
+// Filter queue based on search and amount
+const filteredQueue = computed(() => {
+  let items = []
+
+  if (currentTab.value === 'all') {
+    items = [...queueItems.value]
+  } else if (currentTab.value === 'waiting') {
+    items = queueItems.value
+  } else if (currentTab.value === 'processed') {
+    items = processedItems.value
+  }
+
+  if (searchQuery.value) {
+    items = items.filter((item) => {
+      const anggota = anggotaData.value[item.anggotaId]
+      return (
+        item.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        item.tujuan.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+        (anggota && anggota.name.toLowerCase().includes(searchQuery.value.toLowerCase()))
+      )
+    })
+  }
+
+  if (filterAmount.value !== 'all') {
+    const [min, max] = filterAmount.value.split('-').map(Number)
+    items = items.filter((item) => {
+      if (max) {
+        return item.jumlah >= min && item.jumlah <= max
+      }
+      return item.jumlah >= min
+    })
+  }
+
+  return items
+})
+</script>
+
+<template>
+  <div class="queue-management-container">
+    <div class="page-header">
+      <h1>Manajemen Antrean FCFS</h1>
+      <div class="header-actions">
+        <button class="refresh-button">↻ Refresh Antrean</button>
+      </div>
+    </div>
+
+    <!-- Current Processing -->
+    <div class="processing-section">
+      <h2>Aplikasi Sedang Diproses</h2>
+
+      <div v-if="currentProcessing" class="processing-card">
+        <div class="processing-header">
+          <div class="processing-id">{{ currentProcessing.id }}</div>
+          <div class="processing-status">Verifikasi</div>
+        </div>
+
+        <div class="processing-details">
+          <div class="applicant-info">
+            <div class="applicant-name">
+              {{ anggotaData[currentProcessing.anggotaId]?.name }}
+            </div>
+            <div class="applicant-id">
+              {{ currentProcessing.anggotaId }}
+            </div>
+          </div>
+
+          <div class="loan-summary">
+            <div class="loan-amount">{{ formatCurrency(currentProcessing.jumlah) }}</div>
+            <div class="loan-term">{{ currentProcessing.tenor }} bulan</div>
+          </div>
+
+          <div class="processing-meta">
+            <div class="meta-item">
+              <span class="meta-label">Waktu Masuk:</span>
+              <span class="meta-value">{{ formatDate(currentProcessing.arrivalTime) }}</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Tujuan:</span>
+              <span class="meta-value">{{ currentProcessing.tujuan }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="processing-actions">
+          <button class="skip-button" @click="skipApplication">Tolak Aplikasi</button>
+          <button class="approve-button">Lanjut ke Persetujuan</button>
+        </div>
+      </div>
+
+      <div v-else class="empty-processing">
+        <div v-if="queueItems.length > 0">
+          <p>Tidak ada aplikasi yang sedang diproses</p>
+          <button class="process-button" @click="processNext">Proses Aplikasi Berikutnya</button>
+        </div>
+        <p v-else>Antrean kosong</p>
+      </div>
+    </div>
+
+    <!-- Queue Management -->
+    <div class="queue-section">
+      <div class="section-header">
+        <h2>Daftar Antrean</h2>
+        <div class="filter-controls">
+          <div class="tabs">
+            <button
+              class="tab-button"
+              :class="{ active: currentTab === 'all' }"
+              @click="currentTab = 'all'"
+            >
+              Semua
+            </button>
+            <button
+              class="tab-button"
+              :class="{ active: currentTab === 'waiting' }"
+              @click="currentTab = 'waiting'"
+            >
+              Menunggu ({{ queueItems.length }})
+            </button>
+            <button
+              class="tab-button"
+              :class="{ active: currentTab === 'processed' }"
+              @click="currentTab = 'processed'"
+            >
+              Diproses ({{ processedItems.length }})
+            </button>
+          </div>
+
+          <div class="search-filter">
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="Cari ID/Nama/Tujuan"
+              class="search-input"
+            />
+
+            <select v-model="filterAmount" class="filter-select">
+              <option value="all">Semua Jumlah</option>
+              <option value="1000000-5000000">Rp 1-5 Juta</option>
+              <option value="5000000-10000000">Rp 5-10 Juta</option>
+              <option value="10000000-50000000">Rp 10-50 Juta</option>
+              <option value="50000000">Rp 50+ Juta</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="queue-list">
+        <div
+          v-for="item in filteredQueue"
+          :key="item.id"
+          class="queue-item"
+          :class="{ 'detail-open': showDetail === item.id }"
+        >
+          <div class="queue-item-header" @click="toggleDetail(item.id)">
+            <div class="item-position">
+              {{ item.posisiAntrean || '✓' }}
+            </div>
+            <div class="item-content">
+              <div class="item-main">
+                <div class="item-id">{{ item.id }}</div>
+                <div class="item-name">{{ anggotaData[item.anggotaId]?.name }}</div>
+              </div>
+              <div class="item-sub">
+                <div class="item-amount">{{ formatCurrency(item.jumlah) }}</div>
+                <div class="item-time">{{ formatDate(item.arrivalTime) }}</div>
+              </div>
+            </div>
+            <div class="item-status" :class="item.statusPinjaman">
+              {{
+                item.statusPinjaman === 'antrean'
+                  ? 'Menunggu'
+                  : item.statusPinjaman === 'verifikasi'
+                    ? 'Verifikasi'
+                    : item.statusPinjaman === 'disetujui'
+                      ? 'Disetujui'
+                      : item.statusPinjaman === 'ditolak'
+                        ? 'Ditolak'
+                        : item.statusPinjaman
+              }}
+            </div>
+            <div class="item-arrow">
+              {{ showDetail === item.id ? '▼' : '▶' }}
+            </div>
+          </div>
+
+          <div v-if="showDetail === item.id" class="queue-item-detail">
+            <div class="detail-grid">
+              <div class="detail-column">
+                <h3>Informasi Pemohon</h3>
+                <div class="detail-group">
+                  <div class="detail-label">Nama Lengkap</div>
+                  <div class="detail-value">{{ anggotaData[item.anggotaId]?.name }}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Nomor Anggota</div>
+                  <div class="detail-value">{{ item.anggotaId }}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Status Keanggotaan</div>
+                  <div
+                    class="detail-value status-tag"
+                    :class="{ active: anggotaData[item.anggotaId]?.statusAktif }"
+                  >
+                    {{ anggotaData[item.anggotaId]?.statusAktif ? 'Aktif' : 'Non-Aktif' }}
+                  </div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Riwayat Pinjaman</div>
+                  <div class="detail-value">
+                    {{ anggotaData[item.anggotaId]?.riwayatPinjaman }} pinjaman
+                  </div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Total Simpanan</div>
+                  <div class="detail-value">
+                    {{ formatCurrency(anggotaData[item.anggotaId]?.simpananTotal || 0) }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="detail-column">
+                <h3>Informasi Pinjaman</h3>
+                <div class="detail-group">
+                  <div class="detail-label">Jumlah Pinjaman</div>
+                  <div class="detail-value">{{ formatCurrency(item.jumlah) }}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Tenor</div>
+                  <div class="detail-value">{{ item.tenor }} bulan</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Bunga</div>
+                  <div class="detail-value">{{ item.bunga }}% per bulan</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Tujuan Pinjaman</div>
+                  <div class="detail-value">{{ item.tujuan }}</div>
+                </div>
+                <div class="detail-group">
+                  <div class="detail-label">Waktu Pengajuan</div>
+                  <div class="detail-value">{{ formatDate(item.arrivalTime) }}</div>
+                </div>
+              </div>
+
+              <div class="detail-column">
+                <h3>Informasi Antrean</h3>
+                <div v-if="item.posisiAntrean">
+                  <div class="detail-group">
+                    <div class="detail-label">Posisi Antrean</div>
+                    <div class="detail-value">
+                      {{ item.posisiAntrean }} dari {{ queueItems.length }}
+                    </div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Estimasi Waktu Tunggu</div>
+                    <div class="detail-value">{{ getEstimatedTime(item.posisiAntrean - 1) }}</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Estimasi Waktu Proses</div>
+                    <div class="detail-value">{{ formatTime(item.burstTime || 0) }}</div>
+                  </div>
+                </div>
+                <div v-else>
+                  <div class="detail-group">
+                    <div class="detail-label">Waktu Mulai Proses</div>
+                    <div class="detail-value">{{ formatDate(item.startProcessTime || '') }}</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Waktu Selesai</div>
+                    <div class="detail-value">{{ formatDate(item.finishProcessTime || '') }}</div>
+                  </div>
+                  <div class="detail-group">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value status-tag" :class="item.statusPinjaman">
+                      {{ item.statusPinjaman === 'disetujui' ? 'Disetujui' : 'Ditolak' }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="item.posisiAntrean && item.posisiAntrean > 1" class="detail-actions">
+              <button class="action-button">Verifikasi Dokumen</button>
+              <button class="action-button warning">Ubah Posisi Antrean</button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="filteredQueue.length === 0" class="empty-queue">
+          <p>Tidak ada data yang sesuai dengan filter</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.queue-management-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.refresh-button {
+  padding: 0.5rem 1rem;
+  background-color: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  color: #4b5563;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+}
+
+/* Processing Section */
+.processing-section {
+  margin-bottom: 2rem;
+}
+
+.processing-card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  border-left: 4px solid #f59e0b;
+}
+
+.processing-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.processing-id {
+  font-weight: 600;
+}
+
+.processing-status {
+  padding: 0.25rem 0.75rem;
+  background-color: #fef3c7;
+  color: #b45309;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.processing-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.applicant-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.applicant-id {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.loan-amount {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.loan-term {
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.meta-item {
+  margin-bottom: 0.5rem;
+}
+
+.meta-label {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin-right: 0.5rem;
+}
+
+.meta-value {
+  font-weight: 500;
+}
+
+.processing-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.skip-button {
+  padding: 0.625rem 1.25rem;
+  background-color: white;
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.approve-button {
+  padding: 0.625rem 1.25rem;
+  background-color: #10b981;
+  border: none;
+  color: white;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.empty-processing {
+  background-color: #f9fafb;
+  padding: 2rem;
+  border-radius: 0.5rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.process-button {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background-color: #3b82f6;
+  border: none;
+  color: white;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Queue Section */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.filter-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab-button {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  color: #6b7280;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tab-button.active {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.search-filter {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.search-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  width: 250px;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+}
+
+/* Queue List */
+.queue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.queue-item {
+  background-color: white;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.queue-item.detail-open {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.queue-item-header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.item-position {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6;
+  border-radius: 50%;
+  font-weight: 600;
+  margin-right: 1rem;
+}
+
+.item-content {
+  flex: 1;
+}
+
+.item-main {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.item-id {
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.item-name {
+  font-weight: 600;
+}
+
+.item-sub {
+  display: flex;
+  gap: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.item-status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-right: 1rem;
+}
+
+.item-status.antrean {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.item-status.verifikasi {
+  background-color: #fef3c7;
+  color: #b45309;
+}
+
+.item-status.disetujui {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.item-status.ditolak {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.queue-item-detail {
+  padding: 0 1rem 1rem 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.detail-column h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.detail-group {
+  margin-bottom: 0.75rem;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.detail-value {
+  font-weight: 500;
+}
+
+.status-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.status-tag.active {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-tag.disetujui {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-tag.ditolak {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.action-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.action-button:not(.warning) {
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.action-button.warning {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+.empty-queue {
+  padding: 3rem;
+  text-align: center;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .processing-details {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-filter {
+    width: 100%;
+  }
+
+  .search-input {
+    flex: 1;
+  }
+}
+</style>
