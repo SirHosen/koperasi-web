@@ -13,6 +13,7 @@ const RegisterView = () => import('../views/auth/RegisterView.vue')
 const PengurusDashboardView = () => import('../views/pengurus/DashboardView.vue')
 const AntreanView = () => import('../views/pengurus/AntreanView.vue')
 const PinjamanVerifikasiView = () => import('../views/pengurus/PinjamanVerifikasiView.vue')
+const VerifikasiDashboardView = () => import('../views/pengurus/VerifikasiDashboardView.vue')
 const SimpananView = () => import('../views/pengurus/SimpananView.vue')
 const ShuView = () => import('../views/pengurus/ShuView.vue')
 
@@ -21,6 +22,7 @@ const AnggotaDashboardView = () => import('../views/anggota/AnggotaDashboardView
 const AnggotaSimpananView = () => import('../views/anggota/SimpananView.vue')
 const PinjamanFormView = () => import('../views/anggota/PinjamanFormView.vue')
 const PinjamanStatusView = () => import('../views/anggota/PinjamanStatusView.vue')
+const DokumenStatusView = () => import('../views/anggota/DokumenStatusView.vue')
 
 // Pengawas (Supervisor) views
 // const PengawasDashboardView = () => import('../views/pengawas/DashboardView.vue')
@@ -62,6 +64,11 @@ const router = createRouter({
           name: 'pengurus-pinjaman-verifikasi',
           component: PinjamanVerifikasiView,
         },
+        {
+          path: 'pinjaman/verifikasi-dashboard',
+          name: 'pengurus-verifikasi-dashboard',
+          component: VerifikasiDashboardView,
+        },
         { path: 'simpanan', name: 'pengurus-simpanan', component: SimpananView },
         { path: 'shu', name: 'pengurus-shu', component: ShuView },
         { path: '', redirect: { name: 'pengurus-dashboard' } },
@@ -79,6 +86,7 @@ const router = createRouter({
         { path: 'simpanan', name: 'anggota-simpanan', component: AnggotaSimpananView },
         { path: 'pinjaman/ajukan', name: 'anggota-pinjaman-form', component: PinjamanFormView },
         { path: 'pinjaman/status', name: 'anggota-pinjaman-status', component: PinjamanStatusView },
+        { path: 'pinjaman/dokumen', name: 'anggota-dokumen-status', component: DokumenStatusView },
         { path: '', redirect: { name: 'anggota-dashboard' } },
       ],
     },

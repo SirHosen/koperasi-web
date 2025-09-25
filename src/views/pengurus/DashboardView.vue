@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useErrorHandler } from '@/lib/errorHandler'
 import type { KpiSummary, AntreanStats } from '../../types'
 
 // Mock KPI data
@@ -193,6 +194,10 @@ onMounted(() => {
             <router-link to="/pengurus/pinjaman/verifikasi" class="quick-action">
               <span class="action-icon">✅</span>
               <span class="action-label">Verifikasi Pinjaman</span>
+            </router-link>
+            <router-link to="/pengurus/verifikasi/dashboard" class="quick-action">
+              <span class="action-icon">📈</span>
+              <span class="action-label">Dashboard Verifikasi</span>
             </router-link>
             <router-link to="/pengurus/laporan/harian" class="quick-action">
               <span class="action-icon">📊</span>

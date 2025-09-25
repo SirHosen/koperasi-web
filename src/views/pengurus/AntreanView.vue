@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 import { useFcfsStore } from '@/stores/modules/fcfs'
+import VerificationNavigation from '@/components/pengurus/VerificationNavigation.vue'
 
 // Use FCFS store
 const fcfsStore = useFcfsStore()
@@ -18,7 +19,7 @@ const filterStatus = ref('all')
 const fetchQueue = async () => {
   isLoading.value = true
   errorMessage.value = ''
-  
+
   try {
     // Get queue data from FCFS store
     await fcfsStore.getQueueStatus()
@@ -49,10 +50,10 @@ const stopAutoRefresh = () => {
 // Process next loan in queue
 const processNextLoan = async () => {
   if (isProcessing.value) return
-  
+
   isProcessing.value = true
   errorMessage.value = ''
-  
+
   try {
     await fcfsStore.processNext()
   } catch (error) {
@@ -66,10 +67,10 @@ const processNextLoan = async () => {
 // Approve current loan
 const approveLoan = async (loanId: string) => {
   if (isProcessing.value || !fcfsStore.currentProcessing) return
-  
+
   isProcessing.value = true
   errorMessage.value = ''
-  
+
   try {
     // Update with your actual API call
     await fcfsStore.approveLoan(loanId, processingNotes.value)
@@ -86,10 +87,10 @@ const approveLoan = async (loanId: string) => {
 // Reject current loan
 const rejectLoan = async (loanId: string) => {
   if (isProcessing.value || !fcfsStore.currentProcessing) return
-  
+
   isProcessing.value = true
   errorMessage.value = ''
-  
+
   try {
     // Update with your actual API call
     await fcfsStore.rejectLoan(loanId, processingNotes.value)
@@ -106,10 +107,10 @@ const rejectLoan = async (loanId: string) => {
 // Skip current loan
 const skipLoan = async (loanId: string) => {
   if (isProcessing.value || !fcfsStore.currentProcessing) return
-  
+
   isProcessing.value = true
   errorMessage.value = ''
-  
+
   try {
     // Update with your actual API call
     await fcfsStore.skipLoan(loanId, processingNotes.value)
@@ -121,14 +122,14 @@ const skipLoan = async (loanId: string) => {
 }
 
 // Format date and time
-const formatDateTime = (dateString: string) => {
+const formatDateTime = (dateString: string | undefined) => {
   if (!dateString) return '-'
   return new Date(dateString).toLocaleString('id-ID', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -175,9 +176,9 @@ const filteredQueue = computed(() => {
   if (!searchTerm.value) {
     return fcfsStore.queue
   }
-  
+
   const search = searchTerm.value.toLowerCase()
-  return fcfsStore.queue.filter(item => {
+  return fcfsStore.queue.filter((item) => {
     return (
       item.id.toLowerCase().includes(search) ||
       item.name.toLowerCase().includes(search) ||
@@ -190,16 +191,16 @@ const filteredQueue = computed(() => {
 // Filter processed items based on status and search
 const filteredProcessedItems = computed(() => {
   let items = fcfsStore.processedItems || []
-  
+
   // Filter by status if not "all"
   if (filterStatus.value !== 'all') {
-    items = items.filter(item => item.status_pinjaman === filterStatus.value)
+    items = items.filter((item) => item.status_pinjaman === filterStatus.value)
   }
-  
+
   // Filter by search term if present
   if (searchTerm.value) {
     const search = searchTerm.value.toLowerCase()
-    items = items.filter(item => {
+    items = items.filter((item) => {
       return (
         item.id.toLowerCase().includes(search) ||
         item.name.toLowerCase().includes(search) ||
@@ -208,7 +209,7 @@ const filteredProcessedItems = computed(() => {
       )
     })
   }
-  
+
   return items
 })
 
@@ -226,6 +227,8 @@ onBeforeUnmount(() => {
 <template>
   <div class="antrian-container">
     <h1 class="title">Antrean Pinjaman (FCFS)</h1>
+
+    <VerificationNavigation activeTab="queue" />
 
     <div v-if="isLoading" class="text-center py-5">
       <div class="spinner-border" role="status">
@@ -265,8 +268,16 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="d-flex gap-3 mb-4">
-        <button class="btn btn-primary" @click="processNextLoan" :disabled="isProcessing || fcfsStore.queue.length === 0">
-          <span v-if="isProcessing" class="spinner-border spinner-border-sm me-1" role="status"></span>
+        <button
+          class="btn btn-primary"
+          @click="processNextLoan"
+          :disabled="isProcessing || fcfsStore.queue.length === 0"
+        >
+          <span
+            v-if="isProcessing"
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
+          ></span>
           Proses Berikutnya
         </button>
         <button class="btn btn-outline-secondary" @click="fetchQueue" :disabled="isLoading">
@@ -279,24 +290,57 @@ onBeforeUnmount(() => {
         <div class="row">
           <div class="col-md-3">
             <p><strong>ID Pinjaman:</strong> {{ fcfsStore.currentProcessing.id }}</p>
-            <p><strong>Anggota:</strong> {{ fcfsStore.currentProcessing.name }} ({{ fcfsStore.currentProcessing.nomor_anggota }})</p>
-            <p><strong>Jumlah:</strong> Rp {{ fcfsStore.currentProcessing.jumlah.toLocaleString('id-ID') }}</p>
+            <p>
+              <strong>Anggota:</strong> {{ fcfsStore.currentProcessing.name }} ({{
+                fcfsStore.currentProcessing.nomor_anggota
+              }})
+            </p>
+            <p>
+              <strong>Jumlah:</strong> Rp
+              {{ fcfsStore.currentProcessing.jumlah.toLocaleString('id-ID') }}
+            </p>
           </div>
           <div class="col-md-3">
             <p><strong>Tenor:</strong> {{ fcfsStore.currentProcessing.tenor }} bulan</p>
             <p><strong>Bunga:</strong> {{ fcfsStore.currentProcessing.bunga }}%</p>
-            <p><strong>Masuk Antrean:</strong> {{ formatDateTime(fcfsStore.currentProcessing.arrival_time) }}</p>
+            <p>
+              <strong>Masuk Antrean:</strong>
+              {{ formatDateTime(fcfsStore.currentProcessing.arrival_time) }}
+            </p>
           </div>
           <div class="col-md-6">
             <p><strong>Tujuan:</strong> {{ fcfsStore.currentProcessing.tujuan }}</p>
             <div class="mb-3">
               <label for="processingNotes" class="form-label">Catatan</label>
-              <textarea id="processingNotes" class="form-control" v-model="processingNotes" rows="2"></textarea>
+              <textarea
+                id="processingNotes"
+                class="form-control"
+                v-model="processingNotes"
+                rows="2"
+              ></textarea>
             </div>
             <div class="d-flex gap-2">
-              <button class="btn btn-success" @click="approveLoan(fcfsStore.currentProcessing.id)" :disabled="isProcessing">Setujui</button>
-              <button class="btn btn-warning" @click="skipLoan(fcfsStore.currentProcessing.id)" :disabled="isProcessing">Lewati</button>
-              <button class="btn btn-danger" @click="rejectLoan(fcfsStore.currentProcessing.id)" :disabled="isProcessing">Tolak</button>
+              <button
+                class="btn btn-success"
+                @click="approveLoan(fcfsStore.currentProcessing.id)"
+                :disabled="isProcessing"
+              >
+                Setujui
+              </button>
+              <button
+                class="btn btn-warning"
+                @click="skipLoan(fcfsStore.currentProcessing.id)"
+                :disabled="isProcessing"
+              >
+                Lewati
+              </button>
+              <button
+                class="btn btn-danger"
+                @click="rejectLoan(fcfsStore.currentProcessing.id)"
+                :disabled="isProcessing"
+              >
+                Tolak
+              </button>
             </div>
           </div>
         </div>
@@ -311,13 +355,13 @@ onBeforeUnmount(() => {
                 <div>
                   <span class="badge bg-info">Total: {{ fcfsStore.queue.length }}</span>
                 </div>
-                <div class="input-group" style="max-width: 300px;">
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    placeholder="Cari anggota atau ID..." 
+                <div class="input-group" style="max-width: 300px">
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Cari anggota atau ID..."
                     v-model="searchTerm"
-                  >
+                  />
                   <button class="btn btn-outline-secondary" type="button">
                     <i class="bi bi-search"></i>
                   </button>
@@ -346,7 +390,9 @@ onBeforeUnmount(() => {
                     <td>{{ item.burst_time }} menit</td>
                   </tr>
                   <tr v-if="filteredQueue.length === 0">
-                    <td colspan="6" class="text-center py-4">Tidak ada antrean pinjaman saat ini.</td>
+                    <td colspan="6" class="text-center py-4">
+                      Tidak ada antrean pinjaman saat ini.
+                    </td>
                   </tr>
                 </tbody>
               </table>
@@ -358,25 +404,25 @@ onBeforeUnmount(() => {
             <div class="card-header">
               <h3>Pinjaman Diproses</h3>
               <div class="btn-group" role="group">
-                <button 
-                  type="button" 
-                  class="btn" 
+                <button
+                  type="button"
+                  class="btn"
                   :class="filterStatus === 'all' ? 'btn-primary' : 'btn-outline-primary'"
                   @click="filterStatus = 'all'"
                 >
                   Semua
                 </button>
-                <button 
-                  type="button" 
-                  class="btn" 
+                <button
+                  type="button"
+                  class="btn"
                   :class="filterStatus === 'disetujui' ? 'btn-primary' : 'btn-outline-primary'"
                   @click="filterStatus = 'disetujui'"
                 >
                   Disetujui
                 </button>
-                <button 
-                  type="button" 
-                  class="btn" 
+                <button
+                  type="button"
+                  class="btn"
                   :class="filterStatus === 'ditolak' ? 'btn-primary' : 'btn-outline-primary'"
                   @click="filterStatus = 'ditolak'"
                 >
@@ -385,7 +431,11 @@ onBeforeUnmount(() => {
               </div>
             </div>
             <div class="card-body">
-              <div v-for="item in filteredProcessedItems" :key="item.id" class="processed-item mb-3">
+              <div
+                v-for="item in filteredProcessedItems"
+                :key="item.id"
+                class="processed-item mb-3"
+              >
                 <div class="d-flex justify-content-between">
                   <span class="badge" :class="getBadgeClass(item.status_pinjaman)">
                     {{ getStatusText(item.status_pinjaman) }}
@@ -394,7 +444,9 @@ onBeforeUnmount(() => {
                 </div>
                 <p class="mb-1">ID: {{ item.id }}</p>
                 <p class="mb-1">Anggota: {{ item.name }} ({{ item.nomor_anggota }})</p>
-                <p class="mb-1">Rp {{ item.jumlah.toLocaleString('id-ID') }} / {{ item.tenor }} bulan</p>
+                <p class="mb-1">
+                  Rp {{ item.jumlah.toLocaleString('id-ID') }} / {{ item.tenor }} bulan
+                </p>
                 <p v-if="item.catatan" class="mb-0 fst-italic">
                   <small>Catatan: {{ item.catatan }}</small>
                 </p>

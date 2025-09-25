@@ -177,6 +177,10 @@ const markAsRead = (notificationId: string) => {
           <span class="action-icon">💳</span>
           <span class="action-text">Bayar Angsuran</span>
         </router-link>
+        <router-link to="/anggota/pinjaman/dokumen" class="action-button">
+          <span class="action-icon">📄</span>
+          <span class="action-text">Status Dokumen</span>
+        </router-link>
       </div>
     </section>
 

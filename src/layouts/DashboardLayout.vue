@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/modules/auth'
+import NotificationBell from '@/components/shared/NotificationBell.vue'
 import type { UserRole } from '../types'
 
-// This would normally come from a store or auth service
-const userRole = ref<UserRole>('anggota')
+// Get user role from auth store
+const authStore = useAuthStore()
+const userRole = computed(() => (authStore.userRole as UserRole) || 'anggota')
 
 // Sidebar menu items based on user role
 const menuItems = computed(() => {
@@ -49,9 +52,9 @@ const toggleMobileMenu = () => {
   isMobileMenuOpen.value = !isMobileMenuOpen.value
 }
 
-// Mock logout function
-const logout = () => {
-  // In a real app, this would clear auth tokens, user state, etc.
+// Logout function
+const logout = async () => {
+  await authStore.logout()
   router.push('/login')
 }
 </script>
@@ -66,12 +69,9 @@ const logout = () => {
         </button>
         <div class="brand">Koperasi Simpan Pinjam</div>
         <div class="user-actions">
-          <button class="notification-btn">
-            <span class="icon">🔔</span>
-            <span class="badge">3</span>
-          </button>
+          <NotificationBell />
           <div class="user-profile">
-            <span>User Name</span>
+            <span>{{ authStore.user?.name || 'User' }}</span>
             <button @click="logout" class="logout-btn">Logout</button>
           </div>
         </div>

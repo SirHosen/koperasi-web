@@ -1,32 +1,32 @@
 // DocumentViewerModal.vue - Modal for document viewing
 <script setup lang="ts">
-import { ref } from 'vue';
-import DocumentPreview from './DocumentPreview.vue';
+import { ref } from 'vue'
+import DocumentPreview from './DocumentPreview.vue'
 
 const props = defineProps({
   show: {
     type: Boolean,
-    required: true
+    required: true,
   },
   documentPath: {
     type: String,
-    default: ''
+    default: '',
   },
   documentName: {
     type: String,
-    default: ''
+    default: '',
   },
   documentType: {
     type: String,
-    default: ''
-  }
-});
+    default: '',
+  },
+})
 
-const emit = defineEmits(['close']);
+const emit = defineEmits(['close'])
 
 const closeModal = () => {
-  emit('close');
-};
+  emit('close')
+}
 </script>
 
 <template>

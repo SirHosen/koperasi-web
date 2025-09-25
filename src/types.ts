@@ -112,14 +112,14 @@ export interface ShuAnggota {
 // Notification types
 export interface Notification {
   id: string
-  userId: string
+  user_id: string
   title: string
   message: string
-  isRead: boolean
-  type: 'info' | 'warning' | 'success' | 'error'
+  is_read: boolean
+  type?: 'info' | 'warning' | 'success' | 'error'
   link?: string
-  createdAt: string
-  updatedAt: string
+  created_at: string
+  updated_at?: string
 }
 
 // FCFS Simulator types (initial simulation feature)
@@ -162,4 +162,51 @@ export interface AntreanStats {
   averageWaitingTime: number // in minutes
   longestWaitingTime: number // in minutes
   processedToday: number
+}
+
+// Verification Dashboard types
+export interface VerificationStatistics {
+  overall: {
+    total_processed: number
+    approval_rate: number
+    rejection_rate: number
+    average_processing_time: number
+  }
+  document_stats: {
+    total_count: number
+    approved_count: number
+    rejected_count: number
+    pending_count: number
+  }
+  document_types: DocumentTypeStats[]
+  processing_time_trend: {
+    labels: string[]
+    values: number[]
+  }
+  officer_performance: OfficerPerformance[]
+}
+
+export interface DocumentTypeStats {
+  name: string
+  approval_rate: number
+  count: number
+}
+
+export interface OfficerPerformance {
+  officer_name: string
+  processed_count: number
+  approved_count: number
+  rejected_count: number
+  average_processing_time: number
+}
+
+// Notification types
+export interface Notification {
+  id: number
+  user_id: string
+  title: string
+  message: string
+  link: string
+  is_read: boolean
+  created_at: string
 }

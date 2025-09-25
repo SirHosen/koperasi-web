@@ -15,6 +15,7 @@ import shuRoutes from './routes/shu.routes.js'
 import notificationRoutes from './routes/notification.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 import pengawasRoutes from './routes/pengawas.routes.js'
+import verificationStatsRoutes from './routes/verification-stats.routes.js'
 import { authenticateJWT } from './middleware/auth.middleware.js'
 
 // Load environment variables
@@ -60,6 +61,7 @@ app.use('/api/shu', authenticateJWT, shuRoutes)
 app.use('/api/notifications', authenticateJWT, notificationRoutes)
 app.use('/api/admin', authenticateJWT, adminRoutes)
 app.use('/api/pengawas', authenticateJWT, pengawasRoutes)
+app.use('/api/verification-stats', authenticateJWT, verificationStatsRoutes)
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -67,7 +69,7 @@ app.get('/health', (req, res) => {
 })
 
 // Error handling middleware
-app.use((err, req, res, next) => {
+app.use((err, req, res, _next) => {
   console.error(err.stack)
   res.status(err.statusCode || 500).json({
     status: 'error',

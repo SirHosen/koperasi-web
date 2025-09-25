@@ -2,13 +2,22 @@
 import { ref, computed, onMounted } from 'vue'
 import { usePinjamanVerifikasiStore } from '@/stores/modules/pinjamanVerifikasi'
 import DocumentViewerModal from '@/components/shared/DocumentViewerModal.vue'
+import VerificationNavigation from '@/components/pengurus/VerificationNavigation.vue'
+import { useErrorHandler } from '@/lib/errorHandler'
 
 // Store
 const pinjamanStore = usePinjamanVerifikasiStore()
 
+// Error handling
+const {
+  error: errorMessage,
+  loading: isLoading,
+  success: successMessage,
+  handleAsync,
+  showSuccess,
+} = useErrorHandler()
+
 // State
-const isLoading = ref(true)
-const errorMessage = ref('')
 const selectedLoanId = ref('')
 const notes = ref('')
 const searchTerm = ref('')
@@ -20,15 +29,15 @@ const showDocumentViewer = ref(false)
 const currentDocument = ref({
   path: '',
   name: '',
-  type: ''
+  type: '',
 })
 
 // Open document viewer
-const openDocumentViewer = (doc: { pathFile: string, namaFile: string, jenisDokumen: string }) => {
+const openDocumentViewer = (doc: { pathFile: string; namaFile: string; jenisDokumen: string }) => {
   currentDocument.value = {
     path: doc.pathFile,
     name: doc.namaFile,
-    type: doc.jenisDokumen
+    type: doc.jenisDokumen,
   }
   showDocumentViewer.value = true
 }
@@ -44,19 +53,10 @@ const showLoanDetails = async (id: string) => {
     selectedLoanId.value = ''
     return
   }
-  
+
   selectedLoanId.value = id
-  isLoading.value = true
-  errorMessage.value = ''
-  
-  try {
-    await pinjamanStore.getLoanDetails(id)
-  } catch (error) {
-    console.error('Error loading loan details:', error)
-    errorMessage.value = 'Gagal memuat detail pinjaman'
-  } finally {
-    isLoading.value = false
-  }
+
+  await handleAsync(() => pinjamanStore.getLoanDetails(id), 'Gagal memuat detail pinjaman')
 }
 
 // Format date
@@ -67,7 +67,7 @@ const formatDate = (dateString: string) => {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -76,18 +76,20 @@ const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
-    maximumFractionDigits: 0
+    maximumFractionDigits: 0,
   }).format(amount)
 }
 
 // Verify document
 const verifyDocument = async (loanId: string, docId: string, status: 'diterima' | 'ditolak') => {
-  try {
-    await pinjamanStore.verifyDocument(loanId, docId, status, notes.value)
+  const result = await handleAsync(
+    () => pinjamanStore.verifyDocument(loanId, docId, status, notes.value),
+    'Gagal memverifikasi dokumen',
+  )
+
+  if (result) {
     notes.value = ''
-  } catch (error) {
-    console.error('Error verifying document:', error)
-    errorMessage.value = 'Gagal memverifikasi dokumen'
+    showSuccess(`Dokumen berhasil ${status === 'diterima' ? 'diterima' : 'ditolak'}`)
   }
 }
 
@@ -97,7 +99,7 @@ const completeVerification = async (loanId: string, isApproved: boolean) => {
     errorMessage.value = 'Semua dokumen harus diverifikasi terlebih dahulu'
     return
   }
-  
+
   try {
     await pinjamanStore.completeLoanVerification(loanId, isApproved, notes.value)
     notes.value = ''
@@ -111,10 +113,8 @@ const completeVerification = async (loanId: string, isApproved: boolean) => {
 // Check if all documents are verified
 const confirmAllDocumentsVerified = () => {
   if (!pinjamanStore.currentVerifikasi?.dokumenPendukung) return false
-  
-  return !pinjamanStore.currentVerifikasi.dokumenPendukung.some(
-    doc => doc.status === 'menunggu'
-  )
+
+  return !pinjamanStore.currentVerifikasi.dokumenPendukung.some((doc) => doc.status === 'menunggu')
 }
 
 // Get document status class
@@ -132,11 +132,11 @@ const getDocStatusClass = (status: string) => {
 // Filter and sort loans
 const filteredLoans = computed(() => {
   let result = [...(pinjamanStore.verifikasiList || [])]
-  
+
   // Filter by search term
   if (searchTerm.value) {
     const term = searchTerm.value.toLowerCase()
-    result = result.filter(loan => {
+    result = result.filter((loan) => {
       return (
         loan.id.toLowerCase().includes(term) ||
         loan.name.toLowerCase().includes(term) ||
@@ -145,11 +145,11 @@ const filteredLoans = computed(() => {
       )
     })
   }
-  
+
   // Sort
   result.sort((a, b) => {
     let valA, valB
-    
+
     switch (sortBy.value) {
       case 'jumlah':
         valA = a.jumlah
@@ -167,14 +167,14 @@ const filteredLoans = computed(() => {
         valA = String(a.id)
         valB = String(b.id)
     }
-    
+
     if (sortDir.value === 'asc') {
       return valA > valB ? 1 : -1
     } else {
       return valA < valB ? 1 : -1
     }
   })
-  
+
   return result
 })
 
@@ -196,33 +196,35 @@ const getSortIcon = (field: string) => {
 
 // Load data on mount
 onMounted(async () => {
-  try {
-    await pinjamanStore.getVerifikasiList()
-  } catch (error) {
-    console.error('Error loading verification list:', error)
-    errorMessage.value = 'Gagal memuat daftar pinjaman untuk verifikasi'
-  } finally {
-    isLoading.value = false
-  }
+  await handleAsync(
+    () => pinjamanStore.getVerifikasiList(),
+    'Gagal memuat daftar pinjaman untuk verifikasi',
+  )
 })
 </script>
 
 <template>
   <div class="verification-container">
     <h1 class="mb-4">Verifikasi Pinjaman</h1>
-    
+
+    <VerificationNavigation activeTab="verification" />
+
     <div v-if="isLoading && !selectedLoanId" class="text-center py-5">
       <div class="spinner-border" role="status">
         <span class="visually-hidden">Loading...</span>
       </div>
       <p class="mt-2">Memuat data verifikasi pinjaman...</p>
     </div>
-    
+
     <div v-else-if="errorMessage" class="alert alert-danger" role="alert">
       {{ errorMessage }}
       <button class="btn btn-sm btn-outline-danger ms-2" @click="errorMessage = ''">Tutup</button>
     </div>
-    
+
+    <div v-else-if="successMessage" class="alert alert-success" role="alert">
+      {{ successMessage }}
+    </div>
+
     <div v-else>
       <!-- Search and filter -->
       <div class="card mb-4">
@@ -235,19 +237,21 @@ onMounted(async () => {
                   class="form-control"
                   placeholder="Cari pinjaman..."
                   v-model="searchTerm"
-                >
+                />
                 <button class="btn btn-outline-secondary" type="button">
                   <i class="bi bi-search"></i>
                 </button>
               </div>
             </div>
             <div class="col-md-6 text-md-end mt-3 mt-md-0">
-              <span class="badge bg-primary me-2">Total: {{ pinjamanStore.verifikasiList.length }}</span>
+              <span class="badge bg-primary me-2"
+                >Total: {{ pinjamanStore.verifikasiList.length }}</span
+              >
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Loan verification list -->
       <div class="row">
         <div class="col-md-6">
@@ -275,20 +279,24 @@ onMounted(async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr 
-                      v-for="loan in filteredLoans" 
+                    <tr
+                      v-for="loan in filteredLoans"
                       :key="loan.id"
                       :class="{ 'table-active': selectedLoanId === loan.id }"
                       @click="showLoanDetails(loan.id)"
                       style="cursor: pointer"
                     >
                       <td>{{ loan.id }}</td>
-                      <td>{{ loan.name }} <br><small>{{ loan.nomor_anggota }}</small></td>
+                      <td>
+                        {{ loan.name }} <br /><small>{{ loan.nomor_anggota }}</small>
+                      </td>
                       <td>{{ formatCurrency(loan.jumlah) }}</td>
                       <td>{{ formatDate(loan.created_at) }}</td>
                     </tr>
                     <tr v-if="filteredLoans.length === 0">
-                      <td colspan="4" class="text-center py-4">Tidak ada pinjaman untuk diverifikasi</td>
+                      <td colspan="4" class="text-center py-4">
+                        Tidak ada pinjaman untuk diverifikasi
+                      </td>
                     </tr>
                   </tbody>
                 </table>
@@ -296,7 +304,7 @@ onMounted(async () => {
             </div>
           </div>
         </div>
-        
+
         <div class="col-md-6">
           <!-- Detail view -->
           <div v-if="selectedLoanId" class="card">
@@ -317,20 +325,28 @@ onMounted(async () => {
                     <div class="col-md-6">
                       <p><strong>ID:</strong> {{ pinjamanStore.currentVerifikasi.id }}</p>
                       <p><strong>Anggota:</strong> {{ pinjamanStore.currentVerifikasi.name }}</p>
-                      <p><strong>Nomor Anggota:</strong> {{ pinjamanStore.currentVerifikasi.nomor_anggota }}</p>
+                      <p>
+                        <strong>Nomor Anggota:</strong>
+                        {{ pinjamanStore.currentVerifikasi.nomor_anggota }}
+                      </p>
                     </div>
                     <div class="col-md-6">
-                      <p><strong>Jumlah:</strong> {{ formatCurrency(pinjamanStore.currentVerifikasi.jumlah) }}</p>
-                      <p><strong>Tenor:</strong> {{ pinjamanStore.currentVerifikasi.tenor }} bulan</p>
+                      <p>
+                        <strong>Jumlah:</strong>
+                        {{ formatCurrency(pinjamanStore.currentVerifikasi.jumlah) }}
+                      </p>
+                      <p>
+                        <strong>Tenor:</strong> {{ pinjamanStore.currentVerifikasi.tenor }} bulan
+                      </p>
                       <p><strong>Tujuan:</strong> {{ pinjamanStore.currentVerifikasi.tujuan }}</p>
                     </div>
                   </div>
                 </div>
-                
+
                 <h6>Dokumen Pendukung</h6>
                 <div class="document-list">
-                  <div 
-                    v-for="doc in pinjamanStore.currentVerifikasi.dokumenPendukung" 
+                  <div
+                    v-for="doc in pinjamanStore.currentVerifikasi.dokumenPendukung"
                     :key="doc.id"
                     class="document-item card mb-2"
                   >
@@ -339,15 +355,12 @@ onMounted(async () => {
                         <div class="col-md-4">
                           <span class="document-name">{{ doc.namaFile }}</span>
                           <small class="d-block text-muted">{{ doc.jenisDokumen }}</small>
-                          <span 
-                            class="badge ms-2" 
-                            :class="getDocStatusClass(doc.status)"
-                          >
+                          <span class="badge ms-2" :class="getDocStatusClass(doc.status)">
                             {{ doc.status }}
                           </span>
                         </div>
                         <div class="col-md-4">
-                          <button 
+                          <button
                             @click="openDocumentViewer(doc)"
                             class="btn btn-sm btn-outline-secondary"
                           >
@@ -355,15 +368,23 @@ onMounted(async () => {
                           </button>
                         </div>
                         <div class="col-md-4 text-end">
-                          <button 
-                            @click="verifyDocument(pinjamanStore.currentVerifikasi?.id, doc.id, 'diterima')"
+                          <button
+                            @click="
+                              verifyDocument(
+                                pinjamanStore.currentVerifikasi?.id,
+                                doc.id,
+                                'diterima',
+                              )
+                            "
                             class="btn btn-sm btn-success me-1"
                             :disabled="doc.status === 'diterima'"
                           >
                             <i class="bi bi-check-lg"></i> Terima
                           </button>
-                          <button 
-                            @click="verifyDocument(pinjamanStore.currentVerifikasi?.id, doc.id, 'ditolak')"
+                          <button
+                            @click="
+                              verifyDocument(pinjamanStore.currentVerifikasi?.id, doc.id, 'ditolak')
+                            "
                             class="btn btn-sm btn-danger"
                             :disabled="doc.status === 'ditolak'"
                           >
@@ -377,27 +398,27 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <!-- Notes and actions -->
                 <div class="mt-4">
                   <div class="mb-3">
                     <label for="verificationNotes" class="form-label">Catatan Verifikasi</label>
-                    <textarea 
-                      id="verificationNotes" 
-                      class="form-control" 
+                    <textarea
+                      id="verificationNotes"
+                      class="form-control"
                       v-model="notes"
                       rows="3"
                     ></textarea>
                   </div>
-                  
+
                   <div class="d-flex justify-content-between">
-                    <button 
-                      @click="completeVerification(pinjamanStore.currentVerifikasi?.id, false)" 
+                    <button
+                      @click="completeVerification(pinjamanStore.currentVerifikasi?.id, false)"
                       class="btn btn-danger"
                     >
                       <i class="bi bi-x-circle"></i> Tolak Pinjaman
                     </button>
-                    <button 
+                    <button
                       @click="completeVerification(pinjamanStore.currentVerifikasi?.id, true)"
                       class="btn btn-success"
                     >
@@ -410,7 +431,7 @@ onMounted(async () => {
           </div>
           <div v-else class="card">
             <div class="card-body text-center py-5">
-              <i class="bi bi-file-earmark-text" style="font-size: 3rem; opacity: 0.5;"></i>
+              <i class="bi bi-file-earmark-text" style="font-size: 3rem; opacity: 0.5"></i>
               <p class="mt-3">Pilih pinjaman untuk melihat detail</p>
             </div>
           </div>

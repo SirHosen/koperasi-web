@@ -62,34 +62,36 @@ const handleDokumenLainChange = (event: Event) => {
 onMounted(async () => {
   try {
     // Load anggota profile
-    const profile = await anggotaStore.getProfile();
-    anggotaId.value = profile.id;
-    
+    const profile = await anggotaStore.getProfile()
+    anggotaId.value = profile.id
+
     // Check if anggota already has an active loan application
-    const activePinjaman = await anggotaStore.getActivePinjaman();
-    
-    if (activePinjaman.some(p => ['antrean', 'verifikasi', 'disetujui'].includes(p.statusPinjaman))) {
-      errorMessage.value = 'Anda sudah memiliki pengajuan pinjaman yang sedang diproses';
-      setTimeout(() => router.push('/anggota/pinjaman/status'), 3000);
-      return;
+    const activePinjaman = await anggotaStore.getActivePinjaman()
+
+    if (
+      activePinjaman.some((p) => ['antrean', 'verifikasi', 'disetujui'].includes(p.statusPinjaman))
+    ) {
+      errorMessage.value = 'Anda sudah memiliki pengajuan pinjaman yang sedang diproses'
+      setTimeout(() => router.push('/anggota/pinjaman/status'), 3000)
+      return
     }
-    
+
     // Load system settings (bunga pinjaman)
     // In a real app, you would fetch this from your API
   } catch (error) {
-    console.error('Error loading anggota data:', error);
-    errorMessage.value = 'Terjadi kesalahan saat memuat data';
+    console.error('Error loading anggota data:', error)
+    errorMessage.value = 'Terjadi kesalahan saat memuat data'
   }
-});
+})
 
 // Form submission
 const submitApplication = async () => {
   if (!jumlahPinjaman.value || !tujuan.value || !dokumenSlipGaji.value) {
-    errorMessage.value = 'Mohon lengkapi semua field yang wajib diisi';
-    return;
+    errorMessage.value = 'Mohon lengkapi semua field yang wajib diisi'
+    return
   }
 
-  isLoading.value = true;
+  isLoading.value = true
 
   try {
     // Submit loan application
@@ -97,44 +99,44 @@ const submitApplication = async () => {
       anggotaId: anggotaId.value,
       jumlah: jumlahPinjaman.value,
       tenor: tenor.value,
-      tujuan: tujuan.value
-    };
+      tujuan: tujuan.value,
+    }
 
-    const result = await fcfsStore.submitLoan(loanData);
-    
+    const result = await fcfsStore.submitLoan(loanData)
+
     // Upload documents
     if (dokumenSlipGaji.value || dokumenPendukungLain.value) {
-      const formData = new FormData();
+      const formData = new FormData()
       if (dokumenSlipGaji.value) {
-        formData.append('slipGaji', dokumenSlipGaji.value);
+        formData.append('slipGaji', dokumenSlipGaji.value)
       }
       if (dokumenPendukungLain.value) {
-        formData.append('dokumenLain', dokumenPendukungLain.value);
+        formData.append('dokumenLain', dokumenPendukungLain.value)
       }
-      
+
       // Use the pinjaman API to upload documents
       // This would typically be implemented in the fcfs store
       // For now we're skipping the actual upload as it would need file handling
     }
 
     // Success message
-    successMessage.value = `Pengajuan pinjaman berhasil! Anda berada di posisi #${result.posisiAntrean} dalam antrean FCFS.`;
+    successMessage.value = `Pengajuan pinjaman berhasil! Anda berada di posisi #${result.posisiAntrean} dalam antrean FCFS.`
 
     // Reset form after success
-    jumlahPinjaman.value = null;
-    tenor.value = 12;
-    tujuan.value = '';
-    dokumenSlipGaji.value = null;
-    dokumenPendukungLain.value = null;
-    errorMessage.value = '';
+    jumlahPinjaman.value = null
+    tenor.value = 12
+    tujuan.value = ''
+    dokumenSlipGaji.value = null
+    dokumenPendukungLain.value = null
+    errorMessage.value = ''
 
     // Redirect to loan status page
-    setTimeout(() => router.push('/anggota/pinjaman/status'), 3000);
+    setTimeout(() => router.push('/anggota/pinjaman/status'), 3000)
   } catch (error) {
-    errorMessage.value = fcfsStore.error || 'Terjadi kesalahan saat mengajukan pinjaman';
-    console.error('Application error:', error);
+    errorMessage.value = fcfsStore.error || 'Terjadi kesalahan saat mengajukan pinjaman'
+    console.error('Application error:', error)
   } finally {
-    isLoading.value = false;
+    isLoading.value = false
   }
 }
 

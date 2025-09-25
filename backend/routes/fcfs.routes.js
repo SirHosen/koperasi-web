@@ -364,7 +364,7 @@ router.get('/processed', async (req, res) => {
        JOIN users u ON a.user_id = u.id
        WHERE p.status_pinjaman IN ('disetujui', 'ditolak', 'verifikasi')
        ORDER BY p.finish_process_time DESC
-       LIMIT 50`
+       LIMIT 50`,
     )
 
     return res.status(200).json({
@@ -390,12 +390,12 @@ router.post('/approve/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Update loan status and add notes
     const [result] = await pool.query(
-      `UPDATE pinjaman 
-       SET status_pinjaman = 'disetujui', 
-           finish_process_time = NOW(), 
+      `UPDATE pinjaman
+       SET status_pinjaman = 'disetujui',
+           finish_process_time = NOW(),
            catatan = ?
        WHERE id = ?`,
-      [notes, id]
+      [notes, id],
     )
 
     if (result.affectedRows === 0) {
@@ -404,9 +404,9 @@ router.post('/approve/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Update queue positions for remaining items
     await pool.query(
-      `UPDATE pinjaman 
+      `UPDATE pinjaman
        SET posisi_antrean = posisi_antrean - 1
-       WHERE status_pinjaman = 'antrean' AND posisi_antrean > 0`
+       WHERE status_pinjaman = 'antrean' AND posisi_antrean > 0`,
     )
 
     return res.status(200).json({
@@ -430,12 +430,12 @@ router.post('/reject/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Update loan status and add notes
     const [result] = await pool.query(
-      `UPDATE pinjaman 
-       SET status_pinjaman = 'ditolak', 
-           finish_process_time = NOW(), 
+      `UPDATE pinjaman
+       SET status_pinjaman = 'ditolak',
+           finish_process_time = NOW(),
            catatan = ?
        WHERE id = ?`,
-      [notes, id]
+      [notes, id],
     )
 
     if (result.affectedRows === 0) {
@@ -444,9 +444,9 @@ router.post('/reject/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Update queue positions for remaining items
     await pool.query(
-      `UPDATE pinjaman 
+      `UPDATE pinjaman
        SET posisi_antrean = posisi_antrean - 1
-       WHERE status_pinjaman = 'antrean' AND posisi_antrean > 0`
+       WHERE status_pinjaman = 'antrean' AND posisi_antrean > 0`,
     )
 
     return res.status(200).json({
@@ -470,17 +470,17 @@ router.post('/skip/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Get current queue length
     const [queueCount] = await pool.query(
-      `SELECT COUNT(*) as count FROM pinjaman WHERE status_pinjaman = 'antrean'`
+      `SELECT COUNT(*) as count FROM pinjaman WHERE status_pinjaman = 'antrean'`,
     )
     const newPosition = queueCount[0].count
 
     // Update loan to be at the end of the queue with notes
     const [result] = await pool.query(
-      `UPDATE pinjaman 
-       SET posisi_antrean = ?, 
+      `UPDATE pinjaman
+       SET posisi_antrean = ?,
            catatan = CONCAT(COALESCE(catatan, ''), '\n', ?)
        WHERE id = ?`,
-      [newPosition, notes || 'Skipped for further review', id]
+      [newPosition, notes || 'Skipped for further review', id],
     )
 
     if (result.affectedRows === 0) {
@@ -489,10 +489,10 @@ router.post('/skip/:id', checkRole(['pengurus']), async (req, res) => {
 
     // Update start_process_time to null
     await pool.query(
-      `UPDATE pinjaman 
+      `UPDATE pinjaman
        SET start_process_time = NULL
        WHERE id = ?`,
-      [id]
+      [id],
     )
 
     return res.status(200).json({
