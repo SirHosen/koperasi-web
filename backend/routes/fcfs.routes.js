@@ -504,4 +504,224 @@ router.post('/skip/:id', checkRole(['pengurus']), async (req, res) => {
   }
 })
 
+/**
+ * PRIORITY OVERRIDE: Move a loan to the front of the queue (requires special approval)
+ * POST /api/fcfs/override/prioritize/:id
+ * body: { reason: string, approved_by: string }
+ */
+router.post('/override/prioritize/:id', checkRole(['pengurus']), async (req, res) => {
+  try {
+    const { id } = req.params
+    const { reason = 'Priority override', approved_by = 'komite' } = req.body
+
+    // Get current min position (front of queue)
+    const [minPosRows] = await pool.query(
+      `SELECT MIN(posisi_antrean) AS min_pos FROM pinjaman WHERE status_pinjaman = 'antrean'`,
+    )
+    const newPos = Math.max(1, parseInt(minPosRows[0].min_pos || 1, 10))
+
+    // Decrement position for existing items at or ahead of newPos
+    await pool.query(
+      `UPDATE pinjaman SET posisi_antrean = posisi_antrean + 1
+       WHERE status_pinjaman = 'antrean' AND posisi_antrean >= ?`,
+      [newPos],
+    )
+
+    // Set target loan to newPos
+    const [result] = await pool.query(
+      `UPDATE pinjaman
+       SET posisi_antrean = ?, catatan = CONCAT(COALESCE(catatan, ''), '\n[PRIORITY] ', ? , ' (approved by: ', ?, ')')
+       WHERE id = ? AND status_pinjaman = 'antrean'`,
+      [newPos, reason, approved_by, id],
+    )
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ status: 'error', message: 'Loan not found or not in queue' })
+    }
+
+    // Audit log
+    await pool.query(
+      `INSERT INTO activity_logs (id, user_id, action, entity_type, entity_id, description, ip_address)
+       VALUES (?, ?, 'override_priority', 'pinjaman', ?, ?, ?)`,
+      [uuidv4(), req.user.id, id, reason, req.ip],
+    )
+
+    return res.status(200).json({ status: 'success', data: { id, newPos } })
+  } catch (error) {
+    console.error('Priority override error:', error)
+    return res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * EMERGENCY BYPASS: Immediately mark a loan for verification (bypass queue)
+ * POST /api/fcfs/override/emergency/:id
+ * body: { reason: string, approved_by: string }
+ */
+router.post('/override/emergency/:id', checkRole(['pengurus']), async (req, res) => {
+  try {
+    const { id } = req.params
+    const { reason = 'Emergency bypass', approved_by = 'ketua' } = req.body
+
+    const [result] = await pool.query(
+      `UPDATE pinjaman
+       SET status_pinjaman = 'verifikasi', start_process_time = NOW(), posisi_antrean = NULL,
+           catatan = CONCAT(COALESCE(catatan, ''), '\n[EMERGENCY] ', ? , ' (approved by: ', ?, ')')
+       WHERE id = ? AND status_pinjaman = 'antrean'`,
+      [reason, approved_by, id],
+    )
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ status: 'error', message: 'Loan not found or not in queue' })
+    }
+
+    // Shift positions up for the remaining queue
+    await pool.query(
+      `UPDATE pinjaman SET posisi_antrean = posisi_antrean - 1
+       WHERE status_pinjaman = 'antrean' AND posisi_antrean > 0`,
+    )
+
+    await pool.query(
+      `INSERT INTO activity_logs (id, user_id, action, entity_type, entity_id, description, ip_address)
+       VALUES (?, ?, 'override_emergency', 'pinjaman', ?, ?, ?)`,
+      [uuidv4(), req.user.id, id, reason, req.ip],
+    )
+
+    return res.status(200).json({ status: 'success', data: { id, status: 'verifikasi' } })
+  } catch (error) {
+    console.error('Emergency bypass error:', error)
+    return res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * Analytics: Convoy effect monitor (variance in burst_time and clustering)
+ * GET /api/fcfs/analytics/convoy
+ */
+router.get('/analytics/convoy', checkRole(['pengurus', 'pengawas']), async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT posisi_antrean, burst_time FROM pinjaman WHERE status_pinjaman = 'antrean' ORDER BY posisi_antrean ASC`,
+    )
+
+    const n = rows.length
+    const avg = n ? rows.reduce((s, r) => s + (r.burst_time || 0), 0) / n : 0
+    const variance =
+      n > 1 ? rows.reduce((s, r) => s + Math.pow((r.burst_time || 0) - avg, 2), 0) / (n - 1) : 0
+    const stddev = Math.sqrt(variance)
+
+    // Simple clustering metric: consecutive high burst blocks
+    let clusters = 0
+    let inCluster = false
+    const threshold = avg + stddev
+    rows.forEach((r) => {
+      const high = (r.burst_time || 0) >= threshold
+      if (high && !inCluster) {
+        clusters += 1
+        inCluster = true
+      } else if (!high && inCluster) {
+        inCluster = false
+      }
+    })
+
+    res.json({
+      status: 'success',
+      data: { queue_length: n, avg_burst: avg, stddev_burst: stddev, clusters },
+    })
+  } catch (error) {
+    console.error('Convoy analytics error:', error)
+    res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * Analytics: Wait time analysis (cumulative burst up to position)
+ * GET /api/fcfs/analytics/wait-time
+ */
+router.get('/analytics/wait-time', checkRole(['pengurus', 'pengawas']), async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT posisi_antrean, burst_time FROM pinjaman WHERE status_pinjaman = 'antrean' ORDER BY posisi_antrean ASC`,
+    )
+    let cumulative = 0
+    const series = rows.map((r) => {
+      cumulative += r.burst_time || 0
+      return { posisi: r.posisi_antrean, estimated_wait: cumulative }
+    })
+    res.json({ status: 'success', data: series })
+  } catch (error) {
+    console.error('Wait time analytics error:', error)
+    res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * Analytics: Throughput (processed per day over last 14 days)
+ * GET /api/fcfs/analytics/throughput
+ */
+router.get('/analytics/throughput', checkRole(['pengurus', 'pengawas']), async (_req, res) => {
+  try {
+    const [rows] = await pool.query(
+      `SELECT DATE(finish_process_time) as tanggal, COUNT(*) as processed
+       FROM pinjaman
+       WHERE status_pinjaman IN ('disetujui', 'ditolak')
+         AND finish_process_time >= DATE_SUB(CURDATE(), INTERVAL 14 DAY)
+       GROUP BY DATE(finish_process_time)
+       ORDER BY tanggal ASC`,
+    )
+    res.json({ status: 'success', data: rows })
+  } catch (error) {
+    console.error('Throughput analytics error:', error)
+    res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * Comparison module: simulate FCFS vs Priority strategy and what-if burst scaling
+ * GET /api/fcfs/compare/simulate?strategy=fcfs|priority&scale=number
+ */
+router.get('/compare/simulate', checkRole(['pengurus', 'pengawas']), async (req, res) => {
+  try {
+    const strategy = (req.query.strategy || 'fcfs').toString()
+    const scale = parseFloat(req.query.scale || '1')
+
+    const [queue] = await pool.query(
+      `SELECT id, posisi_antrean, burst_time, arrival_time
+       FROM pinjaman WHERE status_pinjaman = 'antrean'`,
+    )
+
+    let items = queue.map((q) => ({
+      ...q,
+      burst: Math.max(1, Math.round((q.burst_time || 0) * scale)),
+    }))
+
+    if (strategy === 'priority') {
+      // Sort by shortest burst time first (SJF) as a proxy for priority
+      items.sort((a, b) => a.burst - b.burst || (a.arrival_time > b.arrival_time ? 1 : -1))
+    } else {
+      // FCFS by posisi_antrean
+      items.sort((a, b) => (a.posisi_antrean || 0) - (b.posisi_antrean || 0))
+    }
+
+    // Compute completion time and average waiting
+    let time = 0
+    let totalWait = 0
+    const timeline = items.map((it) => {
+      const wait = time
+      totalWait += wait
+      const start = time
+      const finish = start + it.burst
+      time = finish
+      return { id: it.id, start, finish, burst: it.burst }
+    })
+
+    const avgWait = items.length ? totalWait / items.length : 0
+
+    res.json({ status: 'success', data: { strategy, scale, avg_wait: avgWait, timeline } })
+  } catch (error) {
+    console.error('Comparison simulate error:', error)
+    res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
 export default router

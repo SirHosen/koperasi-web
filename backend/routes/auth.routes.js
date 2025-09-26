@@ -4,6 +4,14 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
 import { pool } from '../db.js'
 import { v4 as uuidv4 } from 'uuid'
+import logger from '../utils/logger.js'
+import {
+  successResponse,
+  errorResponse,
+  validationErrorResponse,
+  handleDatabaseError,
+  asyncHandler,
+} from '../utils/response.js'
 
 const router = express.Router()
 
@@ -11,14 +19,17 @@ const router = express.Router()
  * Login route
  * POST /api/auth/login
  */
-router.post('/login', async (req, res) => {
-  try {
+router.post(
+  '/login',
+  asyncHandler(async (req, res) => {
     const { username, password } = req.body
 
+    // Validation
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({ status: 'error', message: 'Username and password are required' })
+      return validationErrorResponse(res, {
+        username: !username ? 'Username is required' : null,
+        password: !password ? 'Password is required' : null,
+      })
     }
 
     // Get user from database
@@ -28,34 +39,45 @@ router.post('/login', async (req, res) => {
     )
 
     if (users.length === 0) {
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials' })
+      logger.warn('Login attempt with invalid username', { username, ip: req.ip })
+      return errorResponse(res, 'Invalid credentials', 401, 'INVALID_CREDENTIALS')
     }
 
     const user = users[0]
 
     // Check if user is active
     if (!user.is_active) {
-      return res.status(403).json({ status: 'error', message: 'Account is disabled' })
+      logger.warn('Login attempt for disabled account', { username, userId: user.id, ip: req.ip })
+      return errorResponse(res, 'Account is disabled', 403, 'ACCOUNT_DISABLED')
     }
 
     // Compare passwords
     const isPasswordValid = await bcrypt.compare(password, user.password)
 
     if (!isPasswordValid) {
-      return res.status(401).json({ status: 'error', message: 'Invalid credentials' })
+      logger.warn('Login attempt with invalid password', { username, userId: user.id, ip: req.ip })
+      return errorResponse(res, 'Invalid credentials', 401, 'INVALID_CREDENTIALS')
     }
 
-    // Create token
-    const token = jwt.sign(
-      {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        name: user.name,
-      },
-      process.env.JWT_SECRET || 'default_secret_change_this',
-      { expiresIn: '8h' },
+    // Generate secure tokens
+    const { generateTokens, generateSecureToken } = await import('../utils/jwt.utils.js')
+
+    const tokenPayload = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+      name: user.name,
+    }
+
+    const { accessToken, refreshToken } = generateTokens(tokenPayload)
+    const sessionId = generateSecureToken()
+
+    // Store refresh token in database (hashed for security)
+    const refreshTokenHash = await bcrypt.hash(refreshToken, 12)
+    await pool.query(
+      'INSERT INTO user_sessions (id, user_id, refresh_token_hash, session_id, expires_at, created_at) VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL 7 DAY), NOW()) ON DUPLICATE KEY UPDATE refresh_token_hash = VALUES(refresh_token_hash), session_id = VALUES(session_id), expires_at = VALUES(expires_at), updated_at = NOW()',
+      [uuidv4(), user.id, refreshTokenHash, sessionId],
     )
 
     // Update last login time
@@ -67,11 +89,14 @@ router.post('/login', async (req, res) => {
       [uuidv4(), user.id, 'login', 'user', user.id, 'User logged in', req.ip],
     )
 
-    // Return token and user info
-    return res.status(200).json({
-      status: 'success',
-      data: {
-        token,
+    // Return tokens and user info
+    return successResponse(
+      res,
+      {
+        accessToken,
+        refreshToken,
+        sessionId,
+        expiresIn: 15 * 60, // 15 minutes in seconds
         user: {
           id: user.id,
           username: user.username,
@@ -80,12 +105,10 @@ router.post('/login', async (req, res) => {
           name: user.name,
         },
       },
-    })
-  } catch (error) {
-    console.error('Login error:', error)
-    return res.status(500).json({ status: 'error', message: 'Internal server error' })
-  }
-})
+      'Login successful',
+    )
+  }),
+)
 
 /**
  * Register route
@@ -267,6 +290,120 @@ router.post('/logout', async (req, res) => {
     return res.status(200).json({ status: 'success', message: 'Logged out successfully' })
   } catch (error) {
     console.error('Logout error:', error)
+    return res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
+ * Refresh token route
+ * POST /api/auth/refresh
+ */
+router.post('/refresh', async (req, res) => {
+  try {
+    const { refreshToken, sessionId } = req.body
+
+    if (!refreshToken || !sessionId) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Refresh token and session ID are required',
+      })
+    }
+
+    const { verifyRefreshToken, generateTokens } = await import('../utils/jwt.utils.js')
+
+    // Verify refresh token
+    let decoded
+    try {
+      decoded = verifyRefreshToken(refreshToken)
+    } catch (error) {
+      console.error('Refresh token verification failed:', error.message)
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid refresh token',
+      })
+    }
+
+    // Check if session exists and is valid
+    const [sessions] = await pool.query(
+      'SELECT us.*, u.username, u.email, u.role, u.name, u.is_active FROM user_sessions us JOIN users u ON us.user_id = u.id WHERE us.user_id = ? AND us.session_id = ? AND us.expires_at > NOW()',
+      [decoded.id, sessionId],
+    )
+
+    if (sessions.length === 0) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Session expired or invalid',
+      })
+    }
+
+    const session = sessions[0]
+
+    // Check if user is still active
+    if (!session.is_active) {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Account is disabled',
+      })
+    }
+
+    // Verify refresh token hash
+    const isValidToken = await bcrypt.compare(refreshToken, session.refresh_token_hash)
+    if (!isValidToken) {
+      return res.status(401).json({
+        status: 'error',
+        message: 'Invalid refresh token',
+      })
+    }
+
+    // Generate new tokens
+    const tokenPayload = {
+      id: session.user_id,
+      username: session.username,
+      email: session.email,
+      role: session.role,
+      name: session.name,
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(tokenPayload)
+
+    // Update refresh token in database
+    const newRefreshTokenHash = await bcrypt.hash(newRefreshToken, 12)
+    await pool.query(
+      'UPDATE user_sessions SET refresh_token_hash = ?, expires_at = DATE_ADD(NOW(), INTERVAL 7 DAY), updated_at = NOW() WHERE user_id = ? AND session_id = ?',
+      [newRefreshTokenHash, session.user_id, sessionId],
+    )
+
+    // Log activity
+    await pool.query(
+      'INSERT INTO activity_logs (id, user_id, action, entity_type, entity_id, description, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [
+        uuidv4(),
+        session.user_id,
+        'token_refresh',
+        'user',
+        session.user_id,
+        'Token refreshed',
+        req.ip,
+      ],
+    )
+
+    return res.status(200).json({
+      status: 'success',
+      data: {
+        accessToken,
+        refreshToken: newRefreshToken,
+        expiresIn: 15 * 60, // 15 minutes in seconds
+        user: {
+          id: session.user_id,
+          username: session.username,
+          email: session.email,
+          role: session.role,
+          name: session.name,
+        },
+      },
+    })
+  } catch (error) {
+    console.error('Token refresh error:', error)
     return res.status(500).json({ status: 'error', message: 'Internal server error' })
   }
 })

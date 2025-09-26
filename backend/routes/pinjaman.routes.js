@@ -37,6 +37,77 @@ const upload = multer({
 })
 
 /**
+ * Calculate amortization schedule and outstanding projection
+ * GET /api/pinjaman/:id/projection
+ * query: method=flat|annuity (default annuity)
+ */
+router.get('/:id/projection', async (req, res) => {
+  try {
+    const { id } = req.params
+    const method = (req.query.method || 'annuity').toString()
+
+    const [loans] = await pool.query(
+      `SELECT id, jumlah as principal, tenor, bunga
+       FROM pinjaman WHERE id = ?`,
+      [id],
+    )
+
+    if (!loans.length) {
+      return res.status(404).json({ status: 'error', message: 'Loan not found' })
+    }
+
+    const principal = parseFloat(loans[0].principal)
+    const tenor = parseInt(loans[0].tenor, 10)
+    const rateMonthly = parseFloat(loans[0].bunga) / 100
+
+    const schedule = []
+    let remaining = principal
+
+    if (method === 'flat') {
+      const interestPerMonth = principal * rateMonthly
+      const principalPerMonth = principal / tenor
+      for (let m = 1; m <= tenor; m++) {
+        const interest = interestPerMonth
+        const principalPay = principalPerMonth
+        const installment = interest + principalPay
+        remaining = Math.max(0, remaining - principalPay)
+        schedule.push({ period: m, principal: principalPay, interest, installment, remaining })
+      }
+    } else {
+      // annuity
+      const i = rateMonthly
+      const factor = i === 0 ? tenor : (i * Math.pow(1 + i, tenor)) / (Math.pow(1 + i, tenor) - 1)
+      const installment = principal * (i === 0 ? 1 / tenor : factor)
+      for (let m = 1; m <= tenor; m++) {
+        const interest = remaining * i
+        const principalPay = installment - interest
+        remaining = Math.max(0, remaining - principalPay)
+        schedule.push({ period: m, principal: principalPay, interest, installment, remaining })
+      }
+    }
+
+    const totalInterest = schedule.reduce((s, r) => s + r.interest, 0)
+    const totalInstallment = schedule.reduce((s, r) => s + r.installment, 0)
+
+    res.json({
+      status: 'success',
+      data: {
+        method,
+        principal,
+        tenor,
+        rateMonthly,
+        totalInterest,
+        totalInstallment,
+        schedule,
+      },
+    })
+  } catch (error) {
+    console.error('Projection error:', error)
+    res.status(500).json({ status: 'error', message: 'Internal server error' })
+  }
+})
+
+/**
  * Get all loan applications in verification status
  * GET /api/pinjaman/verification
  */

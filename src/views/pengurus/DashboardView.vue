@@ -299,10 +299,15 @@ onMounted(() => {
 </template>
 
 <style scoped>
+/* Import modern design system */
+@import '@/styles/modern-design-system.css';
+
 .admin-dashboard-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  min-height: 100vh;
 }
 
 /* Modern Page Header */

@@ -15,66 +15,78 @@ const currentRoute = computed(() => router.currentRoute.value.path)
 const menuItems = computed(() => {
   if (userRole.value === 'anggota') {
     return [
-      { 
-        label: 'Dashboard', 
-        icon: 'bi bi-house-door', 
+      {
+        label: 'Dashboard',
+        icon: 'bi bi-house-door',
         route: '/anggota/dashboard',
-        active: currentRoute.value === '/anggota/dashboard'
+        active: currentRoute.value === '/anggota/dashboard',
       },
-      { 
-        label: 'Simpanan', 
-        icon: 'bi bi-piggy-bank', 
+      {
+        label: 'Simpanan',
+        icon: 'bi bi-piggy-bank',
         route: '/anggota/simpanan',
-        active: currentRoute.value.startsWith('/anggota/simpanan')
+        active: currentRoute.value.startsWith('/anggota/simpanan'),
       },
-      { 
-        label: 'Pinjaman', 
-        icon: 'bi bi-cash-stack', 
+      {
+        label: 'Pinjaman',
+        icon: 'bi bi-cash-stack',
         route: '/anggota/pinjaman/status',
-        active: currentRoute.value.startsWith('/anggota/pinjaman')
+        active: currentRoute.value.startsWith('/anggota/pinjaman'),
       },
-      { 
-        label: 'SHU', 
-        icon: 'bi bi-trophy', 
+      {
+        label: 'SHU',
+        icon: 'bi bi-trophy',
         route: '/anggota/shu',
-        active: currentRoute.value === '/anggota/shu'
+        active: currentRoute.value === '/anggota/shu',
       },
-      { 
-        label: 'Profil', 
-        icon: 'bi bi-person-gear', 
+      {
+        label: 'Profil',
+        icon: 'bi bi-person-gear',
         route: '/anggota/profil',
-        active: currentRoute.value === '/anggota/profil'
+        active: currentRoute.value === '/anggota/profil',
       },
     ]
   } else if (userRole.value === 'pengurus') {
     return [
-      { 
-        label: 'Dashboard', 
-        icon: 'bi bi-speedometer2', 
+      {
+        label: 'Dashboard',
+        icon: 'bi bi-speedometer2',
         route: '/pengurus/dashboard',
-        active: currentRoute.value === '/pengurus/dashboard'
+        active: currentRoute.value === '/pengurus/dashboard',
       },
-      { 
-        label: 'Verifikasi', 
-        icon: 'bi bi-check-circle', 
+      {
+        label: 'Manajemen Anggota',
+        icon: 'bi bi-people-fill',
+        route: '/pengurus/anggota',
+        active: currentRoute.value.startsWith('/pengurus/anggota'),
+      },
+      {
+        label: 'Verifikasi',
+        icon: 'bi bi-check-circle',
         route: '/pengurus/verifikasi',
-        active: currentRoute.value.startsWith('/pengurus/verifikasi')
+        active: currentRoute.value.startsWith('/pengurus/verifikasi'),
       },
-      { 
-        label: 'Antrean FCFS', 
-        icon: 'bi bi-list-ol', 
+      {
+        label: 'Antrean FCFS',
+        icon: 'bi bi-list-ol',
         route: '/pengurus/antrean',
-        active: currentRoute.value === '/pengurus/antrean'
-      }
+        active: currentRoute.value === '/pengurus/antrean',
+      },
+      {
+        label: 'Laporan',
+        icon: 'bi bi-bar-chart-line',
+        route: '/pengurus/reports',
+        active: currentRoute.value === '/pengurus/reports',
+      },
     ]
   } else if (userRole.value === 'pengawas') {
     return [
-      { 
-        label: 'Dashboard', 
-        icon: 'bi bi-bar-chart', 
+      {
+        label: 'Dashboard',
+        icon: 'bi bi-bar-chart',
         route: '/pengawas/dashboard',
-        active: currentRoute.value === '/pengawas/dashboard'
-      }
+        active: currentRoute.value === '/pengawas/dashboard',
+      },
     ]
   }
   return []
@@ -105,10 +117,7 @@ const navigateTo = (route: string) => {
     <header class="top-header">
       <div class="header-content">
         <!-- Mobile Menu Button -->
-        <button 
-          class="mobile-menu-btn"
-          @click="toggleMobileMenu"
-        >
+        <button class="mobile-menu-btn" @click="toggleMobileMenu">
           <i class="bi bi-list"></i>
         </button>
 
@@ -127,7 +136,7 @@ const navigateTo = (route: string) => {
         <div class="header-actions">
           <!-- Notifications -->
           <NotificationBell />
-          
+
           <!-- User Menu -->
           <div class="user-menu">
             <div class="user-avatar">
@@ -135,7 +144,9 @@ const navigateTo = (route: string) => {
             </div>
             <div class="user-info">
               <div class="user-name">{{ authStore.user?.name || 'Pengguna' }}</div>
-              <div class="user-role">{{ userRole.charAt(0).toUpperCase() + userRole.slice(1) }}</div>
+              <div class="user-role">
+                {{ userRole.charAt(0).toUpperCase() + userRole.slice(1) }}
+              </div>
             </div>
             <button class="logout-btn" @click="logout" title="Logout">
               <i class="bi bi-box-arrow-right"></i>
@@ -147,29 +158,22 @@ const navigateTo = (route: string) => {
 
     <div class="layout-body">
       <!-- Sidebar -->
-      <aside 
+      <aside
         class="sidebar"
-        :class="{ 
-          'collapsed': sidebarCollapsed,
-          'mobile-open': mobileMenuOpen 
+        :class="{
+          collapsed: sidebarCollapsed,
+          'mobile-open': mobileMenuOpen,
         }"
       >
         <!-- Sidebar Toggle -->
-        <button 
-          class="sidebar-toggle"
-          @click="toggleSidebar"
-        >
-          <i class="bi bi-chevron-left" :class="{ 'rotate': sidebarCollapsed }"></i>
+        <button class="sidebar-toggle" @click="toggleSidebar">
+          <i class="bi bi-chevron-left" :class="{ rotate: sidebarCollapsed }"></i>
         </button>
 
         <!-- Navigation Menu -->
         <nav class="sidebar-nav">
           <ul class="nav-list">
-            <li 
-              v-for="item in menuItems" 
-              :key="item.route"
-              class="nav-item"
-            >
+            <li v-for="item in menuItems" :key="item.route" class="nav-item">
               <button
                 class="nav-link"
                 :class="{ active: item.active }"
@@ -192,11 +196,7 @@ const navigateTo = (route: string) => {
       </aside>
 
       <!-- Mobile Overlay -->
-      <div 
-        v-if="mobileMenuOpen"
-        class="mobile-overlay"
-        @click="mobileMenuOpen = false"
-      ></div>
+      <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
 
       <!-- Main Content -->
       <main class="main-content">
@@ -207,13 +207,16 @@ const navigateTo = (route: string) => {
 </template>
 
 <style scoped>
+/* Import modern design system */
+@import '@/styles/modern-design-system.css';
+
 /* Modern Dashboard Layout */
 .modern-layout {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #f8fafc;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  font-family: var(--font-family-sans);
 }
 
 /* Top Header */
@@ -566,8 +569,16 @@ const navigateTo = (route: string) => {
   animation: slideIn 0.3s ease forwards;
 }
 
-.nav-item:nth-child(2) { animation-delay: 0.1s; }
-.nav-item:nth-child(3) { animation-delay: 0.2s; }
-.nav-item:nth-child(4) { animation-delay: 0.3s; }
-.nav-item:nth-child(5) { animation-delay: 0.4s; }
+.nav-item:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.nav-item:nth-child(3) {
+  animation-delay: 0.2s;
+}
+.nav-item:nth-child(4) {
+  animation-delay: 0.3s;
+}
+.nav-item:nth-child(5) {
+  animation-delay: 0.4s;
+}
 </style>

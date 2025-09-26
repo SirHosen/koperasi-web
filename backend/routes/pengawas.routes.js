@@ -15,63 +15,84 @@ router.get('/oversight/financial', authenticateJWT, async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Pengawas role required.' })
     }
 
-    let dateFilter = 'YEAR(tanggal_transaksi) = ?'
-    const filterParams = [year || new Date().getFullYear()]
+    // Validate and sanitize input parameters
+    const selectedYear = parseInt(year) || new Date().getFullYear()
+    const selectedMonth = month ? parseInt(month) : null
 
-    if (month) {
-      dateFilter += ' AND MONTH(tanggal_transaksi) = ?'
-      filterParams.push(month)
+    // Validate year range (reasonable bounds)
+    if (selectedYear < 2000 || selectedYear > 2100) {
+      return res.status(400).json({ error: 'Invalid year parameter' })
     }
 
-    // Get savings overview
-    const [savingsRows] = await pool.execute(
-      `
+    // Validate month range
+    if (selectedMonth && (selectedMonth < 1 || selectedMonth > 12)) {
+      return res.status(400).json({ error: 'Invalid month parameter' })
+    }
+
+    let savingsQuery = `
       SELECT
         jenis,
         SUM(CASE WHEN jenis_transaksi = 'setor' THEN jumlah ELSE 0 END) AS total_setor,
         SUM(CASE WHEN jenis_transaksi = 'tarik' THEN jumlah ELSE 0 END) AS total_tarik,
         COUNT(*) AS jumlah_transaksi
       FROM simpanan_transaksi
-      WHERE ${dateFilter}
-      GROUP BY jenis
-    `,
-      filterParams,
-    )
+      WHERE YEAR(tanggal_transaksi) = ?`
 
-    // Get loans overview
-    const [loansRows] = await pool.execute(
-      `
+    let loansQuery = `
       SELECT
         status_pinjaman,
         COUNT(*) AS jumlah,
         SUM(jumlah_pinjaman) AS total_nilai,
         AVG(bunga) AS rata_rata_bunga
       FROM pinjaman
-      WHERE ${dateFilter.replace('tanggal_transaksi', 'tanggal_pengajuan')}
-      GROUP BY status_pinjaman
-    `,
-      filterParams,
-    )
+      WHERE YEAR(tanggal_pengajuan) = ?`
+
+    const filterParams = [selectedYear]
+
+    if (selectedMonth) {
+      savingsQuery += ' AND MONTH(tanggal_transaksi) = ?'
+      loansQuery += ' AND MONTH(tanggal_pengajuan) = ?'
+      filterParams.push(selectedMonth)
+    }
+
+    savingsQuery += ' GROUP BY jenis'
+    loansQuery += ' GROUP BY status_pinjaman'
+
+    // Get savings overview
+    const [savingsRows] = await pool.execute(savingsQuery, filterParams)
+
+    // Get loans overview
+    const [loansRows] = await pool.execute(loansQuery, filterParams)
 
     // Get cash flow (simplified calculation)
-    const [cashFlowRows] = await pool.execute(
-      `
+    let cashFlowQuery = `
       SELECT
         'masuk' as jenis,
         SUM(jumlah) as total
       FROM simpanan_transaksi
-      WHERE jenis_transaksi = 'setor' AND ${dateFilter}
+      WHERE jenis_transaksi = 'setor' AND YEAR(tanggal_transaksi) = ?`
 
+    if (selectedMonth) {
+      cashFlowQuery += ' AND MONTH(tanggal_transaksi) = ?'
+    }
+
+    cashFlowQuery += `
       UNION ALL
-
       SELECT
         'keluar' as jenis,
         SUM(jumlah_pinjaman) as total
       FROM pinjaman
-      WHERE status_pinjaman = 'disetujui' AND ${dateFilter.replace('tanggal_transaksi', 'tanggal_pengajuan')}
-    `,
-      [...filterParams, ...filterParams],
-    )
+      WHERE status_pinjaman = 'disetujui' AND YEAR(tanggal_pengajuan) = ?`
+
+    if (selectedMonth) {
+      cashFlowQuery += ' AND MONTH(tanggal_pengajuan) = ?'
+    }
+
+    const cashFlowParams = selectedMonth
+      ? [selectedYear, selectedMonth, selectedYear, selectedMonth]
+      : [selectedYear, selectedYear]
+
+    const [cashFlowRows] = await pool.execute(cashFlowQuery, cashFlowParams)
 
     res.json({
       success: true,

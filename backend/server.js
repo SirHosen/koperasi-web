@@ -4,10 +4,11 @@ import cors from 'cors'
 import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
 import morgan from 'morgan'
-import dotenv from 'dotenv'
+import { getConfig } from './config/env-validation.js'
 import { testConnection } from './db.js'
 import authRoutes from './routes/auth.routes.js'
 import anggotaRoutes from './routes/anggota.routes.js'
+import anggotaManagementRoutes from './routes/anggota-management.routes.js'
 import simpananRoutes from './routes/simpanan.routes.js'
 import pinjamanRoutes from './routes/pinjaman.routes.js'
 import fcfsRoutes from './routes/fcfs.routes.js'
@@ -16,14 +17,15 @@ import notificationRoutes from './routes/notification.routes.js'
 import adminRoutes from './routes/admin.routes.js'
 import pengawasRoutes from './routes/pengawas.routes.js'
 import verificationStatsRoutes from './routes/verification-stats.routes.js'
+import reportsRoutes from './routes/reports.routes.js'
 import { authenticateJWT } from './middleware/auth.middleware.js'
 
-// Load environment variables
-dotenv.config()
+// Load and validate configuration
+const config = getConfig()
 
 // Initialize Express app
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = config.server.port
 
 // Apply middleware
 app.use(
@@ -60,6 +62,7 @@ app.use(limiter)
 // API routes
 app.use('/api/auth', authRoutes)
 app.use('/api/anggota', authenticateJWT, anggotaRoutes)
+app.use('/api/anggota-management', authenticateJWT, anggotaManagementRoutes)
 app.use('/api/simpanan', authenticateJWT, simpananRoutes)
 app.use('/api/pinjaman', authenticateJWT, pinjamanRoutes)
 app.use('/api/fcfs', authenticateJWT, fcfsRoutes)
@@ -68,6 +71,7 @@ app.use('/api/notifications', authenticateJWT, notificationRoutes)
 app.use('/api/admin', authenticateJWT, adminRoutes)
 app.use('/api/pengawas', authenticateJWT, pengawasRoutes)
 app.use('/api/verification-stats', authenticateJWT, verificationStatsRoutes)
+app.use('/api/reports', authenticateJWT, reportsRoutes)
 
 // Health check endpoint
 app.get('/health', (req, res) => {

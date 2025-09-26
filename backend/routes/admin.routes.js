@@ -1,6 +1,7 @@
 // admin.routes.js - Routes for admin operations
 import express from 'express'
 import { pool } from '../db.js'
+import { checkRole } from '../middleware/auth.middleware.js'
 
 const router = express.Router()
 
@@ -117,7 +118,7 @@ router.get('/dashboard/activities', async (req, res) => {
 })
 
 // System configuration endpoints
-router.get('/config', async (req, res) => {
+router.get('/config', checkRole(['pengurus', 'admin']), async (req, res) => {
   try {
     const [config] = await pool.execute('SELECT * FROM sistem_config ORDER BY created_at DESC')
 
@@ -134,7 +135,7 @@ router.get('/config', async (req, res) => {
   }
 })
 
-router.put('/config/:key', async (req, res) => {
+router.put('/config/:key', checkRole(['pengurus', 'admin']), async (req, res) => {
   try {
     const { key } = req.params
     const { value, description } = req.body

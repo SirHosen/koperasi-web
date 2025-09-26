@@ -5,6 +5,9 @@ import axios from 'axios'
 import App from './App.vue'
 import router from './router'
 
+// Import modern design system
+import './styles/modern-design-system.css'
+
 // Configure axios
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 

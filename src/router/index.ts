@@ -15,6 +15,9 @@ const PinjamanVerifikasiView = () => import('../views/pengurus/PinjamanVerifikas
 const VerifikasiDashboardView = () => import('../views/pengurus/VerifikasiDashboardView.vue')
 const SimpananView = () => import('../views/pengurus/SimpananView.vue')
 const ShuView = () => import('../views/pengurus/ShuView.vue')
+const AnggotaManagementView = () => import('../views/pengurus/AnggotaManagementView.vue')
+const AnggotaDetailView = () => import('../views/pengurus/AnggotaDetailView.vue')
+const ReportsView = () => import('../views/pengurus/ReportsView.vue')
 
 // Anggota (Member) views
 const AnggotaDashboardView = () => import('../views/anggota/AnggotaDashboardView.vue')
@@ -71,6 +74,9 @@ const router = createRouter({
         },
         { path: 'simpanan', name: 'pengurus-simpanan', component: SimpananView },
         { path: 'shu', name: 'pengurus-shu', component: ShuView },
+        { path: 'anggota', name: 'pengurus-anggota', component: AnggotaManagementView },
+        { path: 'anggota/:id', name: 'pengurus-anggota-detail', component: AnggotaDetailView },
+        { path: 'reports', name: 'pengurus-reports', component: ReportsView },
         { path: '', name: 'pengurus-root', redirect: { name: 'pengurus-dashboard' } },
       ],
     },
