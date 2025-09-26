@@ -87,34 +87,22 @@ const login = async () => {
 
             <div class="form-options">
               <div class="checkbox-group">
-                <input
-                  id="remember-me"
-                  v-model="rememberMe"
-                  type="checkbox"
-                />
+                <input id="remember-me" v-model="rememberMe" type="checkbox" />
                 <label for="remember-me">Ingat Saya</label>
               </div>
               <a href="#" class="forgot-password">Lupa Password?</a>
             </div>
 
-            <button
-              type="submit"
-              class="login-btn"
-              :disabled="authStore.isLoading"
-            >
+            <button type="submit" class="login-btn" :disabled="authStore.isLoading">
               <span v-if="authStore.isLoading">
                 <i class="bi bi-arrow-repeat spin"></i> Memproses...
               </span>
-              <span v-else>
-                <i class="bi bi-box-arrow-in-right"></i> Masuk
-              </span>
+              <span v-else> <i class="bi bi-box-arrow-in-right"></i> Masuk </span>
             </button>
 
             <div class="login-footer">
               Belum punya akun?
-              <RouterLink to="/register" class="register-link">
-                Daftar Sekarang
-              </RouterLink>
+              <RouterLink to="/register" class="register-link"> Daftar Sekarang </RouterLink>
             </div>
           </form>
         </div>
@@ -130,7 +118,7 @@ const login = async () => {
   align-items: center;
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   position: relative;
   overflow: hidden;
 }
@@ -138,35 +126,51 @@ const login = async () => {
 .login-container::before {
   content: '';
   position: absolute;
-  width: 100%;
-  height: 100%;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath opacity='.5' d='M96 95h4v1h-4v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4h-9v4h-1v-4H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15v-9H0v-1h15V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h9V0h1v15h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9h4v1h-4v9zm-1 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm9-10v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-10 0v-9h-9v9h9zm-9-10h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9zm10 0h9v-9h-9v9z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  opacity: 0.1;
-  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+  animation: float 6s ease-in-out infinite;
 }
 
 .login-content {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 450px;
-  padding: 2.5rem;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
+  max-width: 420px;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border-radius: 20px;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  animation: fadeIn 0.8s ease-out;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideUp 0.6s ease-out;
 }
 
-@keyframes fadeIn {
+@keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(2deg);
   }
 }
 
@@ -184,42 +188,38 @@ const login = async () => {
 }
 
 .logo-container {
-  font-size: 3.5rem;
+  font-size: 3rem;
   margin-bottom: 1.5rem;
-  color: #ffffff;
-  text-shadow: 0 2px 15px rgba(0, 0, 0, 0.3);
-  animation: pulse 2s infinite;
+  color: #667eea;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0% {
+  0%, 100% {
     transform: scale(1);
-    opacity: 1;
+    opacity: 0.8;
   }
   50% {
     transform: scale(1.05);
-    opacity: 0.9;
-  }
-  100% {
-    transform: scale(1);
     opacity: 1;
   }
 }
 
 .login-header h1 {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #ffffff;
-  margin-bottom: 0.8rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
 }
 
 .login-header p {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.1rem;
-  max-width: 350px;
+  color: #718096;
+  font-size: 1rem;
+  max-width: 320px;
   margin: 0 auto;
-  line-height: 1.6;
+  line-height: 1.5;
+  font-weight: 400;
 }
 
 .login-form {
@@ -236,8 +236,9 @@ const login = async () => {
 
 .form-label {
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1rem;
+  color: #4a5568;
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
 }
 
 .input-with-icon {
@@ -246,45 +247,50 @@ const login = async () => {
 
 .input-with-icon i {
   position: absolute;
-  left: 1.2rem;
+  left: 1rem;
   top: 50%;
   transform: translateY(-50%);
-  color: #4a90e2;
-  font-size: 1.2rem;
+  color: #a0aec0;
+  font-size: 1.1rem;
+  transition: color 0.2s ease;
 }
 
 .form-control {
   width: 100%;
-  padding: 1.2rem 1.2rem 1.2rem 3rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border-radius: 10px;
-  font-size: 1.05rem;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  border: 2px solid #e2e8f0;
+  background: #ffffff;
+  color: #2d3748;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .form-control::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: #a0aec0;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #4a90e2;
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.2);
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.form-control:focus + .input-with-icon i {
+  color: #667eea;
 }
 
 .error-message {
-  color: #ff6b6b;
-  font-size: 0.95rem;
+  color: #e53e3e;
+  font-size: 0.875rem;
   margin-bottom: 1.5rem;
   text-align: center;
-  background-color: rgba(255, 107, 107, 0.1);
-  padding: 1rem;
-  border-radius: 10px;
-  border-left: 3px solid #ff6b6b;
+  background: #fed7d7;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  border: 1px solid #feb2b2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -299,48 +305,56 @@ const login = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
+  margin: 0.5rem 0;
 }
 
-.remember-me {
+.checkbox-group {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  color: rgba(255, 255, 255, 0.8);
+  gap: 0.5rem;
 }
 
-.custom-checkbox {
-  width: 18px;
-  height: 18px;
-  accent-color: #4a90e2;
+.checkbox-group input {
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
 }
+
+.checkbox-group label {
+  color: #4a5568;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
 
 .forgot-password {
-  color: rgba(255, 255, 255, 0.8);
+  color: #667eea;
   text-decoration: none;
+  font-weight: 500;
   transition: color 0.2s;
 }
 
 .forgot-password:hover {
-  color: #4a90e2;
+  color: #5a67d8;
   text-decoration: underline;
 }
 
 .login-btn {
-  padding: 1.2rem;
+  padding: 0.875rem 1.5rem;
   border: none;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #4a90e2, #5637d9);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
-  font-size: 1.05rem;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
   position: relative;
   overflow: hidden;
 }
@@ -357,8 +371,8 @@ const login = async () => {
 }
 
 .login-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 7px 20px rgba(74, 144, 226, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
 }
 
 .login-btn:hover::before {
@@ -366,28 +380,28 @@ const login = async () => {
 }
 
 .login-btn:disabled {
-  background: linear-gradient(135deg, #a0a0a0, #7a7a7a);
+  background: #a0aec0;
   cursor: not-allowed;
   transform: none;
-  box-shadow: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .login-footer {
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 1rem;
+  color: #718096;
+  font-size: 0.875rem;
 }
 
 .register-link {
-  color: #4a90e2;
+  color: #667eea;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.2s;
 }
 
 .register-link:hover {
-  color: #ffffff;
+  color: #5a67d8;
   text-decoration: underline;
 }
 

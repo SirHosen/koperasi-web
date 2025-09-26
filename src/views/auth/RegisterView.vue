@@ -141,22 +141,18 @@ const formatCurrency = (value: string | number) => {
 
 <template>
   <div class="register-container">
-    <div class="register-wrapper">
-      <!-- Left Panel - Form Content -->
-      <div class="register-content-panel">
-        <div class="register-content-container">
-          <!-- Header with Back Navigation -->
-          <div class="register-header">
-            <router-link to="/login" class="back-button">
-              <i class="bi bi-arrow-left"></i>
-            </router-link>
-            <h1 class="register-title">Pendaftaran Anggota Baru</h1>
-            <div class="logo-small">
-              <i class="bi bi-landmark"></i>
-            </div>
-          </div>
-
-          <!-- Step Indicator -->
+    <div class="register-content">
+      <!-- Header with Back Navigation -->
+      <div class="register-header">
+        <router-link to="/login" class="back-button">
+          <i class="bi bi-arrow-left"></i>
+        </router-link>
+        <div class="logo-container">
+          <i class="bi bi-bank2"></i>
+        </div>
+        <h1 class="register-title">Pendaftaran Anggota Baru</h1>
+        <p>Bergabunglah dengan koperasi simpan pinjam terpercaya</p>
+      </div>
           <div class="step-indicator">
             <div class="step-badges">
               <div
@@ -417,72 +413,6 @@ const formatCurrency = (value: string | number) => {
               </button>
             </div>
           </form>
-        </div>
-      </div>
-
-      <!-- Right Panel - Illustration -->
-      <div class="register-image-panel">
-        <div class="image-content">
-          <div class="registration-benefits">
-            <h2>Manfaat Keanggotaan</h2>
-            <ul class="benefits-list">
-              <li>
-                <div class="benefit-icon">
-                  <i class="bi bi-piggy-bank-fill"></i>
-                </div>
-                <div class="benefit-content">
-                  <h3>Simpanan dengan Bunga Kompetitif</h3>
-                  <p>Dapatkan imbal hasil yang menarik untuk simpanan Anda</p>
-                </div>
-              </li>
-              <li>
-                <div class="benefit-icon">
-                  <i class="bi bi-cash-coin"></i>
-                </div>
-                <div class="benefit-content">
-                  <h3>Pinjaman dengan Bunga Rendah</h3>
-                  <p>Akses pinjaman dengan proses cepat dan bunga bersaing</p>
-                </div>
-              </li>
-              <li>
-                <div class="benefit-icon">
-                  <i class="bi bi-graph-up-arrow"></i>
-                </div>
-                <div class="benefit-content">
-                  <h3>Sisa Hasil Usaha</h3>
-                  <p>Pembagian SHU sesuai dengan partisipasi anggota</p>
-                </div>
-              </li>
-              <li>
-                <div class="benefit-icon">
-                  <i class="bi bi-people-fill"></i>
-                </div>
-                <div class="benefit-content">
-                  <h3>Komunitas Keuangan</h3>
-                  <p>Bergabunglah dengan komunitas untuk pertumbuhan bersama</p>
-                </div>
-              </li>
-            </ul>
-
-            <div class="testimonial">
-              <div class="testimonial-text">
-                "Bergabung dengan koperasi ini adalah salah satu keputusan finansial terbaik yang
-                pernah saya ambil. Saya bisa menabung dengan aman dan mendapatkan pinjaman dengan
-                mudah."
-              </div>
-              <div class="testimonial-author">
-                <div class="author-avatar">
-                  <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Member" />
-                </div>
-                <div class="author-info">
-                  <div class="author-name">Budi Santoso</div>
-                  <div class="author-role">Anggota sejak 2020</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -493,40 +423,74 @@ const formatCurrency = (value: string | number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f5f7fa, #e4e7eb);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 1rem;
-}
-
-.register-wrapper {
-  width: 100%;
-  max-width: 1200px;
-  min-height: 700px;
-  display: flex;
-  border-radius: 16px;
+  position: relative;
   overflow: hidden;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
-/* Left Panel - Form */
-.register-content-panel {
-  flex: 5;
-  background-color: #ffffff;
-  padding: 2.5rem;
-  overflow-y: auto;
+.register-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+  animation: float 6s ease-in-out infinite;
+  z-index: 0;
 }
 
-.register-content-container {
-  max-width: 600px;
-  margin: 0 auto;
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-20px) rotate(2deg);
+  }
+}
+
+.register-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  padding: 3rem;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 20px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.12),
+    0 2px 16px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: slideUp 0.6s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .register-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  position: relative;
 }
 
 .back-button {
+  position: absolute;
+  top: 0;
+  left: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -536,7 +500,6 @@ const formatCurrency = (value: string | number) => {
   background-color: #f1f3f5;
   color: #495057;
   text-decoration: none;
-  margin-right: 1rem;
   transition: all 0.2s;
 }
 
@@ -545,12 +508,41 @@ const formatCurrency = (value: string | number) => {
   transform: translateX(-2px);
 }
 
-.register-title {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #343a40;
-  margin: 0;
+.logo-container {
+  font-size: 3rem;
+  margin-bottom: 1.5rem;
+  color: #667eea;
+  animation: pulse 3s ease-in-out infinite;
 }
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.register-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
+}
+
+.register-header p {
+  color: #718096;
+  font-size: 1rem;
+  max-width: 320px;
+  margin: 0 auto;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
 
 /* Step Indicator */
 .step-indicator {
@@ -594,7 +586,7 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-badge.completed .step-number {
-  background-color: #20c997;
+  background-color: #48bb78;
   color: white;
 }
 
@@ -609,7 +601,7 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-badge.active .step-label {
-  color: #2771d8;
+  color: #667eea;
   font-weight: 600;
 }
 
@@ -624,10 +616,9 @@ const formatCurrency = (value: string | number) => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(to right, #2771d8, #20c997);
+  background: linear-gradient(to right, #667eea, #48bb78);
   border-radius: 4px;
   transition: width 0.4s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Form Steps */
@@ -636,16 +627,18 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-title {
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   font-weight: 600;
-  color: #343a40;
+  color: #2d3748;
   margin-bottom: 0.5rem;
+  letter-spacing: -0.025em;
 }
 
 .step-description {
-  font-size: 1rem;
-  color: #6c757d;
+  font-size: 0.875rem;
+  color: #718096;
   margin-bottom: 1.5rem;
+  line-height: 1.5;
 }
 
 /* Form Controls */
@@ -655,9 +648,9 @@ const formatCurrency = (value: string | number) => {
 
 .form-label {
   display: block;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #495057;
+  color: #4a5568;
   margin-bottom: 0.5rem;
 }
 
@@ -670,9 +663,10 @@ const formatCurrency = (value: string | number) => {
   top: 50%;
   transform: translateY(-50%);
   left: 1rem;
-  color: #2771d8;
+  color: #a0aec0;
   z-index: 1;
-  font-size: 1.1rem;
+  font-size: 1rem;
+  transition: color 0.2s ease;
 }
 
 .input-with-icon.textarea i {
@@ -686,23 +680,29 @@ const formatCurrency = (value: string | number) => {
 
 .form-control {
   width: 100%;
-  padding: 0.9rem 1rem 0.9rem 2.7rem;
-  border: 1px solid #dee2e6;
-  border-radius: 10px;
-  font-size: 1rem;
-  transition: all 0.3s;
-  background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  background: #ffffff;
+  color: #2d3748;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .form-control:focus {
-  border-color: #2771d8;
-  box-shadow: 0 0 0 4px rgba(39, 113, 216, 0.15);
+  border-color: #667eea;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
   outline: none;
 }
 
+.form-control:focus + .input-with-icon i {
+  color: #667eea;
+}
+
 .form-control::placeholder {
-  color: #adb5bd;
+  color: #a0aec0;
 }
 
 select.form-control {
@@ -728,7 +728,7 @@ select.form-control {
 }
 
 .terms-link {
-  color: #2771d8;
+  color: #667eea;
   text-decoration: none;
   font-weight: 600;
 }
@@ -745,39 +745,40 @@ select.form-control {
 }
 
 .btn {
-  padding: 0.9rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  border-radius: 10px;
+  border-radius: 12px;
   border: none;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .btn-primary {
-  background-color: #2771d8;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  box-shadow: 0 4px 10px rgba(39, 113, 216, 0.2);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .btn-primary:hover {
-  background-color: #1a5cbf;
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(39, 113, 216, 0.25);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
 }
 
 .btn-secondary {
-  background-color: #f1f3f5;
-  color: #495057;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: #f7fafc;
+  color: #4a5568;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary:hover {
-  background-color: #e9ecef;
-  transform: translateY(-2px);
+  background: #edf2f7;
+  border-color: #cbd5e0;
+  transform: translateY(-1px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -792,10 +793,10 @@ select.form-control {
 
 /* Right Panel - Illustration */
 .register-image-panel {
-  flex: 4;
-  background: linear-gradient(135deg, #2771d8 0%, #0a3a77 100%);
+  flex: 2;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
   color: white;
-  padding: 3rem;
+  padding: 2.5rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -821,122 +822,70 @@ select.form-control {
   z-index: 1;
 }
 
-/* Benefits List */
-.registration-benefits h2 {
+/* Branding Content */
+.branding-content {
+  text-align: center;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.logo-section i {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  display: block;
+  opacity: 0.9;
+}
+
+.logo-section h2 {
   font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 1.8rem;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.benefits-list {
-  list-style: none;
-  padding: 0;
-  margin: 0 0 2rem 0;
+.logo-section p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  line-height: 1.6;
+  max-width: 280px;
+  margin: 0 auto;
 }
 
-.benefits-list li {
+.features-highlight {
   display: flex;
-  margin-bottom: 1.5rem;
-  transition: transform 0.3s ease;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.benefits-list li:hover {
-  transform: translateX(5px);
-}
-
-.benefit-icon {
-  flex: 0 0 50px;
-  height: 50px;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+.feature-item {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
-  margin-right: 1rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.benefit-content {
-  flex: 1;
-}
-
-.benefit-content h3 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin: 0 0 0.25rem 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-.benefit-content p {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  margin: 0;
-  line-height: 1.5;
-}
-
-/* Testimonial */
-.testimonial {
-  background-color: rgba(255, 255, 255, 0.15);
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  padding: 1.8rem;
-  margin-top: 2rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
 }
 
-.testimonial:hover {
-  transform: translateY(-5px);
+.feature-item:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
-.testimonial-text {
-  font-size: 1.05rem;
-  font-style: italic;
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-  position: relative;
+.feature-item i {
+  font-size: 1.5rem;
+  opacity: 0.9;
 }
 
-.testimonial-text:before {
-  content: '"';
-  font-size: 4rem;
-  position: absolute;
-  left: -0.5rem;
-  top: -1.5rem;
-  opacity: 0.3;
-  font-family: serif;
-}
-
-.testimonial-author {
-  display: flex;
-  align-items: center;
-}
-
-.author-avatar {
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  overflow: hidden;
-  margin-right: 1rem;
-  border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-}
-
-.author-avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.author-name {
+.feature-item span {
   font-weight: 600;
   font-size: 1rem;
-}
-
-.author-role {
-  font-size: 0.85rem;
-  opacity: 0.8;
 }
 
 /* Alert Messages */

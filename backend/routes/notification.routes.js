@@ -143,28 +143,6 @@ router.post('/create', checkRole(['pengurus', 'pengawas']), async (req, res) => 
 })
 
 /**
- * Internal helper to create a notification entry in the database.
- * @param {object} notificationData - The notification data.
- * @returns {string|null} The ID of the created notification or null on error.
- */
-const createNotification = async (notificationData) => {
-  try {
-    const { userId, type, title, message, link } = notificationData
-    const notificationId = uuidv4()
-    const now = new Date()
-
-    await pool.query(
-      `INSERT INTO notifications (id, user_id, type, title, message, link, is_read, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, false, ?)`,
-      [notificationId, userId, type, title, message, link, now],
-    )
-    return notificationId
-  } catch (error) {
-    console.error(`Error creating notification of type ${notificationData.type}:`, error)
-    return null
-  }
-}
-/**
  * Helper function to create a document verification notification
  * This is not exposed as an endpoint, but used internally
  */
@@ -200,7 +178,6 @@ export const createDocumentNotification = async (userId, loanId, docType, status
   } catch (error) {
     console.error('Error creating document notification:', error)
     return null
-    return createNotification({ userId, type, title, message, link })
   }
 }
 
@@ -248,7 +225,6 @@ export const createLoanStatusNotification = async (userId, loanId, status, notes
   } catch (error) {
     console.error('Error creating loan status notification:', error)
     return null
-    return createNotification({ userId, type, title, message, link })
   }
 }
 
