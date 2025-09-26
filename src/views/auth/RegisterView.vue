@@ -437,54 +437,43 @@ const formatCurrency = (value: string | number) => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
-  animation: float 6s ease-in-out infinite;
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
   z-index: 0;
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(2deg);
-  }
-}
 
 .register-content {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 480px;
-  padding: 3rem;
+  max-width: 420px;
+  padding: 2rem;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.12),
     0 2px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: slideUp 0.6s ease-out;
+  animation: fadeIn 0.4s ease;
 }
 
-@keyframes slideUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
 .register-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   text-align: center;
   position: relative;
+  padding-top: 0.5rem;
 }
 
 .back-button {
@@ -501,6 +490,8 @@ const formatCurrency = (value: string | number) => {
   color: #495057;
   text-decoration: none;
   transition: all 0.2s;
+  z-index: 10;
+  cursor: pointer;
 }
 
 .back-button:hover {
@@ -509,44 +500,33 @@ const formatCurrency = (value: string | number) => {
 }
 
 .logo-container {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
   color: #667eea;
-  animation: pulse 3s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-}
 
 .register-header h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #2d3748;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.025em;
 }
 
 .register-header p {
   color: #718096;
-  font-size: 1rem;
-  max-width: 320px;
+  font-size: 0.875rem;
+  max-width: 280px;
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.4;
   font-weight: 400;
 }
 
 
 /* Step Indicator */
 .step-indicator {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .step-badges {
@@ -567,8 +547,8 @@ const formatCurrency = (value: string | number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background-color: #e9ecef;
   color: #6c757d;
@@ -595,7 +575,7 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-label {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: #6c757d;
   font-weight: 500;
 }
@@ -627,23 +607,23 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-title {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: #2d3748;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.025em;
 }
 
 .step-description {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #718096;
-  margin-bottom: 1.5rem;
-  line-height: 1.5;
+  margin-bottom: 1.25rem;
+  line-height: 1.4;
 }
 
 /* Form Controls */
 .form-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-label {
@@ -680,10 +660,10 @@ const formatCurrency = (value: string | number) => {
 
 .form-control {
   width: 100%;
-  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  padding: 0.625rem 0.875rem 0.625rem 2.25rem;
   border: 2px solid #e2e8f0;
-  border-radius: 12px;
-  font-size: 0.875rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
   transition: all 0.2s ease;
   background: #ffffff;
   color: #2d3748;
@@ -717,14 +697,15 @@ select.form-control {
 .terms-check {
   display: flex;
   align-items: center;
-  margin: 1.5rem 0;
+  margin: 1rem 0;
+  font-size: 0.8rem;
 }
 
 .form-check-input {
   margin-right: 0.5rem;
-  width: 20px;
-  height: 20px;
-  accent-color: #2771d8;
+  width: 16px;
+  height: 16px;
+  accent-color: #667eea;
 }
 
 .terms-link {
@@ -741,14 +722,14 @@ select.form-control {
 .form-navigation {
   display: flex;
   justify-content: space-between;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
 }
 
 .btn {
-  padding: 0.75rem 1.25rem;
-  font-size: 0.875rem;
+  padding: 0.625rem 1rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  border-radius: 12px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
   transition: all 0.2s;
@@ -791,112 +772,16 @@ select.form-control {
   min-width: 150px;
 }
 
-/* Right Panel - Illustration */
-.register-image-panel {
-  flex: 2;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
-  color: white;
-  padding: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-  overflow: hidden;
-}
-
-.register-image-panel:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  background: url('https://images.unsplash.com/photo-1563237023-b1e970526dcb?auto=format&fit=crop&q=80&w=1000');
-  background-size: cover;
-  background-position: center;
-  opacity: 0.1;
-}
-
-.image-content {
-  position: relative;
-  z-index: 1;
-}
-
-/* Branding Content */
-.branding-content {
-  text-align: center;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 3rem;
-}
-
-.logo-section i {
-  font-size: 4rem;
-  margin-bottom: 1.5rem;
-  display: block;
-  opacity: 0.9;
-}
-
-.logo-section h2 {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.logo-section p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  line-height: 1.6;
-  max-width: 280px;
-  margin: 0 auto;
-}
-
-.features-highlight {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: all 0.3s ease;
-}
-
-.feature-item:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-.feature-item i {
-  font-size: 1.5rem;
-  opacity: 0.9;
-}
-
-.feature-item span {
-  font-weight: 600;
-  font-size: 1rem;
-}
 
 /* Alert Messages */
 .alert {
-  padding: 1.2rem;
-  border-radius: 10px;
-  margin-bottom: 1.5rem;
+  padding: 0.875rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
   display: flex;
   align-items: center;
   animation: fadeIn 0.3s ease-in-out;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+  font-size: 0.8rem;
 }
 
 .alert-danger {
@@ -924,24 +809,15 @@ select.form-control {
 }
 
 /* Responsive Design */
-@media (max-width: 992px) {
-  .register-wrapper {
-    flex-direction: column;
-    max-width: 600px;
-  }
-
-  .register-content-panel {
-    padding: 2rem;
-  }
-
-  .register-image-panel {
-    padding: 2rem;
-  }
-}
-
 @media (max-width: 576px) {
-  .register-content-panel {
-    padding: 1.5rem;
+  .register-content {
+    max-width: 100%;
+    height: 100vh;
+    border-radius: 0;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 
   .step-badge .step-label {

@@ -131,48 +131,36 @@ const login = async () => {
   right: 0;
   bottom: 0;
   background: 
-    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
-  animation: float 6s ease-in-out infinite;
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
 }
 
 .login-content {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 420px;
-  padding: 3rem;
+  max-width: 380px;
+  padding: 2rem;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: 20px;
+  border-radius: 16px;
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.12),
     0 2px 16px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  animation: slideUp 0.6s ease-out;
+  animation: fadeIn 0.4s ease;
 }
 
-@keyframes slideUp {
+@keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(30px) scale(0.95);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
   }
 }
 
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-20px) rotate(2deg);
-  }
-}
 
 .login-form-panel {
   width: 100%;
@@ -183,55 +171,44 @@ const login = async () => {
 }
 
 .login-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
   text-align: center;
 }
 
 .logo-container {
-  font-size: 3rem;
-  margin-bottom: 1.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
   color: #667eea;
-  animation: pulse 3s ease-in-out infinite;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
-}
 
 .login-header h1 {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: #2d3748;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
   letter-spacing: -0.025em;
 }
 
 .login-header p {
   color: #718096;
-  font-size: 1rem;
-  max-width: 320px;
+  font-size: 0.875rem;
+  max-width: 280px;
   margin: 0 auto;
-  line-height: 1.5;
+  line-height: 1.4;
   font-weight: 400;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 1.8rem;
+  gap: 1.25rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.5rem;
 }
 
 .form-label {
@@ -257,12 +234,12 @@ const login = async () => {
 
 .form-control {
   width: 100%;
-  padding: 0.875rem 1rem 0.875rem 2.75rem;
+  padding: 0.75rem 0.875rem 0.75rem 2.5rem;
   border: 2px solid #e2e8f0;
   background: #ffffff;
   color: #2d3748;
-  border-radius: 12px;
-  font-size: 1rem;
+  border-radius: 10px;
+  font-size: 0.875rem;
   transition: all 0.2s ease;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
@@ -284,17 +261,17 @@ const login = async () => {
 
 .error-message {
   color: #e53e3e;
-  font-size: 0.875rem;
-  margin-bottom: 1.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 1rem;
   text-align: center;
   background: #fed7d7;
-  padding: 0.75rem 1rem;
+  padding: 0.625rem 0.875rem;
   border-radius: 8px;
   border: 1px solid #feb2b2;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.375rem;
 }
 
 .error-message i {
@@ -305,8 +282,8 @@ const login = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
-  margin: 0.5rem 0;
+  font-size: 0.8rem;
+  margin: 0.25rem 0;
 }
 
 .checkbox-group {
@@ -341,13 +318,13 @@ const login = async () => {
 }
 
 .login-btn {
-  padding: 0.875rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   border: none;
-  border-radius: 12px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-weight: 600;
-  font-size: 1rem;
+  font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
@@ -387,10 +364,10 @@ const login = async () => {
 }
 
 .login-footer {
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   text-align: center;
   color: #718096;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .register-link {

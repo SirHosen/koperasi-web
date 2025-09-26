@@ -52,12 +52,6 @@ const notifications = ref<Notification[]>([
   },
 ])
 
-const anggotaInfo = ref({
-  nomorAnggota: 'A-20230001',
-  tanggalBergabung: '2023-03-15',
-  statusAktif: true,
-})
-
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -74,148 +68,124 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const markAsRead = (notificationId: string) => {
-  const notification = notifications.value.find((n) => n.id === notificationId)
-  if (notification) {
-    notification.is_read = true
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'info': return 'bi bi-info-circle'
+    case 'warning': return 'bi bi-exclamation-triangle'
+    case 'success': return 'bi bi-check-circle'
+    case 'error': return 'bi bi-x-circle'
+    default: return 'bi bi-info-circle'
   }
 }
 </script>
 
 <template>
   <div class="dashboard-container">
-    <h1>Selamat Datang, Anggota!</h1>
+    <!-- Header -->
+    <div class="dashboard-header">
+      <h1>Selamat Datang, Anggota!</h1>
+      <p class="header-subtitle">Kelola simpanan dan pinjaman Anda dengan mudah</p>
+    </div>
 
-    <!-- Status Keanggotaan -->
-    <section class="member-status">
-      <h2>Status Keanggotaan</h2>
-      <div class="info-card">
-        <div class="info-item">
-          <span class="label">Nomor Anggota:</span>
-          <span class="value">{{ anggotaInfo.nomorAnggota }}</span>
+    <!-- Quick Stats -->
+    <div class="stats-grid">
+      <div class="stat-card primary">
+        <div class="stat-icon">
+          <i class="bi bi-piggy-bank"></i>
         </div>
-        <div class="info-item">
-          <span class="label">Tanggal Bergabung:</span>
-          <span class="value">{{ formatDate(anggotaInfo.tanggalBergabung) }}</span>
-        </div>
-        <div class="info-item">
-          <span class="label">Status:</span>
-          <span class="value status" :class="{ active: anggotaInfo.statusAktif }">
-            {{ anggotaInfo.statusAktif ? 'Aktif' : 'Non-Aktif' }}
-          </span>
+        <div class="stat-content">
+          <div class="stat-value">{{ formatCurrency(simpanan.total) }}</div>
+          <div class="stat-label">Total Simpanan</div>
         </div>
       </div>
-    </section>
 
-    <!-- Ringkasan Keuangan -->
-    <section class="financial-summary">
-      <h2>Ringkasan Keuangan</h2>
-      <div class="dashboard-cards">
-        <div class="dashboard-card">
-          <div class="card-title">Total Simpanan</div>
-          <div class="card-value">{{ formatCurrency(simpanan.total) }}</div>
-          <div class="card-details">
-            <div class="detail-item">
-              <span>Simpanan Pokok:</span>
-              <span>{{ formatCurrency(simpanan.pokok) }}</span>
-            </div>
-            <div class="detail-item">
-              <span>Simpanan Wajib:</span>
-              <span>{{ formatCurrency(simpanan.wajib) }}</span>
-            </div>
-            <div class="detail-item">
-              <span>Simpanan Sukarela:</span>
-              <span>{{ formatCurrency(simpanan.sukarela) }}</span>
-            </div>
-          </div>
-          <div class="card-action">
-            <router-link to="/anggota/simpanan" class="action-link">Kelola Simpanan</router-link>
-          </div>
+      <div class="stat-card secondary">
+        <div class="stat-icon">
+          <i class="bi bi-cash-stack"></i>
         </div>
-
-        <div class="dashboard-card">
-          <div class="card-title">Pinjaman Aktif</div>
-          <div class="card-value">{{ pinjamanAktif.count }} Pinjaman</div>
-          <div class="card-details">
-            <div class="detail-item">
-              <span>Outstanding:</span>
-              <span>{{ formatCurrency(pinjamanAktif.totalOutstanding) }}</span>
-            </div>
-            <div class="detail-item">
-              <span>Pembayaran Berikutnya:</span>
-              <span>{{ formatDate(pinjamanAktif.nextPayment.date) }}</span>
-            </div>
-            <div class="detail-item">
-              <span>Jumlah:</span>
-              <span>{{ formatCurrency(pinjamanAktif.nextPayment.amount) }}</span>
-            </div>
-          </div>
-          <div class="card-action">
-            <router-link to="/anggota/pinjaman" class="action-link">Lihat Pinjaman</router-link>
-          </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ pinjamanAktif.count }}</div>
+          <div class="stat-label">Pinjaman Aktif</div>
         </div>
       </div>
-    </section>
 
-    <!-- Quick Actions -->
-    <section class="quick-actions">
+      <div class="stat-card tertiary">
+        <div class="stat-icon">
+          <i class="bi bi-bell"></i>
+        </div>
+        <div class="stat-content">
+          <div class="stat-value">{{ notifications.filter(n => !n.is_read).length }}</div>
+          <div class="stat-label">Notifikasi Baru</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Actions -->
+    <div class="main-actions">
       <h2>Aksi Cepat</h2>
       <div class="actions-grid">
-        <router-link to="/anggota/simpanan/setor" class="action-button">
-          <span class="action-icon">💰</span>
-          <span class="action-text">Setor Simpanan</span>
+        <router-link to="/anggota/simpanan/setor" class="action-card">
+          <div class="action-icon">
+            <i class="bi bi-plus-circle"></i>
+          </div>
+          <div class="action-title">Setor Simpanan</div>
+          <div class="action-desc">Tambah saldo simpanan Anda</div>
         </router-link>
-        <router-link to="/anggota/simpanan/tarik" class="action-button">
-          <span class="action-icon">💸</span>
-          <span class="action-text">Tarik Simpanan</span>
+
+        <router-link to="/anggota/simpanan/tarik" class="action-card">
+          <div class="action-icon">
+            <i class="bi bi-dash-circle"></i>
+          </div>
+          <div class="action-title">Tarik Simpanan</div>
+          <div class="action-desc">Ambil saldo simpanan</div>
         </router-link>
-        <router-link to="/anggota/pinjaman/ajukan" class="action-button">
-          <span class="action-icon">📝</span>
-          <span class="action-text">Ajukan Pinjaman</span>
+
+        <router-link to="/anggota/pinjaman/ajukan" class="action-card">
+          <div class="action-icon">
+            <i class="bi bi-file-earmark-plus"></i>
+          </div>
+          <div class="action-title">Ajukan Pinjaman</div>
+          <div class="action-desc">Pengajuan pinjaman baru</div>
         </router-link>
-        <router-link to="/anggota/pinjaman/bayar" class="action-button">
-          <span class="action-icon">💳</span>
-          <span class="action-text">Bayar Angsuran</span>
-        </router-link>
-        <router-link to="/anggota/pinjaman/dokumen" class="action-button">
-          <span class="action-icon">📄</span>
-          <span class="action-text">Status Dokumen</span>
+
+        <router-link to="/anggota/pinjaman/bayar" class="action-card">
+          <div class="action-icon">
+            <i class="bi bi-credit-card"></i>
+          </div>
+          <div class="action-title">Bayar Angsuran</div>
+          <div class="action-desc">Pembayaran angsuran pinjaman</div>
         </router-link>
       </div>
-    </section>
+    </div>
 
-    <!-- Notifications -->
-    <section class="notifications">
-      <h2>Notifikasi</h2>
-      <div class="notification-list">
-        <div
-          v-for="notification in notifications"
-          :key="notification.id"
-          class="notification-item"
-          :class="{ unread: !notification.is_read, [notification.type || 'info']: true }"
-        >
-          <div class="notification-icon">
-            <span v-if="notification.type === 'info'">ℹ️</span>
-            <span v-else-if="notification.type === 'warning'">⚠️</span>
-            <span v-else-if="notification.type === 'success'">✅</span>
-            <span v-else-if="notification.type === 'error'">❌</span>
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+      <div class="activity-header">
+        <h2>Aktivitas Terbaru</h2>
+        <router-link to="/anggota/notifications" class="view-all-link">Lihat Semua</router-link>
+      </div>
+
+      <div class="activity-list">
+        <div v-for="notification in notifications.slice(0, 5)" :key="notification.id" class="activity-item" :class="{ unread: !notification.is_read }">
+          <div class="activity-icon">
+            <i :class="getNotificationIcon(notification.type)"></i>
           </div>
-          <div class="notification-content">
-            <div class="notification-title">{{ notification.title }}</div>
-            <div class="notification-message">{{ notification.message }}</div>
-            <div class="notification-date">{{ formatDate(notification.created_at) }}</div>
+          <div class="activity-content">
+            <div class="activity-title">{{ notification.title }}</div>
+            <div class="activity-message">{{ notification.message }}</div>
+            <div class="activity-time">{{ formatDate(notification.created_at) }}</div>
           </div>
-          <button
-            v-if="!notification.is_read"
-            @click="markAsRead(notification.id)"
-            class="mark-read-button"
-          >
+          <button v-if="!notification.is_read" @click="markAsRead(notification.id)" class="mark-read-btn">
             Tandai Dibaca
           </button>
         </div>
-        <div v-if="notifications.length === 0" class="empty-notification">Tidak ada notifikasi</div>
+
+        <div v-if="notifications.length === 0" class="empty-state">
+          <i class="bi bi-inbox"></i>
+          <p>Tidak ada aktivitas terbaru</p>
+        </div>
       </div>
-    </section>
+    </div>
   </div>
 </template>
 
