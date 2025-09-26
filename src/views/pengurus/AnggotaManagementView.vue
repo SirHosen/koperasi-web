@@ -390,9 +390,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import type { Member, MemberForm, FormErrors, Pagination, Filters } from '@/types/anggota.js'
 
 // API base URL
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
@@ -403,8 +404,8 @@ const router = useRouter()
 // Reactive data
 const isLoading = ref(false)
 const isSubmitting = ref(false)
-const members = ref([])
-const pagination = ref({
+const members = ref<Member[]>([])
+const pagination = ref<Pagination>({
   currentPage: 1,
   totalPages: 1,
   totalItems: 0,
@@ -412,7 +413,7 @@ const pagination = ref({
 })
 
 // Filters
-const filters = ref({
+const filters = ref<Filters>({
   search: '',
   status: 'all',
   sortBy: 'created_at',
@@ -427,10 +428,12 @@ const successMessage = ref('')
 // Modals
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
-const currentMemberId = ref(null)
+const currentMemberId = ref<string | null>(null)
+
+// Using imported MemberForm type
 
 // Form data
-const memberForm = ref({
+const memberForm = ref<MemberForm>({
   name: '',
   email: '',
   username: '',
@@ -443,7 +446,7 @@ const memberForm = ref({
   status_aktif: true,
 })
 
-const formErrors = ref({})
+const formErrors = ref<FormErrors>({})
 
 // Computed
 const visiblePages = computed(() => {
@@ -501,7 +504,7 @@ const loadMembers = async () => {
       members.value = response.data.data
       pagination.value = response.data.pagination
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error loading members:', error)
     errorMessage.value = 'Gagal memuat data anggota'
   } finally {
@@ -520,8 +523,8 @@ const viewMember = (memberId: string) => {
   router.push(`/pengurus/anggota/${memberId}`)
 }
 
-const editMember = (member: Record<string, unknown>) => {
-  currentMemberId.value = member.id as string
+const editMember = (member: Member) => {
+  currentMemberId.value = member.id
   memberForm.value = {
     name: member.name as string,
     email: member.email as string,
@@ -538,9 +541,9 @@ const editMember = (member: Record<string, unknown>) => {
   showEditModal.value = true
 }
 
-const confirmDelete = (member: Record<string, unknown>) => {
+const confirmDelete = (member: Member) => {
   if (confirm(`Apakah Anda yakin ingin menonaktifkan anggota ${member.name}?`)) {
-    deleteMember(member.id as string)
+    deleteMember(member.id)
   }
 }
 
@@ -656,7 +659,8 @@ const exportToExcel = async () => {
     setTimeout(() => {
       successMessage.value = ''
     }, 3000)
-  } catch {
+  } catch (error: unknown) {
+    console.error('Error exporting data:', error)
     errorMessage.value = 'Gagal mengekspor data anggota'
     setTimeout(() => {
       errorMessage.value = ''

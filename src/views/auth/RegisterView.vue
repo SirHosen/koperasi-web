@@ -56,12 +56,10 @@ const validateCurrentStep = () => {
   } else if (currentStep.value === 3) {
     if (!formData.value.username) return 'Username wajib diisi'
     if (!formData.value.password) return 'Password wajib diisi'
-    if (formData.value.password.length < 6)
-      return 'Password harus minimal 6 karakter'
+    if (formData.value.password.length < 6) return 'Password harus minimal 6 karakter'
     if (formData.value.password !== formData.value.confirmPassword)
       return 'Password konfirmasi tidak cocok'
-    if (!formData.value.acceptTerms)
-      return 'Anda harus menyetujui syarat dan ketentuan'
+    if (!formData.value.acceptTerms) return 'Anda harus menyetujui syarat dan ketentuan'
   }
 
   return null
@@ -153,38 +151,40 @@ const formatCurrency = (value: string | number) => {
               <i class="bi bi-arrow-left"></i>
             </router-link>
             <h1 class="register-title">Pendaftaran Anggota Baru</h1>
+            <div class="logo-small">
+              <i class="bi bi-landmark"></i>
+            </div>
           </div>
 
           <!-- Step Indicator -->
           <div class="step-indicator">
             <div class="step-badges">
-              <div 
-                v-for="step in totalSteps" 
+              <div
+                v-for="step in totalSteps"
                 :key="step"
                 class="step-badge"
                 :class="{
-                  'active': step === currentStep,
-                  'completed': step < currentStep
+                  active: step === currentStep,
+                  completed: step < currentStep,
                 }"
               >
                 <span class="step-number">{{ step }}</span>
                 <div class="step-label">
-                  <span>{{ 
-                    step === 1 ? 'Data Pribadi' : 
-                    step === 2 ? 'Informasi Tambahan' : 'Akun' 
+                  <span>{{
+                    step === 1 ? 'Data Pribadi' : step === 2 ? 'Informasi Tambahan' : 'Akun'
                   }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="progress-bar-container">
-              <div 
-                class="progress-fill" 
+              <div
+                class="progress-fill"
                 :style="`width: ${((currentStep - 1) / (totalSteps - 1)) * 100}%`"
               ></div>
             </div>
           </div>
-          
+
           <!-- Error Message -->
           <div v-if="errorMessage" class="alert alert-danger" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -198,12 +198,15 @@ const formatCurrency = (value: string | number) => {
           </div>
 
           <!-- Registration Form -->
-          <form @submit.prevent="currentStep === totalSteps ? submitRegistration() : nextStep()" class="register-form">
+          <form
+            @submit.prevent="currentStep === totalSteps ? submitRegistration() : nextStep()"
+            class="register-form"
+          >
             <!-- Step 1: Personal Information -->
             <div v-if="currentStep === 1" class="form-step">
               <h3 class="step-title">Informasi Pribadi</h3>
               <p class="step-description">Masukkan data diri Anda dengan lengkap dan benar.</p>
-              
+
               <div class="form-group">
                 <label for="name" class="form-label">Nama Lengkap</label>
                 <div class="input-with-icon">
@@ -255,7 +258,7 @@ const formatCurrency = (value: string | number) => {
             <div v-if="currentStep === 2" class="form-step">
               <h3 class="step-title">Informasi Tambahan</h3>
               <p class="step-description">Berikan informasi kontak dan finansial Anda.</p>
-              
+
               <div class="form-group">
                 <label for="email" class="form-label">Email</label>
                 <div class="input-with-icon">
@@ -306,7 +309,11 @@ const formatCurrency = (value: string | number) => {
                   <i class="bi bi-cash-stack"></i>
                   <select id="income" v-model="formData.income" class="form-control" required>
                     <option value="" disabled selected>Pilih rentang pendapatan</option>
-                    <option v-for="option in incomeOptions" :key="option.value" :value="option.value">
+                    <option
+                      v-for="option in incomeOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
                       {{ option.label }}
                     </option>
                   </select>
@@ -318,7 +325,7 @@ const formatCurrency = (value: string | number) => {
             <div v-if="currentStep === 3" class="form-step">
               <h3 class="step-title">Buat Akun</h3>
               <p class="step-description">Buat username dan password untuk akun Anda.</p>
-              
+
               <div class="form-group">
                 <label for="username" class="form-label">Username</label>
                 <div class="input-with-icon">
@@ -373,7 +380,8 @@ const formatCurrency = (value: string | number) => {
                   required
                 />
                 <label class="form-check-label" for="acceptTerms">
-                  Saya menyetujui <a href="#" class="terms-link">syarat dan ketentuan</a> yang berlaku
+                  Saya menyetujui <a href="#" class="terms-link">syarat dan ketentuan</a> yang
+                  berlaku
                 </label>
               </div>
             </div>
@@ -389,7 +397,7 @@ const formatCurrency = (value: string | number) => {
                 <i class="bi bi-arrow-left me-1"></i>
                 Sebelumnya
               </button>
-              
+
               <button
                 type="submit"
                 class="btn btn-primary next-btn"
@@ -400,7 +408,10 @@ const formatCurrency = (value: string | number) => {
                   <i class="bi bi-arrow-right ms-1"></i>
                 </span>
                 <span v-else>
-                  <span v-if="authStore.isLoading" class="spinner-border spinner-border-sm me-1"></span>
+                  <span
+                    v-if="authStore.isLoading"
+                    class="spinner-border spinner-border-sm me-1"
+                  ></span>
                   Daftar Sekarang
                 </span>
               </button>
@@ -455,7 +466,9 @@ const formatCurrency = (value: string | number) => {
 
             <div class="testimonial">
               <div class="testimonial-text">
-                "Bergabung dengan koperasi ini adalah salah satu keputusan finansial terbaik yang pernah saya ambil. Saya bisa menabung dengan aman dan mendapatkan pinjaman dengan mudah."
+                "Bergabung dengan koperasi ini adalah salah satu keputusan finansial terbaik yang
+                pernah saya ambil. Saya bisa menabung dengan aman dan mendapatkan pinjaman dengan
+                mudah."
               </div>
               <div class="testimonial-author">
                 <div class="author-avatar">
@@ -480,7 +493,7 @@ const formatCurrency = (value: string | number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f5f7fa;
+  background: linear-gradient(135deg, #f5f7fa, #e4e7eb);
   padding: 1rem;
 }
 
@@ -491,7 +504,7 @@ const formatCurrency = (value: string | number) => {
   display: flex;
   border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
 }
 
 /* Left Panel - Form */
@@ -562,20 +575,22 @@ const formatCurrency = (value: string | number) => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   background-color: #e9ecef;
   color: #6c757d;
   font-weight: 600;
   margin-bottom: 0.5rem;
   transition: all 0.3s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .step-badge.active .step-number {
   background-color: #2771d8;
   color: white;
   box-shadow: 0 2px 8px rgba(39, 113, 216, 0.3);
+  transform: scale(1.1);
 }
 
 .step-badge.completed .step-number {
@@ -588,7 +603,7 @@ const formatCurrency = (value: string | number) => {
 }
 
 .step-label {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #6c757d;
   font-weight: 500;
 }
@@ -599,18 +614,20 @@ const formatCurrency = (value: string | number) => {
 }
 
 .progress-bar-container {
-  height: 4px;
+  height: 6px;
   background-color: #e9ecef;
   border-radius: 4px;
   position: relative;
   margin-top: 1rem;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
   height: 100%;
   background: linear-gradient(to right, #2771d8, #20c997);
   border-radius: 4px;
-  transition: width 0.3s ease;
+  transition: width 0.4s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Form Steps */
@@ -638,7 +655,7 @@ const formatCurrency = (value: string | number) => {
 
 .form-label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: #495057;
   margin-bottom: 0.5rem;
@@ -653,8 +670,9 @@ const formatCurrency = (value: string | number) => {
   top: 50%;
   transform: translateY(-50%);
   left: 1rem;
-  color: #adb5bd;
+  color: #2771d8;
   z-index: 1;
+  font-size: 1.1rem;
 }
 
 .input-with-icon.textarea i {
@@ -668,17 +686,18 @@ const formatCurrency = (value: string | number) => {
 
 .form-control {
   width: 100%;
-  padding: 0.8rem 1rem 0.8rem 2.5rem;
+  padding: 0.9rem 1rem 0.9rem 2.7rem;
   border: 1px solid #dee2e6;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 1rem;
-  transition: all 0.2s;
+  transition: all 0.3s;
   background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
 }
 
 .form-control:focus {
   border-color: #2771d8;
-  box-shadow: 0 0 0 3px rgba(39, 113, 216, 0.15);
+  box-shadow: 0 0 0 4px rgba(39, 113, 216, 0.15);
   outline: none;
 }
 
@@ -688,7 +707,7 @@ const formatCurrency = (value: string | number) => {
 
 select.form-control {
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23adb5bd' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 01.708 0L8 10.293l5.646-5.647a.5.5 0 01.708.708l-6 6a.5.5 0 01-.708 0l-6-6a.5.5 0 010-.708z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%232771d8' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 01.708 0L8 10.293l5.646-5.647a.5.5 0 01.708.708l-6 6a.5.5 0 01-.708 0l-6-6a.5.5 0 010-.708z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 16px;
@@ -703,8 +722,8 @@ select.form-control {
 
 .form-check-input {
   margin-right: 0.5rem;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   accent-color: #2771d8;
 }
 
@@ -726,13 +745,13 @@ select.form-control {
 }
 
 .btn {
-  padding: 0.8rem 1.5rem;
+  padding: 0.9rem 1.5rem;
   font-size: 1rem;
   font-weight: 600;
-  border-radius: 8px;
+  border-radius: 10px;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -741,22 +760,25 @@ select.form-control {
 .btn-primary {
   background-color: #2771d8;
   color: white;
+  box-shadow: 0 4px 10px rgba(39, 113, 216, 0.2);
 }
 
 .btn-primary:hover {
   background-color: #1a5cbf;
   transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(39, 113, 216, 0.2);
+  box-shadow: 0 6px 15px rgba(39, 113, 216, 0.25);
 }
 
 .btn-secondary {
   background-color: #f1f3f5;
   color: #495057;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .btn-secondary:hover {
   background-color: #e9ecef;
   transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .prev-btn {
@@ -801,9 +823,10 @@ select.form-control {
 
 /* Benefits List */
 .registration-benefits h2 {
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
 }
 
 .benefits-list {
@@ -815,18 +838,24 @@ select.form-control {
 .benefits-list li {
   display: flex;
   margin-bottom: 1.5rem;
+  transition: transform 0.3s ease;
+}
+
+.benefits-list li:hover {
+  transform: translateX(5px);
 }
 
 .benefit-icon {
   flex: 0 0 50px;
   height: 50px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.5rem;
   margin-right: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .benefit-content {
@@ -837,6 +866,7 @@ select.form-control {
   font-size: 1.1rem;
   font-weight: 600;
   margin: 0 0 0.25rem 0;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .benefit-content p {
@@ -848,14 +878,20 @@ select.form-control {
 
 /* Testimonial */
 .testimonial {
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(255, 255, 255, 0.15);
   border-radius: 12px;
-  padding: 1.5rem;
+  padding: 1.8rem;
   margin-top: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.testimonial:hover {
+  transform: translateY(-5px);
 }
 
 .testimonial-text {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-style: italic;
   line-height: 1.6;
   margin-bottom: 1.5rem;
@@ -884,6 +920,7 @@ select.form-control {
   overflow: hidden;
   margin-right: 1rem;
   border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
 }
 
 .author-avatar img {
@@ -904,28 +941,37 @@ select.form-control {
 
 /* Alert Messages */
 .alert {
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 1.2rem;
+  border-radius: 10px;
   margin-bottom: 1.5rem;
   display: flex;
   align-items: center;
   animation: fadeIn 0.3s ease-in-out;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 }
 
 .alert-danger {
   background-color: #fee;
   color: #e74c3c;
+  border-left: 3px solid #e74c3c;
 }
 
 .alert-success {
   background-color: #e8f5e9;
   color: #2e7d32;
+  border-left: 3px solid #2e7d32;
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive Design */
@@ -934,11 +980,11 @@ select.form-control {
     flex-direction: column;
     max-width: 600px;
   }
-  
+
   .register-content-panel {
     padding: 2rem;
   }
-  
+
   .register-image-panel {
     padding: 2rem;
   }
@@ -948,17 +994,18 @@ select.form-control {
   .register-content-panel {
     padding: 1.5rem;
   }
-  
+
   .step-badge .step-label {
     display: none;
   }
-  
+
   .form-navigation {
     flex-direction: column;
     gap: 1rem;
   }
-  
-  .prev-btn, .next-btn {
+
+  .prev-btn,
+  .next-btn {
     width: 100%;
   }
 }

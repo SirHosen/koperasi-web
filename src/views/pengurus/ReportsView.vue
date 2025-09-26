@@ -279,14 +279,43 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useAuthStore } from '@/stores/modules/auth.js'
+import { useAuthStore } from '@/stores/modules/auth'
 import axios from 'axios'
+
+// Types
+type ReportType = 'financial' | 'membership' | 'loans' | 'shu'
+type ReportFormat = 'excel' | 'pdf' | 'json'
+
+interface ReportItem {
+  id: number
+  type: ReportType
+  format: ReportFormat
+  startDate: string
+  endDate: string
+  createdAt: string
+}
+
+interface Filters {
+  startDate: string
+  endDate: string
+  quickPeriod:
+    | ''
+    | 'thisMonth'
+    | 'lastMonth'
+    | 'thisQuarter'
+    | 'lastQuarter'
+    | 'thisYear'
+    | 'lastYear'
+}
+
+// API base URL
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 
 // State
 const loading = ref(false)
-const recentReports = ref([])
+const recentReports = ref<ReportItem[]>([])
 
-const filters = reactive({
+const filters = reactive<Filters>({
   startDate: '',
   endDate: '',
   quickPeriod: '',
@@ -296,7 +325,7 @@ const filters = reactive({
 const authStore = useAuthStore()
 
 // Methods
-const generateReport = async (type, format) => {
+const generateReport = async (type: ReportType, format: ReportFormat) => {
   if (!filters.startDate || !filters.endDate) {
     alert('Mohon pilih periode laporan terlebih dahulu')
     return
@@ -305,7 +334,7 @@ const generateReport = async (type, format) => {
   loading.value = true
 
   try {
-    const response = await axios.get(`http://localhost:3000/api/reports/${type}`, {
+    const response = await axios.get(`${API_URL}/reports/${type}`, {
       params: {
         startDate: filters.startDate,
         endDate: filters.endDate,
@@ -340,7 +369,7 @@ const generateReport = async (type, format) => {
       format: format,
       startDate: filters.startDate,
       endDate: filters.endDate,
-      createdAt: new Date(),
+      createdAt: new Date().toISOString(),
     })
 
     // Keep only last 10 reports
@@ -396,46 +425,46 @@ const setQuickPeriod = () => {
   }
 }
 
-const getReportIcon = (type) => {
-  const icons = {
+const getReportIcon = (type: ReportType) => {
+  const icons: Record<ReportType, string> = {
     financial: 'fas fa-calculator text-primary',
     membership: 'fas fa-users text-success',
     loans: 'fas fa-money-bill-wave text-warning',
     shu: 'fas fa-percentage text-info',
   }
-  return icons[type] || 'fas fa-file'
+  return icons[type]
 }
 
-const getReportName = (type) => {
-  const names = {
+const getReportName = (type: ReportType) => {
+  const names: Record<ReportType, string> = {
     financial: 'Laporan Keuangan',
     membership: 'Laporan Keanggotaan',
     loans: 'Laporan Pinjaman',
     shu: 'Laporan SHU',
   }
-  return names[type] || type
+  return names[type]
 }
 
-const getFormatBadgeClass = (format) => {
-  const classes = {
+const getFormatBadgeClass = (format: ReportFormat) => {
+  const classes: Record<ReportFormat, string> = {
     excel: 'bg-success',
     pdf: 'bg-danger',
     json: 'bg-info',
   }
-  return classes[format] || 'bg-secondary'
+  return classes[format]
 }
 
-const formatDateRange = (startDate, endDate) => {
+const formatDateRange = (startDate: string, endDate: string) => {
   const start = new Date(startDate).toLocaleDateString('id-ID')
   const end = new Date(endDate).toLocaleDateString('id-ID')
   return `${start} - ${end}`
 }
 
-const formatDateTime = (date) => {
+const formatDateTime = (date: string | Date) => {
   return new Date(date).toLocaleString('id-ID')
 }
 
-const downloadReport = (report) => {
+const downloadReport = (report: ReportItem) => {
   // Re-generate and download the report
   generateReport(report.type, report.format)
 }
@@ -453,7 +482,11 @@ onMounted(() => {
   // Load recent reports from localStorage if available
   const savedReports = localStorage.getItem('recentReports')
   if (savedReports) {
-    recentReports.value = JSON.parse(savedReports)
+    try {
+      recentReports.value = JSON.parse(savedReports) as ReportItem[]
+    } catch {
+      // ignore corrupt saved data
+    }
   }
 })
 

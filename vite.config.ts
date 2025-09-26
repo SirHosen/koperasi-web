@@ -34,30 +34,48 @@ export default defineConfig({
     // Bundle optimization
     rollupOptions: {
       output: {
-        // Manual chunk splitting for better caching
-        manualChunks: {
-          // Vendor libraries
-          'vue-vendor': ['vue', 'vue-router', 'pinia'],
-          'ui-vendor': ['bootstrap'],
-          'chart-vendor': ['chart.js'],
-          'utility-vendor': ['axios', 'uuid'],
+        // Manual chunk splitting for better caching (function form for proper typing)
+        manualChunks(id, { getModuleInfo: _getModuleInfo }) {
+          // Normalize id to POSIX style
+          const path = id.replace(/\\/g, '/')
+          // Vendor groups
+          if (path.includes('/node_modules/')) {
+            if (
+              /\/node_modules\/vue(\/|$)|\/node_modules\/vue-router|\/node_modules\/pinia/.test(
+                path,
+              )
+            ) {
+              return 'vue-vendor'
+            }
+            if (/\/node_modules\/bootstrap/.test(path)) {
+              return 'ui-vendor'
+            }
+            if (/\/node_modules\/chart\.js/.test(path)) {
+              return 'chart-vendor'
+            }
+            if (/\/node_modules\/(axios|uuid)(\/|$)/.test(path)) {
+              return 'utility-vendor'
+            }
+          }
 
-          // Application modules
-          'auth-module': [
-            './src/stores/modules/auth.js',
-            './src/views/auth/LoginView.vue',
-            './src/views/auth/RegisterView.vue',
-          ],
-          'anggota-module': [
-            './src/stores/modules/anggota.js',
-            './src/views/anggota/AnggotaDashboardView.vue',
-            './src/views/anggota/SimpananView.vue',
-          ],
-          'pengurus-module': [
-            './src/views/pengurus/DashboardView.vue',
-            './src/views/pengurus/AnggotaManagementView.vue',
-            './src/views/pengurus/PinjamanVerifikasiView.vue',
-          ],
+          // App module groups
+          if (path.includes('/src/')) {
+            if (/\/src\/views\/auth\//.test(path) || path.endsWith('/src/stores/modules/auth.js')) {
+              return 'auth-module'
+            }
+            if (
+              /\/src\/views\/anggota\//.test(path) ||
+              path.endsWith('/src/stores/modules/anggota.js')
+            ) {
+              return 'anggota-module'
+            }
+            if (/\/src\/views\/pengurus\//.test(path)) {
+              return 'pengurus-module'
+            }
+          }
+
+          // Let Rollup decide otherwise
+          return undefined
         },
         // Optimize chunk names for caching
         chunkFileNames: (chunkInfo) => {

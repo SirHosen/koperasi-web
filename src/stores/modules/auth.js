@@ -37,21 +37,25 @@ export const useAuthStore = defineStore('auth', {
     async login(credentials) {
       this.isLoading = true
       this.error = null
-
+    
       try {
         const response = await axios.post(`${API_URL}/auth/login`, credentials)
-
-        // Menyesuaikan dengan format response dari backend
+    
+        // Perbaikan: Menyesuaikan dengan format response dari backend
+        // Periksa struktur response yang sebenarnya
+        console.log('Login response:', response.data)
+        
+        // Gunakan struktur yang benar sesuai dengan backend
         this.token = response.data.data.accessToken
         this.user = response.data.data.user
-
+    
         // Save to localStorage
         localStorage.setItem('token', this.token)
         localStorage.setItem('user', JSON.stringify(this.user))
-
+    
         // Set auth header for future requests
         this.setAuthHeader()
-
+    
         // Redirect based on user role
         if (this.user.role === 'anggota') {
           router.push('/anggota/dashboard')
@@ -60,9 +64,10 @@ export const useAuthStore = defineStore('auth', {
         } else if (this.user.role === 'pengawas') {
           router.push('/pengawas/dashboard')
         }
-
+    
         return response.data
       } catch (error) {
+        console.error('Login error details:', error.response?.data)
         this.error = error.response?.data?.message || 'Login failed. Please check your credentials.'
         throw error
       } finally {

@@ -44,13 +44,13 @@ const router = createRouter({
       path: '/login',
       name: 'login',
       component: LoginView,
-      meta: { requiresGuest: true },
+      meta: { requiresGuest: true, transition: 'slide' },
     },
     {
       path: '/register',
       name: 'register',
       component: RegisterView,
-      meta: { requiresGuest: true },
+      meta: { requiresGuest: true, transition: 'slide' },
     },
 
     // Pengurus (Admin) routes
