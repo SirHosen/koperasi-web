@@ -56,12 +56,10 @@ const validateCurrentStep = () => {
   } else if (currentStep.value === 3) {
     if (!formData.value.username) return 'Username wajib diisi'
     if (!formData.value.password) return 'Password wajib diisi'
-    if (formData.value.password.length < 6)
-      return 'Password harus minimal 6 karakter'
+    if (formData.value.password.length < 6) return 'Password harus minimal 6 karakter'
     if (formData.value.password !== formData.value.confirmPassword)
       return 'Password konfirmasi tidak cocok'
-    if (!formData.value.acceptTerms)
-      return 'Anda harus menyetujui syarat dan ketentuan'
+    if (!formData.value.acceptTerms) return 'Anda harus menyetujui syarat dan ketentuan'
   }
 
   return null
@@ -158,33 +156,32 @@ const formatCurrency = (value: string | number) => {
           <!-- Step Indicator -->
           <div class="step-indicator">
             <div class="step-badges">
-              <div 
-                v-for="step in totalSteps" 
+              <div
+                v-for="step in totalSteps"
                 :key="step"
                 class="step-badge"
                 :class="{
-                  'active': step === currentStep,
-                  'completed': step < currentStep
+                  active: step === currentStep,
+                  completed: step < currentStep,
                 }"
               >
                 <span class="step-number">{{ step }}</span>
                 <div class="step-label">
-                  <span>{{ 
-                    step === 1 ? 'Data Pribadi' : 
-                    step === 2 ? 'Informasi Tambahan' : 'Akun' 
+                  <span>{{
+                    step === 1 ? 'Data Pribadi' : step === 2 ? 'Informasi Tambahan' : 'Akun'
                   }}</span>
                 </div>
               </div>
             </div>
-            
+
             <div class="progress-bar-container">
-              <div 
-                class="progress-fill" 
+              <div
+                class="progress-fill"
                 :style="`width: ${((currentStep - 1) / (totalSteps - 1)) * 100}%`"
               ></div>
             </div>
           </div>
-          
+
           <!-- Error Message -->
           <div v-if="errorMessage" class="alert alert-danger" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
@@ -198,12 +195,15 @@ const formatCurrency = (value: string | number) => {
           </div>
 
           <!-- Registration Form -->
-          <form @submit.prevent="currentStep === totalSteps ? submitRegistration() : nextStep()" class="register-form">
+          <form
+            @submit.prevent="currentStep === totalSteps ? submitRegistration() : nextStep()"
+            class="register-form"
+          >
             <!-- Step 1: Personal Information -->
             <div v-if="currentStep === 1" class="form-step">
               <h3 class="step-title">Informasi Pribadi</h3>
               <p class="step-description">Masukkan data diri Anda dengan lengkap dan benar.</p>
-              
+
               <div class="form-group">
                 <label for="name" class="form-label">Nama Lengkap</label>
                 <div class="input-with-icon">
@@ -255,7 +255,7 @@ const formatCurrency = (value: string | number) => {
             <div v-if="currentStep === 2" class="form-step">
               <h3 class="step-title">Informasi Tambahan</h3>
               <p class="step-description">Berikan informasi kontak dan finansial Anda.</p>
-              
+
               <div class="form-group">
                 <label for="email" class="form-label">Email</label>
                 <div class="input-with-icon">
@@ -306,7 +306,11 @@ const formatCurrency = (value: string | number) => {
                   <i class="bi bi-cash-stack"></i>
                   <select id="income" v-model="formData.income" class="form-control" required>
                     <option value="" disabled selected>Pilih rentang pendapatan</option>
-                    <option v-for="option in incomeOptions" :key="option.value" :value="option.value">
+                    <option
+                      v-for="option in incomeOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
                       {{ option.label }}
                     </option>
                   </select>
@@ -318,7 +322,7 @@ const formatCurrency = (value: string | number) => {
             <div v-if="currentStep === 3" class="form-step">
               <h3 class="step-title">Buat Akun</h3>
               <p class="step-description">Buat username dan password untuk akun Anda.</p>
-              
+
               <div class="form-group">
                 <label for="username" class="form-label">Username</label>
                 <div class="input-with-icon">
@@ -373,7 +377,8 @@ const formatCurrency = (value: string | number) => {
                   required
                 />
                 <label class="form-check-label" for="acceptTerms">
-                  Saya menyetujui <a href="#" class="terms-link">syarat dan ketentuan</a> yang berlaku
+                  Saya menyetujui <a href="#" class="terms-link">syarat dan ketentuan</a> yang
+                  berlaku
                 </label>
               </div>
             </div>
@@ -389,7 +394,7 @@ const formatCurrency = (value: string | number) => {
                 <i class="bi bi-arrow-left me-1"></i>
                 Sebelumnya
               </button>
-              
+
               <button
                 type="submit"
                 class="btn btn-primary next-btn"
@@ -400,7 +405,10 @@ const formatCurrency = (value: string | number) => {
                   <i class="bi bi-arrow-right ms-1"></i>
                 </span>
                 <span v-else>
-                  <span v-if="authStore.isLoading" class="spinner-border spinner-border-sm me-1"></span>
+                  <span
+                    v-if="authStore.isLoading"
+                    class="spinner-border spinner-border-sm me-1"
+                  ></span>
                   Daftar Sekarang
                 </span>
               </button>
@@ -455,7 +463,9 @@ const formatCurrency = (value: string | number) => {
 
             <div class="testimonial">
               <div class="testimonial-text">
-                "Bergabung dengan koperasi ini adalah salah satu keputusan finansial terbaik yang pernah saya ambil. Saya bisa menabung dengan aman dan mendapatkan pinjaman dengan mudah."
+                "Bergabung dengan koperasi ini adalah salah satu keputusan finansial terbaik yang
+                pernah saya ambil. Saya bisa menabung dengan aman dan mendapatkan pinjaman dengan
+                mudah."
               </div>
               <div class="testimonial-author">
                 <div class="author-avatar">
@@ -924,8 +934,14 @@ select.form-control {
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Responsive Design */
@@ -934,11 +950,11 @@ select.form-control {
     flex-direction: column;
     max-width: 600px;
   }
-  
+
   .register-content-panel {
     padding: 2rem;
   }
-  
+
   .register-image-panel {
     padding: 2rem;
   }
@@ -948,17 +964,18 @@ select.form-control {
   .register-content-panel {
     padding: 1.5rem;
   }
-  
+
   .step-badge .step-label {
     display: none;
   }
-  
+
   .form-navigation {
     flex-direction: column;
     gap: 1rem;
   }
-  
-  .prev-btn, .next-btn {
+
+  .prev-btn,
+  .next-btn {
     width: 100%;
   }
 }

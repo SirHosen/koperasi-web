@@ -41,7 +41,8 @@ export const useAuthStore = defineStore('auth', {
       try {
         const response = await axios.post(`${API_URL}/auth/login`, credentials)
 
-        this.token = response.data.data.token
+        // Menyesuaikan dengan format response dari backend
+        this.token = response.data.data.accessToken
         this.user = response.data.data.user
 
         // Save to localStorage

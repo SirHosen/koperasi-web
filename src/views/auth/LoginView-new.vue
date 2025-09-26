@@ -34,6 +34,21 @@ const login = async () => {
     console.error('Login error:', error)
   }
 }
+
+// Demo account functionality
+const fillDemoAccount = (role: string) => {
+  const demoAccounts = {
+    anggota: { username: 'anggota', password: 'anggota123' },
+    pengurus: { username: 'pengurus', password: 'pengurus123' },
+    pengawas: { username: 'pengawas', password: 'pengawas123' },
+  }
+
+  const account = demoAccounts[role as keyof typeof demoAccounts]
+  if (account) {
+    username.value = account.username
+    password.value = account.password
+  }
+}
 </script>
 
 <template>
@@ -129,6 +144,38 @@ const login = async () => {
               <span v-if="authStore.isLoading">Memproses...</span>
               <span v-else>Masuk</span>
             </button>
+
+            <div class="login-divider">
+              <span>atau</span>
+            </div>
+
+            <!-- Demo Accounts -->
+            <div class="demo-accounts">
+              <p class="demo-title">Login dengan akun demo:</p>
+              <div class="demo-buttons">
+                <button
+                  type="button"
+                  class="btn btn-demo anggota"
+                  @click="fillDemoAccount('anggota')"
+                >
+                  <i class="bi bi-person"></i> Anggota
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-demo pengurus"
+                  @click="fillDemoAccount('pengurus')"
+                >
+                  <i class="bi bi-person-workspace"></i> Pengurus
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-demo pengawas"
+                  @click="fillDemoAccount('pengawas')"
+                >
+                  <i class="bi bi-binoculars"></i> Pengawas
+                </button>
+              </div>
+            </div>
           </form>
 
           <!-- Footer -->
@@ -376,6 +423,83 @@ const login = async () => {
 .login-btn:disabled {
   background-color: #adb5bd;
   cursor: not-allowed;
+}
+
+.login-divider {
+  position: relative;
+  text-align: center;
+  margin: 1rem 0;
+}
+
+.login-divider::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #dee2e6;
+  z-index: 0;
+}
+
+.login-divider span {
+  background-color: white;
+  padding: 0 1rem;
+  color: #6c757d;
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+}
+
+.demo-accounts {
+  text-align: center;
+}
+
+.demo-title {
+  font-size: 0.9rem;
+  color: #6c757d;
+  margin-bottom: 1rem;
+}
+
+.demo-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+.btn-demo {
+  padding: 0.6rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex: 1;
+  transition: all 0.2s;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-demo.anggota {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.btn-demo.pengurus {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.btn-demo.pengawas {
+  background-color: #e9ecef;
+  color: #495057;
+}
+
+.btn-demo:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .login-footer {

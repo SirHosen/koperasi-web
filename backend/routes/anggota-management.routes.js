@@ -11,7 +11,6 @@ import {
   errorResponse,
   validationErrorResponse,
   paginatedResponse,
-  handleDatabaseError,
   asyncHandler,
 } from '../utils/response.js'
 

@@ -23,7 +23,7 @@ export const preloadCriticalRoutes = () => {
 
 // Intelligent preloading based on user role
 export const preloadRoleBasedRoutes = (userRole: string) => {
-  const roleRoutes: Record<string, (() => Promise<any>)[]> = {
+  const roleRoutes: Record<string, (() => Promise<unknown>)[]> = {
     anggota: [
       () => import('@/views/anggota/AnggotaDashboardView.vue'),
       () => import('@/views/anggota/SimpananView.vue'),
@@ -46,7 +46,7 @@ export const preloadRoleBasedRoutes = (userRole: string) => {
 }
 
 // Lazy loading wrapper with loading state
-export const createLazyComponent = (importFn: () => Promise<any>, fallback?: any) => {
+export const createLazyComponent = (importFn: () => Promise<unknown>, fallback?: unknown) => {
   return {
     component: importFn,
     loading: fallback || {
@@ -96,7 +96,7 @@ export const setupImageLazyLoading = () => {
 }
 
 // Debounce utility for performance
-export const debounce = <T extends (...args: any[]) => any>(
+export const debounce = <T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number,
   immediate = false,
@@ -119,7 +119,7 @@ export const debounce = <T extends (...args: any[]) => any>(
 }
 
 // Throttle utility for scroll/resize events
-export const throttle = <T extends (...args: any[]) => any>(
+export const throttle = <T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number,
 ): ((...args: Parameters<T>) => void) => {
@@ -154,9 +154,9 @@ export const cleanup = {
   },
 
   // Chart cleanup
-  charts: new Set<any>(),
+  charts: new Set<{ destroy?: () => void }>(),
 
-  addChart(chart: any) {
+  addChart(chart: { destroy?: () => void }) {
     this.charts.add(chart)
   },
 
@@ -229,7 +229,7 @@ export const performanceMonitor = {
   getMetrics() {
     if (typeof window === 'undefined') return {}
 
-    const metrics: Record<string, any> = {}
+    const metrics: Record<string, unknown> = {}
 
     // Get all render times from session storage
     for (let i = 0; i < sessionStorage.length; i++) {
@@ -252,6 +252,15 @@ export const performanceMonitor = {
 }
 
 // Bundle analysis helper (development only)
+// Define webpack require interface
+declare global {
+  interface Window {
+    __webpack_require__?: {
+      cache: Record<string, unknown>
+    }
+  }
+}
+
 export const analyzeBundleSize = () => {
   if (process.env.NODE_ENV !== 'development') return
 

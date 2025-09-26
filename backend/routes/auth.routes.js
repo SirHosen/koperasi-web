@@ -9,7 +9,6 @@ import {
   successResponse,
   errorResponse,
   validationErrorResponse,
-  handleDatabaseError,
   asyncHandler,
 } from '../utils/response.js'
 
