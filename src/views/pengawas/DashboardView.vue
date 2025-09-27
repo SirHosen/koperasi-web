@@ -474,14 +474,14 @@ const alerts = ref<Alert[]>([
     id: 1,
     severity: 'high',
     message: 'NPL Ratio mencapai 4.2% - mendekati batas aman',
-    timestamp: '2024-01-15T10:30:00'
+    timestamp: '2024-01-15T10:30:00',
   },
   {
     id: 2,
     severity: 'medium',
     message: 'Likuiditas turun 8% dibanding bulan lalu',
-    timestamp: '2024-01-15T09:15:00'
-  }
+    timestamp: '2024-01-15T09:15:00',
+  },
 ])
 
 const kpiData = ref<KPIData>({
@@ -492,7 +492,7 @@ const kpiData = ref<KPIData>({
   riskLevel: 'Medium',
   riskFactors: 3,
   performanceIndex: 8.7,
-  lastUpdate: '2024-01-15T11:00:00'
+  lastUpdate: '2024-01-15T11:00:00',
 })
 
 const complianceStatus = ref<ComplianceStatus[]>([
@@ -501,29 +501,29 @@ const complianceStatus = ref<ComplianceStatus[]>([
     category: 'Permenkop No.8/2023',
     status: 'compliant',
     percentage: 95,
-    description: 'Laporan keuangan dan operasional'
+    description: 'Laporan keuangan dan operasional',
   },
   {
     id: 2,
     category: 'UU No.25/1992',
     status: 'compliant',
     percentage: 100,
-    description: 'Struktur organisasi dan tata kelola'
+    description: 'Struktur organisasi dan tata kelola',
   },
   {
     id: 3,
     category: 'Basel III Equivalent',
     status: 'warning',
     percentage: 78,
-    description: 'Rasio kecukupan modal'
+    description: 'Rasio kecukupan modal',
   },
   {
     id: 4,
     category: 'Internal Policy',
     status: 'compliant',
     percentage: 92,
-    description: 'Kebijakan internal koperasi'
-  }
+    description: 'Kebijakan internal koperasi',
+  },
 ])
 
 const riskMatrix = ref<RiskMatrix[]>([
@@ -532,7 +532,7 @@ const riskMatrix = ref<RiskMatrix[]>([
   { id: 3, category: 'Operational', level: 'low', icon: 'fas fa-cogs' },
   { id: 4, category: 'System', level: 'medium', icon: 'fas fa-server' },
   { id: 5, category: 'Compliance', level: 'low', icon: 'fas fa-gavel' },
-  { id: 6, category: 'Market', level: 'high', icon: 'fas fa-chart-line' }
+  { id: 6, category: 'Market', level: 'high', icon: 'fas fa-chart-line' },
 ])
 
 const recentActivities = ref<RecentActivity[]>([
@@ -544,7 +544,7 @@ const recentActivities = ref<RecentActivity[]>([
     timestamp: '2024-01-15T10:45:00',
     severity: 'warning',
     icon: 'fas fa-exclamation-triangle',
-    color: '#ffc107'
+    color: '#ffc107',
   },
   {
     id: 2,
@@ -554,7 +554,7 @@ const recentActivities = ref<RecentActivity[]>([
     timestamp: '2024-01-15T10:30:00',
     severity: 'info',
     icon: 'fas fa-exchange-alt',
-    color: '#17a2b8'
+    color: '#17a2b8',
   },
   {
     id: 3,
@@ -564,8 +564,8 @@ const recentActivities = ref<RecentActivity[]>([
     timestamp: '2024-01-15T10:15:00',
     severity: 'danger',
     icon: 'fas fa-shield-alt',
-    color: '#dc3545'
-  }
+    color: '#dc3545',
+  },
 ])
 
 const systemMetrics = ref<SystemMetrics>({
@@ -573,14 +573,74 @@ const systemMetrics = ref<SystemMetrics>({
   memoryUsage: 68,
   activeUsers: 42,
   userGrowth: 12,
-  uptime: '99.8%'
+  uptime: '99.8%',
 })
+
+interface Recommendation {
+  id: number
   category: string
   priority: string
   description: string
   target_date: string
   status: string
   created_at: string
+}
+
+interface FinancialOverview {
+  current_year: number
+  savings: SavingOverview[]
+  loans: LoanOverview[]
+  cash_flow: CashFlowOverview[]
+}
+
+interface ComplianceMetric {
+  id: number
+  name: string
+  value: number
+  status: string
+  metric: string
+  description: string
+}
+
+interface AuditReport {
+  id: number
+  title: string
+  date: string
+  status: string
+  tanggal_audit: string
+  judul_audit: string
+  jenis_audit: string
+  status_audit: string
+  auditor: string
+  temuan_utama: string
+}
+
+interface SavingOverview {
+  jenis: string
+  total_setor: number
+  total_tarik: number
+  jumlah_transaksi: number
+  total_balance: number
+  total_members: number
+  monthly_growth: number
+}
+
+interface LoanOverview {
+  status_pinjaman: string
+  jumlah: number
+  total_nilai: number
+  rata_rata_bunga: number
+  total_outstanding: number
+  active_loans: number
+  default_rate: number
+}
+
+interface CashFlowOverview {
+  jenis: string
+  total: number
+  monthly_inflow: number
+  monthly_outflow: number
+  net_flow: number
 }
 
 const { handleAsync, error: errorMessage, loading: isLoading } = useErrorHandler()
@@ -598,9 +658,6 @@ const auditReports = ref<AuditReport[]>([])
 const recommendations = ref<Recommendation[]>([])
 const selectedYear = ref(new Date().getFullYear())
 const selectedMonth = ref('')
-
-// Tabs
-const activeTab = ref('overview')
 
 // Chart references
 const savingsChartCanvas = ref<HTMLCanvasElement | null>(null)

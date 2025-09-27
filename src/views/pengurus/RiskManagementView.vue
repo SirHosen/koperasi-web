@@ -781,6 +781,9 @@ import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
 
+// Chart.js type alias for cleaner code
+type ChartInstance = InstanceType<typeof Chart>
+
 interface RiskLevels {
   low: number
   medium: number
@@ -1041,13 +1044,13 @@ export default {
       },
 
       // Chart instances
-      riskHeatMapChart: null as Chart | null,
-      riskScoreChart: null as Chart | null,
-      creditRiskChart: null as Chart | null,
-      operationalRiskChart: null as Chart | null,
-      liquidityChart: null as Chart | null,
-      cashFlowChart: null as Chart | null,
-      mitigationChart: null as Chart | null,
+      riskHeatMapChart: null as ChartInstance | null,
+      riskScoreChart: null as ChartInstance | null,
+      creditRiskChart: null as ChartInstance | null,
+      operationalRiskChart: null as ChartInstance | null,
+      liquidityChart: null as ChartInstance | null,
+      cashFlowChart: null as ChartInstance | null,
+      mitigationChart: null as ChartInstance | null,
     }
   },
 
@@ -1309,17 +1312,16 @@ export default {
 
     destroyCharts() {
       const charts = [
-        'riskHeatMapChart',
-        'riskScoreChart',
-        'creditRiskChart',
-        'operationalRiskChart',
-        'liquidityChart',
-        'cashFlowChart',
-        'mitigationChart',
+        this.riskHeatMapChart,
+        this.riskScoreChart,
+        this.creditRiskChart,
+        this.operationalRiskChart,
+        this.liquidityChart,
+        this.cashFlowChart,
+        this.mitigationChart,
       ]
 
-      charts.forEach((chartName) => {
-        const chart = this[chartName as keyof this] as Chart | null
+      charts.forEach((chart) => {
         if (chart) {
           chart.destroy()
         }

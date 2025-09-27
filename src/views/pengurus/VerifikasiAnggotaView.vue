@@ -596,9 +596,9 @@ declare module '@vue/runtime-core' {
 declare global {
   interface Window {
     bootstrap: {
-      Modal: new (element: Element) => {
-        show(): void
-        hide(): void
+      Modal: {
+        new (element: Element): { show(): void; hide(): void }
+        getInstance(element: Element | null): { hide(): void } | null
       }
     }
   }

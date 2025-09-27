@@ -422,7 +422,7 @@ export default {
 
 .modal.show {
   display: block !important;
-utkan}
+}
 
 .btn-group-sm .btn {
   padding: 0.25rem 0.5rem;

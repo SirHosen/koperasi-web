@@ -945,13 +945,6 @@ declare module '@vue/runtime-core' {
   }
 }
 
-interface ChartOfAccount {
-  code: string
-  name: string
-  category: string
-  normal_balance: string
-}
-
 interface JournalDetail {
   id?: number
   account_code: string
