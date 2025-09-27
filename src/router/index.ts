@@ -17,6 +17,11 @@ const SimpananView = () => import('../views/pengurus/SimpananView.vue')
 const ShuView = () => import('../views/pengurus/ShuView.vue')
 const AnggotaManagementView = () => import('../views/pengurus/AnggotaManagementView.vue')
 const AnggotaDetailView = () => import('../views/pengurus/AnggotaDetailView.vue')
+const VerifikasiAnggotaView = () => import('../views/pengurus/VerifikasiAnggotaView.vue')
+const CashManagementView = () => import('../views/pengurus/CashManagementView.vue')
+const AccountingView = () => import('../views/pengurus/AccountingView.vue')
+const FinancialAnalysisView = () => import('../views/pengurus/FinancialAnalysisView.vue')
+const RiskManagementView = () => import('../views/pengurus/RiskManagementView.vue')
 const ReportsView = () => import('../views/pengurus/ReportsView.vue')
 
 // Anggota (Member) views
@@ -60,7 +65,19 @@ const router = createRouter({
       component: () => import('../layouts/DashboardLayout.vue'),
       meta: { requiresAuth: true, role: 'pengurus' },
       children: [
+        // 1. Dashboard Admin
         { path: 'dashboard', name: 'pengurus-dashboard', component: PengurusDashboardView },
+
+        // 2. Manajemen Anggota
+        { path: 'anggota', name: 'pengurus-anggota', component: AnggotaManagementView },
+        { path: 'anggota/:id', name: 'pengurus-anggota-detail', component: AnggotaDetailView },
+        {
+          path: 'anggota/verifikasi',
+          name: 'pengurus-verifikasi-anggota',
+          component: VerifikasiAnggotaView,
+        },
+
+        // 3. Sistem Antrean FCFS
         { path: 'antrean', name: 'pengurus-antrean', component: AntreanView },
         {
           path: 'pinjaman/verifikasi',
@@ -68,15 +85,46 @@ const router = createRouter({
           component: PinjamanVerifikasiView,
         },
         {
-          path: 'pinjaman/verifikasi-dashboard',
+          path: 'verifikasi-dashboard',
           name: 'pengurus-verifikasi-dashboard',
           component: VerifikasiDashboardView,
         },
+
+        // 4. Manajemen Keuangan
+        {
+          path: 'cash-management',
+          name: 'pengurus-cash-management',
+          component: CashManagementView,
+        },
+        { path: 'accounting', name: 'pengurus-accounting', component: AccountingView },
+        {
+          path: 'financial-analysis',
+          name: 'pengurus-financial-analysis',
+          component: FinancialAnalysisView,
+        },
+        {
+          path: 'risk-management',
+          name: 'pengurus-risk-management',
+          component: RiskManagementView,
+        },
+
+        // 5. Operasional Lainnya
         { path: 'simpanan', name: 'pengurus-simpanan', component: SimpananView },
         { path: 'shu', name: 'pengurus-shu', component: ShuView },
-        { path: 'anggota', name: 'pengurus-anggota', component: AnggotaManagementView },
-        { path: 'anggota/:id', name: 'pengurus-anggota-detail', component: AnggotaDetailView },
+
+        // 6. Reporting & Compliance
         { path: 'reports', name: 'pengurus-reports', component: ReportsView },
+        {
+          path: 'credit-verification',
+          name: 'pengurus-credit-verification',
+          component: () => import('../views/pengurus/CreditVerificationView.vue'),
+        },
+        {
+          path: 'regulatory-reports',
+          name: 'pengurus-regulatory-reports',
+          component: () => import('../views/pengurus/RegulatoryReportsView.vue'),
+        },
+
         { path: '', name: 'pengurus-root', redirect: { name: 'pengurus-dashboard' } },
       ],
     },

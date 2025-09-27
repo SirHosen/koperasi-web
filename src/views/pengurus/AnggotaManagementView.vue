@@ -7,6 +7,18 @@
         <p class="text-muted">Kelola data anggota koperasi</p>
       </div>
       <div class="header-actions">
+        <button class="btn btn-outline-info me-2" @click="downloadTemplate" :disabled="isLoading">
+          <i class="bi bi-download me-1"></i>
+          Template Excel
+        </button>
+        <button
+          class="btn btn-outline-warning me-2"
+          @click="showBulkImportModal = true"
+          :disabled="isLoading"
+        >
+          <i class="bi bi-upload me-1"></i>
+          Bulk Import
+        </button>
         <button class="btn btn-outline-success me-2" @click="exportToExcel" :disabled="isLoading">
           <i class="bi bi-file-earmark-excel me-1"></i>
           Export Excel
@@ -384,8 +396,157 @@
       </div>
     </div>
 
+    <!-- Bulk Import Modal -->
+    <div
+      class="modal fade"
+      :class="{ show: showBulkImportModal }"
+      tabindex="-1"
+      :style="{ display: showBulkImportModal ? 'block' : 'none' }"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">
+              <i class="bi bi-upload me-2"></i>
+              Bulk Import Anggota
+            </h5>
+            <button type="button" class="btn-close" @click="closeBulkImportModal"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Instructions -->
+            <div class="alert alert-info">
+              <h6 class="alert-heading">
+                <i class="bi bi-info-circle me-1"></i>
+                Petunjuk Import
+              </h6>
+              <ol class="mb-0">
+                <li>Download template Excel terlebih dahulu</li>
+                <li>Isi data anggota sesuai format template</li>
+                <li>Upload file Excel atau CSV yang sudah diisi</li>
+                <li>Sistem akan memvalidasi dan mengimpor data</li>
+              </ol>
+            </div>
+
+            <!-- Template Download -->
+            <div class="mb-4">
+              <h6>1. Download Template</h6>
+              <p class="text-muted">
+                Download template Excel untuk memudahkan pengisian data anggota:
+              </p>
+              <button type="button" class="btn btn-outline-success" @click="downloadTemplate">
+                <i class="bi bi-download me-1"></i>
+                Download Template Excel
+              </button>
+            </div>
+
+            <!-- File Upload -->
+            <div class="mb-4">
+              <h6>2. Upload File</h6>
+              <p class="text-muted">
+                Pilih file Excel (.xls, .xlsx) atau CSV (.csv) yang berisi data anggota:
+              </p>
+              <div class="input-group">
+                <input
+                  type="file"
+                  class="form-control"
+                  id="bulk-import-file"
+                  accept=".xls,.xlsx,.csv"
+                  @change="handleFileUpload"
+                />
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  :disabled="!bulkImportFile || isProcessingImport"
+                  @click="processBulkImport"
+                >
+                  <span
+                    v-if="isProcessingImport"
+                    class="spinner-border spinner-border-sm me-1"
+                  ></span>
+                  <i v-else class="bi bi-upload me-1"></i>
+                  {{ isProcessingImport ? 'Memproses...' : 'Mulai Import' }}
+                </button>
+              </div>
+
+              <!-- File Info -->
+              <div v-if="bulkImportFile" class="mt-2">
+                <small class="text-muted">
+                  File dipilih: {{ bulkImportFile.name }} ({{
+                    (bulkImportFile.size / 1024 / 1024).toFixed(2)
+                  }}
+                  MB)
+                </small>
+              </div>
+            </div>
+
+            <!-- Import Results -->
+            <div v-if="importResults" class="mt-4">
+              <h6>3. Hasil Import</h6>
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="card bg-success bg-opacity-10 border-success">
+                    <div class="card-body text-center">
+                      <i class="bi bi-check-circle-fill text-success fs-3"></i>
+                      <h5 class="text-success mt-2">{{ importResults.success }}</h5>
+                      <p class="text-success mb-0">Berhasil diimpor</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card bg-danger bg-opacity-10 border-danger">
+                    <div class="card-body text-center">
+                      <i class="bi bi-exclamation-circle-fill text-danger fs-3"></i>
+                      <h5 class="text-danger mt-2">{{ importResults.failed }}</h5>
+                      <p class="text-danger mb-0">Gagal diimpor</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error Details -->
+              <div v-if="importResults.errors && importResults.errors.length > 0" class="mt-3">
+                <h6>Detail Error:</h6>
+                <div class="alert alert-danger">
+                  <ul class="mb-0">
+                    <li v-for="(error, index) in importResults.errors" :key="index">
+                      {{ error }}
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <!-- Error Message -->
+            <div v-if="errorMessage" class="alert alert-danger mt-3">
+              <i class="bi bi-exclamation-triangle-fill me-1"></i>
+              {{ errorMessage }}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeBulkImportModal">
+              {{ importResults ? 'Tutup' : 'Batal' }}
+            </button>
+            <button
+              v-if="!importResults"
+              type="button"
+              class="btn btn-primary"
+              :disabled="!bulkImportFile || isProcessingImport"
+              @click="processBulkImport"
+            >
+              <span v-if="isProcessingImport" class="spinner-border spinner-border-sm me-1"></span>
+              <i v-else class="bi bi-upload me-1"></i>
+              {{ isProcessingImport ? 'Memproses...' : 'Mulai Import' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal backdrop -->
-    <div v-if="showCreateModal || showEditModal" class="modal-backdrop fade show"></div>
+    <div
+      v-if="showCreateModal || showEditModal || showBulkImportModal"
+      class="modal-backdrop fade show"
+    ></div>
   </div>
 </template>
 
@@ -428,7 +589,17 @@ const successMessage = ref('')
 // Modals
 const showCreateModal = ref(false)
 const showEditModal = ref(false)
+const showBulkImportModal = ref(false)
 const currentMemberId = ref<string | null>(null)
+
+// Bulk Import
+const bulkImportFile = ref<File | null>(null)
+const isProcessingImport = ref(false)
+const importResults = ref<{
+  success: number
+  failed: number
+  errors: string[]
+} | null>(null)
 
 // Using imported MemberForm type
 
@@ -680,6 +851,128 @@ const formatCurrency = (amount: number) => {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(amount || 0)
+}
+
+// Bulk Import Functions
+const downloadTemplate = () => {
+  // Create Excel template for bulk import
+  const templateData = [
+    {
+      'Nama Lengkap': 'Contoh: John Doe',
+      Email: 'contoh: john@email.com',
+      Username: 'contoh: johndoe',
+      Password: 'contoh: password123',
+      NIK: 'contoh: 3201234567890123',
+      Alamat: 'contoh: Jl. Merdeka No. 123',
+      Telepon: 'contoh: 081234567890',
+      'Tanggal Bergabung': 'contoh: 2024-01-15',
+      'Simpanan Pokok': 'contoh: 100000',
+      'Status Aktif': 'contoh: true',
+    },
+  ]
+
+  // Convert to CSV format
+  const headers = Object.keys(templateData[0])
+  const csvContent = [
+    headers.join(','),
+    templateData
+      .map((row) => headers.map((header) => `"${row[header as keyof typeof row]}"`).join(','))
+      .join('\n'),
+  ].join('\n')
+
+  // Download file
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+  const link = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  link.setAttribute('href', url)
+  link.setAttribute('download', 'template_anggota.csv')
+  link.style.visibility = 'hidden'
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
+
+const handleFileUpload = (event: Event) => {
+  const target = event.target as HTMLInputElement
+  const file = target.files?.[0]
+
+  if (file) {
+    // Validate file type
+    const validTypes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'text/csv',
+    ]
+    if (!validTypes.includes(file.type)) {
+      errorMessage.value = 'File harus berformat Excel (.xls, .xlsx) atau CSV (.csv)'
+      return
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      errorMessage.value = 'Ukuran file maksimal 5MB'
+      return
+    }
+
+    bulkImportFile.value = file
+    errorMessage.value = ''
+  }
+}
+
+const processBulkImport = async () => {
+  if (!bulkImportFile.value) {
+    errorMessage.value = 'Pilih file untuk diupload'
+    return
+  }
+
+  isProcessingImport.value = true
+  errorMessage.value = ''
+  importResults.value = null
+
+  try {
+    const formData = new FormData()
+    formData.append('file', bulkImportFile.value)
+
+    const response = await axios.post(`${API_URL}/anggota-management/bulk-import`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+    })
+
+    importResults.value = response.data
+
+    if (importResults.value && importResults.value.success > 0) {
+      successMessage.value = `Berhasil mengimpor ${importResults.value.success} anggota`
+      setTimeout(() => {
+        successMessage.value = ''
+      }, 5000)
+
+      // Reload member list
+      loadMembers()
+    }
+  } catch (error: unknown) {
+    const axiosError = error as { response?: { data?: { message?: string } } }
+    errorMessage.value = axiosError.response?.data?.message || 'Gagal mengimpor data anggota'
+    setTimeout(() => {
+      errorMessage.value = ''
+    }, 5000)
+  } finally {
+    isProcessingImport.value = false
+  }
+}
+
+const closeBulkImportModal = () => {
+  showBulkImportModal.value = false
+  bulkImportFile.value = null
+  importResults.value = null
+  errorMessage.value = ''
+
+  // Reset file input
+  const fileInput = document.getElementById('bulk-import-file') as HTMLInputElement
+  if (fileInput) {
+    fileInput.value = ''
+  }
 }
 
 // Lifecycle

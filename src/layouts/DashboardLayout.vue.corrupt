@@ -1,8 +1,36 @@
-<script setup lang="ts">
+<import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { useAuthStore } from '@/stores/modules/auth'
+
+interface MenuItem {
+  label: string
+  icon: string
+  route: string
+  active: boolean
+  expanded?: boolean
+  submenu?: Array<{
+    label: string
+    route: string
+    active: boolean
+  }>
+}="ts">
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '@/stores/modules/auth'
-import NotificationBell from '@/components/shared/NotificationBell.vue'
+import { authStore } from '@/stores/modules/auth'
+import { notificationStore } from '@/stores/modules/notification'
+
+interface MenuItem {
+  label: string
+  icon: string
+  route: string
+  active: boolean
+  expanded?: boolean
+  submenu?: Array<{
+    label: string
+    route: string
+    active: boolean
+  }>
+}
 
 const authStore = useAuthStore()
 const router = useRouter()
@@ -48,15 +76,12 @@ const menuItems = computed(() => {
     ]
   } else if (userRole.value === 'pengurus') {
     return [
-      // 1. Dashboard Admin
       {
         label: 'Dashboard',
         icon: 'bi bi-speedometer2',
         route: '/pengurus/dashboard',
         active: currentRoute.value === '/pengurus/dashboard',
       },
-
-      // 2. Manajemen Anggota
       {
         label: 'Manajemen Anggota',
         icon: 'bi bi-people-fill',
@@ -64,124 +89,65 @@ const menuItems = computed(() => {
         active: currentRoute.value.startsWith('/pengurus/anggota'),
         submenu: [
           {
-            label: 'Database Anggota',
-            icon: 'bi bi-person-lines-fill',
+            label: 'Daftar Anggota',
             route: '/pengurus/anggota',
+            active: currentRoute.value === '/pengurus/anggota',
           },
           {
             label: 'Verifikasi Calon Anggota',
-            icon: 'bi bi-person-check',
-            route: '/pengurus/anggota/verifikasi',
+            route: '/pengurus/verifikasi-anggota',
+            active: currentRoute.value === '/pengurus/verifikasi-anggota',
           },
-        ],
+        ]
       },
-
-      // 3. Sistem FCFS
       {
-        label: 'Sistem FCFS',
+        label: 'Verifikasi Pinjaman',
+        icon: 'bi bi-check-circle',
+        route: '/pengurus/verifikasi',
+        active: currentRoute.value.startsWith('/pengurus/verifikasi'),
+      },
+      {
+        label: 'Antrean FCFS',
         icon: 'bi bi-list-ol',
         route: '/pengurus/antrean',
-        active:
-          currentRoute.value.startsWith('/pengurus/antrean') ||
-          currentRoute.value.startsWith('/pengurus/pinjaman') ||
-          currentRoute.value.startsWith('/pengurus/verifikasi'),
-        submenu: [
-          {
-            label: 'Antrean FCFS',
-            icon: 'bi bi-list-ol',
-            route: '/pengurus/antrean',
-          },
-          {
-            label: 'Verifikasi Pinjaman',
-            icon: 'bi bi-check-circle-fill',
-            route: '/pengurus/pinjaman/verifikasi',
-          },
-          {
-            label: 'Verifikasi 5C',
-            icon: 'bi bi-clipboard-check-fill',
-            route: '/pengurus/credit-verification',
-          },
-          {
-            label: 'Dashboard Verifikasi',
-            icon: 'bi bi-bar-chart',
-            route: '/pengurus/verifikasi-dashboard',
-          },
-        ],
+        active: currentRoute.value === '/pengurus/antrean',
       },
-
-      // 4. Manajemen Keuangan
       {
-        label: 'Manajemen Keuangan',
-        icon: 'bi bi-cash-stack',
+        label: 'Keuangan',
+        icon: 'bi bi-currency-dollar',
         route: '/pengurus/cash-management',
-        active:
-          currentRoute.value.includes('/cash-management') ||
-          currentRoute.value.includes('/accounting') ||
-          currentRoute.value.includes('/financial') ||
-          currentRoute.value.includes('/risk'),
+        active: currentRoute.value.startsWith('/pengurus/cash-management') || 
+               currentRoute.value.startsWith('/pengurus/accounting') ||
+               currentRoute.value.startsWith('/pengurus/financial-analysis'),
         submenu: [
           {
-            label: 'Cash Management',
-            icon: 'bi bi-cash-coin',
+            label: 'Manajemen Kas',
             route: '/pengurus/cash-management',
+            active: currentRoute.value === '/pengurus/cash-management',
           },
           {
-            label: 'Akuntansi',
-            icon: 'bi bi-calculator',
+            label: 'Akuntansi & Buku Besar',
             route: '/pengurus/accounting',
+            active: currentRoute.value === '/pengurus/accounting',
           },
           {
             label: 'Analisis Keuangan',
-            icon: 'bi bi-graph-up',
             route: '/pengurus/financial-analysis',
+            active: currentRoute.value === '/pengurus/financial-analysis',
           },
-          {
-            label: 'Manajemen Risiko',
-            icon: 'bi bi-shield-exclamation',
-            route: '/pengurus/risk-management',
-          },
-        ],
+        ]
       },
-
-      // 5. Operasional
       {
-        label: 'Operasional',
-        icon: 'bi bi-gear-fill',
-        route: '/pengurus/simpanan',
-        active: currentRoute.value.includes('/simpanan') || currentRoute.value.includes('/shu'),
-        submenu: [
-          {
-            label: 'Simpanan',
-            icon: 'bi bi-piggy-bank',
-            route: '/pengurus/simpanan',
-          },
-          {
-            label: 'SHU',
-            icon: 'bi bi-percent',
-            route: '/pengurus/shu',
-          },
-        ],
+        label: 'Manajemen Risiko',
+        icon: 'bi bi-shield-check',
+        route: '/pengurus/risk-management',
+        active: currentRoute.value === '/pengurus/risk-management',
       },
-
-      // 6. Reporting & Compliance
       {
         label: 'Laporan',
         icon: 'bi bi-bar-chart-line',
         route: '/pengurus/reports',
-        active:
-          currentRoute.value.includes('/reports') || currentRoute.value.includes('/regulatory'),
-        submenu: [
-          {
-            label: 'Laporan Umum',
-            icon: 'bi bi-file-earmark-text',
-            route: '/pengurus/reports',
-          },
-          {
-            label: 'Laporan Regulasi',
-            icon: 'bi bi-file-earmark-ruled',
-            route: '/pengurus/regulatory-reports',
-          },
-        ],
+        active: currentRoute.value === '/pengurus/reports',
       },
     ]
   } else if (userRole.value === 'pengawas') {
@@ -208,6 +174,10 @@ const toggleMobileMenu = () => {
 const logout = async () => {
   await authStore.logout()
   router.push('/login')
+}
+
+const toggleSubmenu = (item: MenuItem) => {
+  item.expanded = !item.expanded
 }
 
 const navigateTo = (route: string) => {
@@ -281,12 +251,26 @@ const navigateTo = (route: string) => {
             <li v-for="item in menuItems" :key="item.route" class="nav-item">
               <button
                 class="nav-link"
-                :class="{ active: item.active }"
-                @click="navigateTo(item.route)"
+                :class="{ active: item.active, 'has-submenu': item.submenu }"
+                @click="item.submenu ? toggleSubmenu(item) : navigateTo(item.route)"
               >
                 <i :class="item.icon" class="nav-icon"></i>
                 <span class="nav-text">{{ item.label }}</span>
+                <i v-if="item.submenu" class="bi bi-chevron-down submenu-arrow" :class="{ 'rotate-180': item.expanded }"></i>
               </button>
+              
+              <!-- Submenu -->
+              <ul v-if="item.submenu && item.expanded" class="submenu">
+                <li v-for="subitem in item.submenu" :key="subitem.route" class="submenu-item">
+                  <button
+                    class="submenu-link"
+                    :class="{ active: subitem.active }"
+                    @click="navigateTo(subitem.route)"
+                  >
+                    <span class="submenu-text">{{ subitem.label }}</span>
+                  </button>
+                </li>
+              </ul>
             </li>
           </ul>
         </nav>

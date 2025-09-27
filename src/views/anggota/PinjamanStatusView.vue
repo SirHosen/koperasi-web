@@ -49,7 +49,7 @@ const fetchLoanStatus = async () => {
 
       queueStats.value = {
         totalAntrean: queueStatus.queueStats.total_antrean,
-        estimatedWaitingTime: queueStatus.queueStats.estimatedWaitingTime || 0,
+        estimatedWaitingTime: calculateEstimatedWaitTime(currentLoan.value),
         processedToday: queueStatus.queueStats.processed_today,
       }
     }
@@ -59,6 +59,48 @@ const fetchLoanStatus = async () => {
   } finally {
     isLoading.value = false
   }
+}
+
+// Calculate more accurate waiting time estimation
+const calculateEstimatedWaitTime = (loanData: Pinjaman | null) => {
+  if (!loanData || loanData.statusPinjaman !== 'antrean') return 0
+
+  // Base processing time (in minutes)
+  const baseProcessingTime = 15 // 15 minutes per application
+
+  // Burst time factor (complexity of loan application)
+  const burstTimeFactor = loanData.burstTime || 1
+
+  // Adjusted processing time based on complexity
+  const adjustedProcessingTime = baseProcessingTime * burstTimeFactor
+
+  // Position in queue (minus 1 because current position doesn't need waiting)
+  const positionInQueue = Math.max(0, (loanData.posisiAntrean || 1) - 1)
+
+  // Total estimated wait time
+  const estimatedWaitTime = positionInQueue * adjustedProcessingTime
+
+  // Add buffer time for peak hours (assume 20% buffer)
+  const bufferTime = estimatedWaitTime * 0.2
+
+  return Math.round(estimatedWaitTime + bufferTime)
+}
+
+// Calculate progress percentage
+const calculateProgress = (loanData: Pinjaman | null) => {
+  if (!loanData) return 0
+
+  const statusProgress: Record<string, number> = {
+    antrean: 20,
+    verifikasi: 40,
+    disetujui: 60,
+    pencairan: 80,
+    aktif: 100,
+    lunas: 100,
+    ditolak: 0,
+  }
+
+  return statusProgress[loanData.statusPinjaman] || 0
 }
 
 // Start refreshing queue status periodically
@@ -168,8 +210,18 @@ const getStatusLabel = (status: string) => {
           <div class="time-estimate">
             <span class="estimate-label">Estimasi waktu tunggu:</span>
             <span class="estimate-value">{{
-              formatDuration(queueStats.estimatedWaitingTime)
+              formatDuration(calculateEstimatedWaitTime(currentLoan))
             }}</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-label">Progress Pengajuan</div>
+            <div class="progress-container">
+              <div
+                class="progress-fill"
+                :style="{ width: `${calculateProgress(currentLoan)}%` }"
+              ></div>
+            </div>
+            <div class="progress-text">{{ calculateProgress(currentLoan) }}% selesai</div>
           </div>
         </div>
 
@@ -301,7 +353,9 @@ const getStatusLabel = (status: string) => {
 .queue-status-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 1rem;
+  padding: 2rem;
+  background: #f8fafc;
+  min-height: 100vh;
 }
 
 /* Modern Page Header */
@@ -309,135 +363,226 @@ const getStatusLabel = (status: string) => {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 2rem;
-  border-radius: 1rem;
+  border-radius: 16px;
   margin-bottom: 2rem;
-  box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+  pointer-events: none;
 }
 
 .header-content h1 {
-  font-size: 2.25rem;
+  font-size: 2.5rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
+  position: relative;
+  z-index: 1;
 }
 
 .header-content h1 i {
   font-size: 2rem;
+  opacity: 0.9;
 }
 
 .page-subtitle {
   margin: 0;
   opacity: 0.9;
   font-size: 1.1rem;
+  position: relative;
+  z-index: 1;
 }
 
-h2 {
-  font-size: 1.125rem;
+/* Loading State */
+.loading-state {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+.loading-state p {
+  color: #6b7280;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Error State */
+.error-message {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.error-message p {
+  color: #ef4444;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.retry-button {
+  background: #ef4444;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
   font-weight: 600;
-  color: #374151;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
+.retry-button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+/* No Loan State */
+.no-loan-state {
+  background: white;
+  border-radius: 16px;
+  padding: 3rem;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+}
+
+.no-loan-state p {
+  color: #6b7280;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}
+
+.apply-button {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  text-decoration: none;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.apply-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+  text-decoration: none;
+  color: white;
+}
+
+/* Queue Card */
 .queue-card {
   background: white;
-  border-radius: 1rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
   margin-bottom: 2rem;
 }
 
 .status-header {
+  padding: 1.5rem 2rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
 
 .loan-id {
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
 }
 
 .status-badge {
-  padding: 0.4rem 0.8rem;
-  border-radius: 9999px;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
   font-size: 0.75rem;
   font-weight: 600;
   color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
-.status-antrean {
-  background-color: #3b82f6;
-}
+.status-antrean { background: #3b82f6; }
+.status-verifikasi { background: #f59e0b; }
+.status-disetujui { background: #10b981; }
+.status-ditolak { background: #ef4444; }
+.status-pencairan { background: #8b5cf6; }
+.status-aktif { background: #6366f1; }
+.status-lunas { background: #6b7280; }
 
-.status-verifikasi {
-  background-color: #f59e0b;
-}
-
-.status-disetujui {
-  background-color: #10b981;
-}
-
-.status-ditolak {
-  background-color: #ef4444;
-}
-
-.status-pencairan {
-  background-color: #8b5cf6;
-}
-
-.status-aktif {
-  background-color: #6366f1;
-}
-
-.status-lunas {
-  background-color: #6b7280;
-}
-
+/* Queue Info */
 .queue-info {
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border-radius: 1rem;
-  padding: 2.5rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  border: 1px solid rgba(102, 126, 234, 0.1);
+  padding: 2rem;
 }
 
 .position-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
+  padding: 2rem;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
 }
 
 .position-number {
-  font-size: 3rem;
+  font-size: 4rem;
   font-weight: 700;
   color: #3b82f6;
   line-height: 1;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .position-label {
-  font-size: 1.125rem;
-  font-weight: 500;
-  margin-bottom: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
 }
 
 .total-queue {
   color: #6b7280;
   margin-bottom: 1.5rem;
+  font-size: 1rem;
 }
 
 .time-estimate {
-  padding: 0.75rem;
-  background-color: #eff6ff;
-  border-radius: 0.375rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
   color: #1e40af;
+  border: 1px solid #dbeafe;
 }
 
 .estimate-label {
@@ -445,77 +590,112 @@ h2 {
   margin-right: 0.5rem;
 }
 
+.estimate-value {
+  font-weight: 600;
+}
+
 .processing-info,
 .approval-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  text-align: center;
+  padding: 2rem;
 }
 
 .processing-icon,
 .approval-icon {
-  font-size: 3rem;
+  font-size: 4rem;
   margin-bottom: 1rem;
 }
 
 .processing-text,
 .approval-text {
-  font-size: 1.125rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  color: #374151;
 }
 
 .processing-time,
 .approval-time {
   color: #6b7280;
+  font-size: 0.875rem;
 }
 
+/* Loan Details */
 .loan-details {
-  margin-top: 2rem;
+  padding: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.loan-details h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
 }
 
 .details-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
 }
 
 .detail-item {
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border-radius: 0.375rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  border: 1px solid #e5e7eb;
 }
 
 .detail-label {
   font-size: 0.75rem;
   color: #6b7280;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
 }
 
 .detail-value {
-  font-weight: 500;
+  font-weight: 600;
   color: #111827;
+  font-size: 1rem;
 }
 
+/* Progress Tracker */
 .progress-tracker {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 2rem;
   margin-bottom: 2rem;
+}
+
+.progress-tracker h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2rem;
+  text-align: center;
 }
 
 .tracker-steps {
   display: flex;
   justify-content: space-between;
   position: relative;
+  padding: 0 2rem;
 }
 
 .tracker-steps::before {
   content: '';
   position: absolute;
   top: 24px;
-  left: 0;
-  right: 0;
+  left: 2rem;
+  right: 2rem;
   height: 2px;
-  background-color: #e5e7eb;
+  background: linear-gradient(90deg, #e5e7eb 0%, #10b981 100%);
   z-index: 0;
+  border-radius: 1px;
 }
 
 .tracker-step {
@@ -524,116 +704,165 @@ h2 {
   flex-direction: column;
   align-items: center;
   flex: 1;
+  z-index: 1;
 }
 
 .step-icon {
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #f3f4f6;
+  background: #f3f4f6;
   border: 2px solid #e5e7eb;
   color: #9ca3af;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  margin-bottom: 0.5rem;
-  z-index: 1;
+  margin-bottom: 0.75rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
 }
 
 .step-label {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: #6b7280;
+  text-align: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.step-time {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin-top: 0.25rem;
   text-align: center;
 }
 
 .tracker-step.completed .step-icon {
-  background-color: #10b981;
+  background: #10b981;
   border-color: #10b981;
   color: white;
 }
 
 .tracker-step.completed .step-label {
   color: #10b981;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.tracker-step.completed + .tracker-step.completed::before {
-  background-color: #10b981;
+.tracker-step.active .step-icon {
+  background: #667eea;
+  border-color: #667eea;
+  color: white;
+  animation: pulse 2s infinite;
 }
 
+.tracker-step.active .step-label {
+  color: #667eea;
+  font-weight: 600;
+}
+
+/* Queue Stats */
 .queue-stats {
-  margin-top: 2rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e5e7eb;
+  padding: 2rem;
+}
+
+.queue-stats h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
+  text-align: center;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
 
 .stat-card {
-  background-color: white;
-  border-radius: 0.5rem;
-  padding: 1.25rem;
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 1.5rem;
   text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .stat-value {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: #111827;
   margin-bottom: 0.5rem;
-}
-
-.no-loan-state {
-  background: white;
-  border-radius: 1rem;
-  padding: 3rem;
-  text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.no-loan-state p {
-  margin-bottom: 2rem;
-  color: #64748b;
-  font-size: 1.1rem;
-}
-
-.apply-button {
-  padding: 0.875rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  text-decoration: none;
-  border-radius: 0.75rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-  display: inline-block;
-}
-
-.apply-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  text-decoration: none;
-  color: white;
+  line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
   color: #6b7280;
+  font-weight: 500;
 }
 
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+  .queue-status-container {
+    padding: 1rem;
+  }
+
+  .page-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .header-content h1 {
+    font-size: 2rem;
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .status-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .position-number {
+    font-size: 3rem;
+  }
+
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-grid {
     grid-template-columns: 1fr;
   }
 
   .tracker-steps {
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 2rem;
+    padding: 0;
   }
 
   .tracker-steps::before {
@@ -649,6 +878,101 @@ h2 {
     flex-direction: row;
     align-items: center;
     gap: 1rem;
+  }
+
+  .step-icon {
+    margin-bottom: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .queue-status-container {
+    padding: 0.5rem;
+  }
+
+  .page-header {
+    padding: 1rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.75rem;
+  }
+}
+
+/* Progress Bar Styles */
+.progress-bar {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.progress-label {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.progress-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
+}
+
+/* Enhanced Time Estimate */
+.time-estimate {
+  background: rgba(255, 255, 255, 0.1);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.estimate-label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.estimate-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}  .queue-card,
+  .progress-tracker,
+  .queue-stats {
+    margin-bottom: 1rem;
+  }
+
+  .status-header,
+  .queue-info,
+  .loan-details {
+    padding: 1rem;
+  }
+
+  .position-number {
+    font-size: 2.5rem;
+  }
+
+  .processing-icon,
+  .approval-icon {
+    font-size: 3rem;
   }
 }
 </style>
