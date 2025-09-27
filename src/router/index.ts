@@ -168,6 +168,26 @@ const router = createRouter({
           name: 'pengawas-dashboard',
           component: () => import('../views/pengawas/DashboardView.vue'),
         },
+        {
+          path: 'monitoring-dashboard',
+          name: 'pengawas-monitoring-dashboard',
+          component: () => import('../views/pengawas/MonitoringDashboardView.vue'),
+        },
+        {
+          path: 'transaction-audit',
+          name: 'pengawas-transaction-audit',
+          component: () => import('../views/pengawas/TransactionAuditView.vue'),
+        },
+        {
+          path: 'reports-access',
+          name: 'pengawas-reports-access',
+          component: () => import('../views/pengawas/ReportsAccessView.vue'),
+        },
+        {
+          path: 'fcfs-analytics',
+          name: 'pengawas-fcfs-analytics',
+          component: () => import('../views/pengawas/FCFSAnalyticsView.vue'),
+        },
         { path: '', name: 'pengawas-root', redirect: { name: 'pengawas-dashboard' } },
       ],
     },

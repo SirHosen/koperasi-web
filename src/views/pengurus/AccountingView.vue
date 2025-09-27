@@ -934,6 +934,17 @@
 </template>
 
 <script lang="ts">
+// Vue instance type extension
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $toast?: {
+      success: (message: string) => void
+      error: (message: string) => void
+      info: (message: string) => void
+    }
+  }
+}
+
 interface ChartOfAccount {
   code: string
   name: string
@@ -959,12 +970,62 @@ interface JournalEntry {
   details: JournalDetail[]
 }
 
-interface JournalFormDetail {
-  accountCode: string
+interface LedgerEntry {
+  id: number
+  date: string
   description: string
+  reference: string
   debit: number
   credit: number
-  reference: string
+  running_balance: number
+}
+
+interface TrialBalanceEntry {
+  category: string
+  accounts: {
+    code: string
+    name: string
+    debit_balance: number
+    credit_balance: number
+  }[]
+}
+
+interface IncomeStatementData {
+  revenue: {
+    account_code: string
+    account_name: string
+    amount: number
+  }[]
+  expenses: {
+    account_code: string
+    account_name: string
+    amount: number
+  }[]
+  totalRevenue: number
+  totalExpenses: number
+  netIncome: number
+}
+
+interface BalanceSheetData {
+  assets: {
+    account_code: string
+    account_name: string
+    amount: number
+  }[]
+  liabilities: {
+    account_code: string
+    account_name: string
+    amount: number
+  }[]
+  equity: {
+    account_code: string
+    account_name: string
+    amount: number
+  }[]
+  totalAssets: number
+  totalLiabilities: number
+  totalEquity: number
+  totalLiabilitiesEquity: number
 }
 
 export default {
@@ -992,7 +1053,7 @@ export default {
       ],
 
       // Journal
-      journalEntries: [],
+      journalEntries: [] as JournalEntry[],
       journalFilters: {
         dateFrom: '',
         dateTo: '',
@@ -1002,7 +1063,7 @@ export default {
       journalCurrentPage: 1,
       journalItemsPerPage: 10,
       showAddJournalModal: false,
-      editingJournal: null,
+      editingJournal: null as JournalEntry | null,
       journalForm: {
         date: new Date().toISOString().split('T')[0],
         journalNumber: '',
@@ -1018,7 +1079,7 @@ export default {
 
       // Ledger
       selectedLedgerAccount: '',
-      ledgerDetails: [],
+      ledgerDetails: [] as LedgerEntry[],
       ledgerFilters: {
         dateFrom: '',
         dateTo: '',
@@ -1031,7 +1092,7 @@ export default {
 
       // Trial Balance
       trialBalanceDate: new Date().toISOString().split('T')[0],
-      trialBalanceData: [],
+      trialBalanceData: [] as TrialBalanceEntry[],
       trialBalanceTotals: {
         totalDebit: 0,
         totalCredit: 0,
@@ -1047,8 +1108,8 @@ export default {
           date: new Date().toISOString().split('T')[0],
         },
       },
-      incomeStatementData: null,
-      balanceSheetData: null,
+      incomeStatementData: null as IncomeStatementData | null,
+      balanceSheetData: null as BalanceSheetData | null,
     }
   },
 
@@ -1414,7 +1475,7 @@ export default {
         if (this.editingJournal) {
           // Update existing entry
           const index = this.journalEntries.findIndex(
-            (entry) => entry.id === this.editingJournal.id,
+            (entry) => entry.id === this.editingJournal!.id,
           )
           if (index !== -1) {
             this.journalEntries[index] = newEntry
@@ -1445,7 +1506,7 @@ export default {
           description: detail.description,
           debit: detail.debit,
           credit: detail.credit,
-          reference: detail.reference,
+          reference: detail.reference || '',
         })),
         totalDebit: 0,
         totalCredit: 0,

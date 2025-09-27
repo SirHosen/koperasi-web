@@ -535,13 +535,27 @@ const getStatusLabel = (status: string) => {
   letter-spacing: 0.025em;
 }
 
-.status-antrean { background: #3b82f6; }
-.status-verifikasi { background: #f59e0b; }
-.status-disetujui { background: #10b981; }
-.status-ditolak { background: #ef4444; }
-.status-pencairan { background: #8b5cf6; }
-.status-aktif { background: #6366f1; }
-.status-lunas { background: #6b7280; }
+.status-antrean {
+  background: #3b82f6;
+}
+.status-verifikasi {
+  background: #f59e0b;
+}
+.status-disetujui {
+  background: #10b981;
+}
+.status-ditolak {
+  background: #ef4444;
+}
+.status-pencairan {
+  background: #8b5cf6;
+}
+.status-aktif {
+  background: #6366f1;
+}
+.status-lunas {
+  background: #6b7280;
+}
 
 /* Queue Info */
 .queue-info {
@@ -814,13 +828,22 @@ const getStatusLabel = (status: string) => {
 
 /* Animations */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 /* Responsive Design */
@@ -954,25 +977,25 @@ const getStatusLabel = (status: string) => {
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-}  .queue-card,
-  .progress-tracker,
-  .queue-stats {
-    margin-bottom: 1rem;
-  }
+}
+.queue-card,
+.progress-tracker,
+.queue-stats {
+  margin-bottom: 1rem;
+}
 
-  .status-header,
-  .queue-info,
-  .loan-details {
-    padding: 1rem;
-  }
+.status-header,
+.queue-info,
+.loan-details {
+  padding: 1rem;
+}
 
-  .position-number {
-    font-size: 2.5rem;
-  }
+.position-number {
+  font-size: 2.5rem;
+}
 
-  .processing-icon,
-  .approval-icon {
-    font-size: 3rem;
-  }
+.processing-icon,
+.approval-icon {
+  font-size: 3rem;
 }
 </style>

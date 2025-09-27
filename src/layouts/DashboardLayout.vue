@@ -192,6 +192,30 @@ const menuItems = computed(() => {
         route: '/pengawas/dashboard',
         active: currentRoute.value === '/pengawas/dashboard',
       },
+      {
+        label: 'Monitoring Dashboard',
+        icon: 'bi bi-display',
+        route: '/pengawas/monitoring-dashboard',
+        active: currentRoute.value === '/pengawas/monitoring-dashboard',
+      },
+      {
+        label: 'Audit Functions',
+        icon: 'bi bi-search',
+        route: '/pengawas/transaction-audit',
+        active: currentRoute.value === '/pengawas/transaction-audit',
+      },
+      {
+        label: 'Reports Access',
+        icon: 'bi bi-file-earmark',
+        route: '/pengawas/reports-access',
+        active: currentRoute.value === '/pengawas/reports-access',
+      },
+      {
+        label: 'FCFS Analytics',
+        icon: 'bi bi-graph-up',
+        route: '/pengawas/fcfs-analytics',
+        active: currentRoute.value === '/pengawas/fcfs-analytics',
+      },
     ]
   }
   return []

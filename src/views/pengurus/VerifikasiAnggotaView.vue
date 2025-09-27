@@ -581,7 +581,69 @@
 </template>
 
 <script lang="ts">
-import { Modal } from 'bootstrap'
+// Vue instance type extension
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $toast?: {
+      success: (message: string) => void
+      error: (message: string) => void
+      info: (message: string) => void
+    }
+  }
+}
+
+// Bootstrap Modal type declaration
+declare global {
+  interface Window {
+    bootstrap: {
+      Modal: new (element: Element) => {
+        show(): void
+        hide(): void
+      }
+    }
+  }
+}
+
+interface Document {
+  type: string
+  name: string
+  uploaded: boolean
+}
+
+interface VerificationHistory {
+  id: number
+  status: string
+  notes: string
+  verified_by: string
+  created_at: string
+}
+
+interface Application {
+  id: number
+  nama_lengkap: string
+  nik: string
+  email: string
+  no_hp: string
+  tempat_lahir: string
+  tanggal_lahir: string
+  jenis_kelamin: string
+  agama: string
+  alamat: string
+  kelurahan: string
+  kecamatan: string
+  kota: string
+  provinsi: string
+  pekerjaan: string
+  penghasilan: number
+  nama_perusahaan?: string
+  alamat_perusahaan?: string
+  tanggal_daftar: string
+  status: 'pending' | 'approved' | 'rejected'
+  verified_by?: string
+  verified_at?: string
+  documents: Document[]
+  verification_history: VerificationHistory[]
+}
 
 export default {
   name: 'VerifikasiAnggotaView',
@@ -589,16 +651,16 @@ export default {
     return {
       loading: false,
       processing: false,
-      applications: [],
-      filteredApplications: [],
-      selectedApplication: null,
+      applications: [] as Application[],
+      filteredApplications: [] as Application[],
+      selectedApplication: null as Application | null,
       currentPage: 1,
       itemsPerPage: 10,
 
       // Modals
-      viewApplicationModal: null,
-      approvalModal: null,
-      rejectionModal: null,
+      viewApplicationModal: null as { show(): void; hide(): void } | null,
+      approvalModal: null as { show(): void; hide(): void } | null,
+      rejectionModal: null as { show(): void; hide(): void } | null,
 
       // Stats
       stats: {
@@ -658,9 +720,11 @@ export default {
 
   methods: {
     initializeModals() {
-      this.viewApplicationModal = new Modal(this.$refs.viewApplicationModal)
-      this.approvalModal = new Modal(this.$refs.approvalModal)
-      this.rejectionModal = new Modal(this.$refs.rejectionModal)
+      this.viewApplicationModal = new window.bootstrap.Modal(
+        this.$refs.viewApplicationModal as Element,
+      )
+      this.approvalModal = new window.bootstrap.Modal(this.$refs.approvalModal as Element)
+      this.rejectionModal = new window.bootstrap.Modal(this.$refs.rejectionModal as Element)
     },
 
     async loadApplications() {
@@ -691,8 +755,8 @@ export default {
             alamat_perusahaan: 'Jl. Sudirman No. 456',
             tanggal_daftar: '2024-01-15',
             status: 'pending',
-            verified_by: null,
-            verified_at: null,
+            verified_by: undefined,
+            verified_at: undefined,
             documents: [
               { type: 'ktp', name: 'KTP', uploaded: true },
               { type: 'kk', name: 'Kartu Keluarga', uploaded: true },
@@ -797,22 +861,22 @@ export default {
       await this.loadApplications()
     },
 
-    viewApplication(application) {
+    viewApplication(application: Application) {
       this.selectedApplication = application
-      this.viewApplicationModal.show()
+      this.viewApplicationModal?.show()
     },
 
-    approveApplication(application) {
+    approveApplication(application: Application) {
       this.selectedApplication = application
       this.approvalForm.notes = ''
-      this.approvalModal.show()
+      this.approvalModal?.show()
     },
 
-    rejectApplication(application) {
+    rejectApplication(application: Application) {
       this.selectedApplication = application
       this.rejectionForm.notes = ''
       this.rejectionForm.submitted = false
-      this.rejectionModal.show()
+      this.rejectionModal?.show()
     },
 
     async confirmApproval() {
@@ -823,7 +887,7 @@ export default {
 
         // Update application status
         const appIndex = this.applications.findIndex(
-          (app) => app.id === this.selectedApplication.id,
+          (app) => app.id === this.selectedApplication!.id,
         )
         if (appIndex !== -1) {
           this.applications[appIndex].status = 'approved'
@@ -843,7 +907,7 @@ export default {
         this.filterApplications()
         this.calculateStats()
 
-        this.approvalModal.hide()
+        this.approvalModal?.hide()
         this.viewApplicationModal?.hide()
         this.$toast?.success('Aplikasi berhasil disetujui')
       } catch (error) {
@@ -868,7 +932,7 @@ export default {
 
         // Update application status
         const appIndex = this.applications.findIndex(
-          (app) => app.id === this.selectedApplication.id,
+          (app) => app.id === this.selectedApplication!.id,
         )
         if (appIndex !== -1) {
           this.applications[appIndex].status = 'rejected'
@@ -888,7 +952,7 @@ export default {
         this.filterApplications()
         this.calculateStats()
 
-        this.rejectionModal.hide()
+        this.rejectionModal?.hide()
         this.viewApplicationModal?.hide()
         this.$toast?.success('Aplikasi berhasil ditolak')
       } catch (error) {
@@ -899,12 +963,12 @@ export default {
       }
     },
 
-    viewDocument(doc) {
+    viewDocument(doc: Document) {
       // Mock document viewing - replace with actual implementation
       window.open(`/api/documents/${doc.type}`, '_blank')
     },
 
-    formatDate(dateString) {
+    formatDate(dateString: string) {
       if (!dateString) return '-'
       return new Date(dateString).toLocaleDateString('id-ID', {
         year: 'numeric',
@@ -913,13 +977,13 @@ export default {
       })
     },
 
-    formatCurrency(amount) {
+    formatCurrency(amount: number) {
       if (!amount) return '0'
       return new Intl.NumberFormat('id-ID').format(amount)
     },
 
-    getStatusText(status) {
-      const statusMap = {
+    getStatusText(status: string) {
+      const statusMap: { [key: string]: string } = {
         pending: 'Menunggu Verifikasi',
         approved: 'Disetujui',
         rejected: 'Ditolak',
